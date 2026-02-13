@@ -1,0 +1,9 @@
+/.*
+!.gitignore
+
+# CMake
+CMakeUserPresets.json
+*.cmake
+
+# Build artifacts
+build
