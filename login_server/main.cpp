@@ -11,6 +11,27 @@ using byte = unsigned char;
 using u16  = std::uint16_t;
 using u32  = std::uint32_t;
 
+struct Connection;
+using PacketHandler = void (*)(Connection &);
+
+template<typename T, typename D = std::default_delete<T>>
+auto makeUPtr(T * t, D deleter = {}) -> decltype(auto) { return std::unique_ptr<T, D>(t, deleter); }
+
+static void applyBlowfish(byte const * start, size_t size, BF_KEY & blowfish, bool mode)
+{
+    for (size_t i = 0; i < size; i += 8)
+    {
+        union { u32 ints[2]; byte raw[8]; } chunk = {0};
+        chunk.ints[0] = htonl(*(u32 *) (start + i + 0));
+        chunk.ints[1] = htonl(*(u32 *) (start + i + 4));
+        BF_ecb_encrypt(chunk.raw, chunk.raw, &blowfish, mode);
+        chunk.ints[0] = ntohl(chunk.ints[0]);
+        chunk.ints[1] = ntohl(chunk.ints[1]);
+        *(u32 *) (start + i + 0) = chunk.ints[0];
+        *(u32 *) (start + i + 4) = chunk.ints[1];
+    }
+}
+
 struct Packet
 {
     std::vector<byte> buffer;
@@ -56,10 +77,15 @@ struct Connection
         RSA_generate_key_ex(rsaKey.get(), 1024, bigNum.get(), nullptr);
     }
 
-    void send(Packet & p)
+    void send(Packet & p, bool encryptPacket = true)
     {
         finalize(p);
-        SPDLOG_INFO("sent: {:02X} ({} bytes)", p.buffer[3], p.buffer.size());
+
+        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.buffer[3], p.buffer.size());
+
+        if (encryptPacket)
+            encrypt(p);
+
         socket.send(boost::asio::buffer(p.buffer, p.buffer.size()));
     }
 
@@ -87,10 +113,13 @@ private:
         auto const finalSize = static_cast<u16>(p.buffer.size());
         std::memcpy(p.buffer.data(), &finalSize, sizeof(finalSize));
     }
-};
 
-template<typename T, typename D = std::default_delete<T>>
-auto makeUPtr(T * t, D deleter = {}) -> decltype(auto) { return std::unique_ptr<T, D>(t, deleter); }
+    void encrypt(Packet & p)
+    {
+        applyBlowfish(p.buffer.data() + sizeof(u16),
+                      p.buffer.size() - sizeof(u16), blowfish, BF_ENCRYPT);
+    }
+};
 
 static void hexdump(void const * ptr, size_t const buflen)
 {
@@ -119,57 +148,6 @@ static void hexdump(void const * ptr, size_t const buflen)
     }
 
     fmt::print("{}", result);
-}
-
-static void readPacket(Connection & conn)
-{
-    std::vector<byte> readBuffer(1024);
-    auto const netSize = conn.socket.receive(boost::asio::buffer(readBuffer));
-
-    auto request = readBuffer.data();
-
-    // Read packet size
-    u16 size = 0;
-    std::memcpy(&size, request, sizeof(size));
-    request += sizeof(size);
-
-    auto const bodySize = size - sizeof(size);
-
-    // Blowfish decrypt
-    for (u16 i = 0; i < bodySize; i += 8)
-    {
-        union { u32 ints[2]; byte raw[8]; } chunk = {0};
-        chunk.ints[0] = htonl(*(u32 *) (request + i + 0));
-        chunk.ints[1] = htonl(*(u32 *) (request + i + 4));
-
-        BF_ecb_encrypt(chunk.raw, chunk.raw, &conn.blowfish, BF_DECRYPT);
-        chunk.ints[0] = ntohl(chunk.ints[0]);
-        chunk.ints[1] = ntohl(chunk.ints[1]);
-        *(u32 *) (request + i + 0) = chunk.ints[0];
-        *(u32 *) (request + i + 4) = chunk.ints[1];
-    }
-
-    // Read packet type
-    byte type = 0;
-    std::memcpy(&type, request, sizeof(type));
-    request += sizeof(type);
-
-    SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
-
-    // RSA decrypt the body of the packet
-    RSA_private_decrypt(RSA_size(conn.rsaKey.get()),
-                        request, request, conn.rsaKey.get(), RSA_NO_PADDING);
-
-    std::string_view text;
-    switch (type)
-    {
-        case 0x00: text = "handle_auth_request";        break;
-        case 0x02: text = "handle_game_server";         break;
-        case 0x05: text = "handle_server_list_request"; break;
-        case 0x07: text = "ignore_gg_packet";           break;
-        default:   text = "unknown packet";             break;
-    }
-    SPDLOG_INFO("Packet string type: {}", text);
 }
 
 static void sendInitPacket(Connection & conn)
@@ -210,7 +188,81 @@ static void sendInitPacket(Connection & conn)
 
     Packet p;
     p << u16(0) << init.session_id << init.protocol << init.modulus;
+    conn.send(p, false);
+}
+
+static void handleGameGuardPacket(Connection & conn)
+{
+    constexpr byte type     = 0x0b;
+    constexpr u32  ignoreGg = 0x0b;
+
+    Packet p;
+    p << type << ignoreGg;
     conn.send(p);
+}
+
+static PacketHandler readPacket(Connection & conn)
+{
+    std::vector<byte> readBuffer(1024);
+    conn.socket.receive(boost::asio::buffer(readBuffer));
+
+    auto request = readBuffer.data();
+
+    // Read packet size
+    u16 size = 0;
+    std::memcpy(&size, request, sizeof(size));
+    request += sizeof(size);
+
+    auto const bodySize = size - sizeof(size);
+
+    // Blowfish decrypt
+    applyBlowfish(request, bodySize, conn.blowfish, BF_DECRYPT);
+
+    // Read packet type
+    byte type = 0;
+    std::memcpy(&type, request, sizeof(type));
+    request += sizeof(type);
+
+    SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
+
+    // RSA decrypt the body of the packet
+    RSA_private_decrypt(RSA_size(conn.rsaKey.get()),
+                        request, request, conn.rsaKey.get(), RSA_NO_PADDING);
+
+    void (*handle)(Connection & conn) = {};
+
+    std::string_view text;
+    switch (type)
+    {
+        case 0x00:
+        {
+            text = "handle_auth_request";
+            break;
+        }
+        case 0x02:
+        {
+            text = "handle_game_server";
+            break;
+        }
+        case 0x05:
+        {
+            text = "handle_server_list_request";
+            break;
+        }
+        case 0x07:
+        {
+            text = "ignore_gg_packet";
+            handle = &handleGameGuardPacket;
+            break;
+        }
+        default:
+        {
+            text = "unknown packet";
+            break;
+        }
+    }
+    SPDLOG_INFO("Packet string type: {}", text);
+    return handle;
 }
 
 int main() try
@@ -243,7 +295,11 @@ int main() try
             SPDLOG_INFO("Socket connected!");
             Connection conn(std::move(socket));
             sendInitPacket(conn);
-            readPacket(conn);
+
+            PacketHandler handle;
+            while ((handle = readPacket(conn)))
+                (*handle)(conn);
+
             socket.close();
         }
     });
