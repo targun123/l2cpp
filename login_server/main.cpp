@@ -11,15 +11,27 @@ using byte = unsigned char;
 using u16  = std::uint16_t;
 using u32  = std::uint32_t;
 
-#define memAppend(dest, src) \
-    (memcpy((dest), &(src), sizeof(src)), (dest) + sizeof(src))
-
-template<typename D, typename S>
-void * appendF(D * dest, S const * src)
+struct Packet
 {
-    std::memcpy(dest, src, sizeof(src));
-    return dest + sizeof(src);
-}
+    std::vector<byte> buffer;
+    Packet()
+    {
+        buffer.reserve(256);
+        append<u16>(0); // slot to write final size before sending
+    }
+
+    template<typename T>
+    Packet & append(T const & t)
+    {
+        byte chunk[sizeof(T)];
+        std::memcpy(chunk, &t, sizeof(T));
+        buffer.append_range(chunk);
+        return *this;
+    }
+
+    template<typename T>
+    Packet & operator<<(T const & t) { return append(t); }
+};
 
 struct Connection
 {
@@ -43,32 +55,42 @@ struct Connection
 
         RSA_generate_key_ex(rsaKey.get(), 1024, bigNum.get(), nullptr);
     }
-};
 
-struct Packet
-{
-    std::vector<byte> buffer;
-    Packet()
+    void send(Packet & p)
     {
-        buffer.reserve(1024);
-        append<u16>(0);
+        finalize(p);
+        SPDLOG_INFO("sent: {:02X} ({} bytes)", p.buffer[3], p.buffer.size());
+        socket.send(boost::asio::buffer(p.buffer, p.buffer.size()));
     }
 
-    template<typename T>
-    Packet & append(T const & t)
+private:
+    void finalize(Packet & p)
     {
-        byte chunk[sizeof(T)];
-        memcpy(chunk, &t, sizeof(T));
-        buffer.append_range(chunk);
-        return *this;
-    }
+        u32 result = 0;
 
-    template<typename T>
-    Packet & operator<<(T const & t) { return append(t); }
+        auto const buf = p.buffer.data();
+        for (auto start = buf + sizeof(u16), end = buf + p.buffer.size(); start + 4 < end; )
+        {
+            u32 ecx = *start++ & 0xff;
+            ecx |= (*start++ << 8) & 0xff00;
+            ecx |= (*start++ << 0x10) & 0xff0000;
+            ecx |= (*start++ << 0x18) & 0xff000000;
+            result ^= ecx;
+        }
+
+        p.append(result);
+
+        while ((p.buffer.size() - sizeof(u16)) % 8 != 0) // Pad to 8 bytes with zeroes
+            p.buffer.emplace_back(0);
+
+        // Write total size on the first two bytes of the buffer
+        auto const finalSize = static_cast<u16>(p.buffer.size());
+        std::memcpy(p.buffer.data(), &finalSize, sizeof(finalSize));
+    }
 };
 
-template<typename T, typename D>
-auto makeUPtr(T * t, D deleter) -> decltype(auto) { return std::unique_ptr<T, D>(t, deleter); }
+template<typename T, typename D = std::default_delete<T>>
+auto makeUPtr(T * t, D deleter = {}) -> decltype(auto) { return std::unique_ptr<T, D>(t, deleter); }
 
 static void hexdump(void const * ptr, size_t const buflen)
 {
@@ -99,44 +121,6 @@ static void hexdump(void const * ptr, size_t const buflen)
     fmt::print("{}", result);
 }
 
-static u16 checksum(byte *dest, byte *start, byte *end)
-{
-    assert(dest);
-    assert(start);
-    assert(end);
-    assert(start < end);
-    assert(end - start < std::numeric_limits<u16>::max());
-
-    u16 size = static_cast<u16>(end - start);
-    u32 result = 0;
-    for (u16 i = 0; i < size; i += 4)
-    {
-        u32 ecx = *start++ & 0xff;
-        ecx |= (*start++ << 8) & 0xff00;
-        ecx |= (*start++ << 0x10) & 0xff0000;
-        ecx |= (*start++ << 0x18) & 0xff000000;
-        result ^= ecx;
-    }
-
-    memAppend(end, result);
-    size += static_cast<u16>(sizeof(result));
-
-    /*
-     * The packet must be multiple of 8
-     */
-    u16 const body_padded_size = ((size + 7) & (~7));
-    constexpr u16 size_header = 2;
-    /*
-     * The final size of the packet consists of
-     * the padded size plus 2 bytes used to store how
-     * big the packet is.
-     */
-    u16 const final_size = body_padded_size + size_header;
-    memcpy(dest, &final_size, sizeof(final_size));
-
-    return final_size;
-}
-
 static void readPacket(Connection & conn)
 {
     std::vector<byte> readBuffer(1024);
@@ -146,7 +130,7 @@ static void readPacket(Connection & conn)
 
     // Read packet size
     u16 size = 0;
-    memcpy(&size, request, sizeof(size));
+    std::memcpy(&size, request, sizeof(size));
     request += sizeof(size);
 
     auto const bodySize = size - sizeof(size);
@@ -167,11 +151,10 @@ static void readPacket(Connection & conn)
 
     // Read packet type
     byte type = 0;
-    memcpy(&type, request, sizeof(type));
+    std::memcpy(&type, request, sizeof(type));
     request += sizeof(type);
 
-    SPDLOG_INFO("netSize = '{}' | packetSize = '{}' | bodySize = '{}' | type = 0x{:02X}",
-                netSize, size, bodySize, type);
+    SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
 
     // RSA decrypt the body of the packet
     RSA_private_decrypt(RSA_size(conn.rsaKey.get()),
@@ -227,11 +210,7 @@ static void sendInitPacket(Connection & conn)
 
     Packet p;
     p << u16(0) << init.session_id << init.protocol << init.modulus;
-
-    auto const buf    = p.buffer.data();
-    size_t const size = checksum(buf, buf + sizeof(u16), buf + p.buffer.size());
-    SPDLOG_INFO("Sending packet of size '{}' (net size = '{}')", size, p.buffer.size());
-    conn.socket.send(boost::asio::buffer(buf, size));
+    conn.send(p);
 }
 
 int main() try
