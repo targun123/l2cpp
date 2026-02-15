@@ -39,6 +39,24 @@ static void applyBlowfish(byte const * start, size_t const size,
 class Packet
 {
 public:
+    enum class Client : u8
+    {
+        Authentication      = 0x00,
+        GameServerSelection = 0x02,
+        GameServerList      = 0x05,
+        GameGuard           = 0x07,
+    };
+
+    enum class Server : u8
+    {
+        Initialization      = 0x00,
+        Authentication      = 0x03,
+        GameServerList      = 0x04,
+        GameServerSelection = 0x07,
+        GameGuard           = 0x0b,
+    };
+
+public:
     Packet()
     {
         _buffer.reserve(256);
@@ -50,6 +68,14 @@ public:
     {
         _buffer.emplace_back(type);
     }
+
+    explicit Packet(Client const type)
+        : Packet(static_cast<byte>(type))
+    {}
+
+    explicit Packet(Server const type)
+        : Packet(static_cast<byte>(type))
+    {}
 
     Packet & append(byte const b)
     {
@@ -106,6 +132,11 @@ public:
 private:
     std::vector<byte> _buffer;
 };
+
+bool operator==(Packet::Client const p, byte const type)
+{
+    return static_cast<byte>(p) == type;
+}
 
 struct Connection
 {
@@ -207,7 +238,7 @@ static void sendInitPacket(Connection & conn)
             modulus[0x40 + i] = static_cast<byte>(modulus[0x40 + i] ^ modulus[i]);
     }
 
-    Packet p(0x00);
+    Packet p(Packet::Server::Initialization);
     p << 0 << 0x785a << modulus;
     conn.send(p, false);
 }
@@ -215,7 +246,7 @@ static void sendInitPacket(Connection & conn)
 static void handleGameGuardPacket(Connection & conn)
 {
     constexpr u32 ignoreGg = 0x0b;
-    conn.send(Packet(0x0b) << ignoreGg);
+    conn.send(Packet(Packet::Server::GameGuard) << ignoreGg);
 }
 
 static void handleAuthPacket(Connection & conn)
@@ -243,7 +274,7 @@ static void handleAuthPacket(Connection & conn)
         0x00, 0x00, 0x00,
     };
 
-    Packet p(0x03);
+    Packet p(Packet::Server::Authentication);
     p << login1 << login2 << unknown;
     conn.send(p);
 }
@@ -266,7 +297,7 @@ static void handleServerListPacket(Connection & conn)
 
     constexpr u8 serverCount = 1;
 
-    Packet p(0x04);
+    Packet p(Packet::Server::GameServerList);
     p << serverCount
       << u8(0) // unused or reserved
       << defaultServer.id
@@ -289,7 +320,7 @@ static void handleServerSelectionPacket(Connection & conn)
     RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
     RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
 
-    Packet p(0x07);
+    Packet p(Packet::Server::GameServerSelection);
     p << login1 << login2;
     conn.send(p);
 }
@@ -327,7 +358,7 @@ static PacketHandler readPacket(Connection & conn)
 
     SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
 
-    if (type == 0x00)
+    if (type == Packet::Client::Authentication)
     {
         // RSA in-place decrypt the body of the packet
         auto const decryptedSize = RSA_private_decrypt(RSA_size(conn.rsaKey.get()), request,
@@ -342,28 +373,29 @@ static PacketHandler readPacket(Connection & conn)
 
     void (*handle)(Connection & conn) = {};
 
-    std::string_view text;
+    std::string text;
     switch (type)
     {
-        case 0x00:
+#define CASE(id) case static_cast<decltype(type)>(Packet::Client::id)
+        CASE(Authentication):
         {
             text = "handle_auth_request";
             handle = &handleAuthPacket;
             break;
         }
-        case 0x02:
+        CASE(GameServerSelection):
         {
             text = "handle_game_server";
             handle = &handleServerSelectionPacket;
             break;
         }
-        case 0x05:
+        CASE(GameServerList):
         {
             text = "handle_server_list_request";
             handle = &handleServerListPacket;
             break;
         }
-        case 0x07:
+        CASE(GameGuard):
         {
             text = "ignore_gg_packet";
             handle = &handleGameGuardPacket;
@@ -371,9 +403,10 @@ static PacketHandler readPacket(Connection & conn)
         }
         default:
         {
-            text = "unknown packet";
+            text = fmt::format("unknown packet 0x{:02x}", type);
             break;
         }
+#undef CASE
     }
     SPDLOG_INFO("Packet string type: {}", text);
     return handle;
