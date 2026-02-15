@@ -262,7 +262,7 @@ static void handleServerListPacket(Connection & conn)
     struct ServerInfo
     {
         u8   id             = 1;
-        u32  host           = 0;
+        u8   host[4]        = {127, 0, 0, 1};
         u32  port           = 7777;
         u8   ageLimit       = 0;
         bool isPvp          = false;
@@ -277,7 +277,7 @@ static void handleServerListPacket(Connection & conn)
 
     Packet p(0x04);
     p << serverCount
-      << u8(0)
+      << u8(0) // unused or reserved
       << defaultServer.id
       << defaultServer.host
       << defaultServer.port
@@ -289,6 +289,17 @@ static void handleServerListPacket(Connection & conn)
       << defaultServer.extra
       << defaultServer.brackets;
 
+    conn.send(p);
+}
+
+static void handleServerSelectionPacket(Connection & conn)
+{
+    u32 login1, login2;
+    RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
+    RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
+
+    Packet p(0x07);
+    p << login1 << login2;
     conn.send(p);
 }
 
@@ -352,6 +363,7 @@ static PacketHandler readPacket(Connection & conn)
         case 0x02:
         {
             text = "handle_game_server";
+            handle = &handleServerSelectionPacket;
             break;
         }
         case 0x05:
