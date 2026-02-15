@@ -1,13 +1,16 @@
 #include <boost/asio.hpp>
 #include <iostream>
 #include <openssl/blowfish.h>
+#include <openssl/err.h>
+#include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
 using tcp = boost::asio::ip::tcp;
 
-using byte = unsigned char;
+using byte = std::uint8_t;
+using u8   = std::uint8_t;
 using u16  = std::uint16_t;
 using u32  = std::uint32_t;
 
@@ -41,6 +44,12 @@ struct Packet
         append<u16>(0); // slot to write final size before sending
     }
 
+    Packet(byte const type)
+        : Packet()
+    {
+        append(type);
+    }
+
     template<typename T>
     Packet & append(T const & t)
     {
@@ -62,6 +71,11 @@ struct Connection
     std::unique_ptr<RSA,    decltype(&RSA_free)> rsaKey;
     std::unique_ptr<BIGNUM, decltype(&BN_free)>  bigNum;
 
+    std::vector<byte> readBuffer;
+
+    std::string username;
+    std::string password;
+
     Connection(tcp::socket socket) noexcept
         : socket(std::move(socket))
         , rsaKey(RSA_new(), &RSA_free)
@@ -75,6 +89,7 @@ struct Connection
         bigNum.reset(n);
 
         RSA_generate_key_ex(rsaKey.get(), 1024, bigNum.get(), nullptr);
+        readBuffer.resize(sizeof(u16) + sizeof(u8) + RSA_size(rsaKey.get())); // size + type + rsa
     }
 
     void send(Packet & p, bool encryptPacket = true)
@@ -148,6 +163,7 @@ static void hexdump(void const * ptr, size_t const buflen)
     }
 
     fmt::print("{}", result);
+    fflush(stdout);
 }
 
 static void sendInitPacket(Connection & conn)
@@ -186,48 +202,92 @@ static void sendInitPacket(Connection & conn)
             modulus[0x40 + i] = static_cast<byte>(modulus[0x40 + i] ^ modulus[i]);
     }
 
-    Packet p;
-    p << u16(0) << init.session_id << init.protocol << init.modulus;
+    Packet p(0x00);
+    p << init.session_id << init.protocol << init.modulus;
     conn.send(p, false);
 }
 
 static void handleGameGuardPacket(Connection & conn)
 {
-    constexpr byte type     = 0x0b;
-    constexpr u32  ignoreGg = 0x0b;
+    constexpr u32 ignoreGg = 0x0b;
+    conn.send(Packet(0x0b) << ignoreGg);
+}
 
-    Packet p;
-    p << type << ignoreGg;
+static void handleAuthPacket(Connection & conn)
+{
+    auto const body = conn.readBuffer.data() + sizeof(u16) + sizeof(byte);
+    conn.username   = reinterpret_cast<char const *>(body + 0x62);
+    conn.password   = reinterpret_cast<char const *>(body + 0x70);
+
+    SPDLOG_INFO("username: '{}' | password: '{}'", conn.username, conn.password);
+
+    u32 login1, login2;
+    RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
+    RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
+
+    constexpr byte unknown[] = {
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0xea, 0x03, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x60, 0x62, 0xe0, 0x00,
+        0x00, 0x00, 0x00,
+    };
+
+    Packet p(0x03);
+    p << login1 << login2 << unknown;
     conn.send(p);
 }
 
 static PacketHandler readPacket(Connection & conn)
 {
-    std::vector<byte> readBuffer(1024);
-    conn.socket.receive(boost::asio::buffer(readBuffer));
+    conn.readBuffer.assign(conn.readBuffer.size(), '\0'); // Reset buffer
 
-    auto request = readBuffer.data();
+    u16 size;
+    boost::asio::read(conn.socket, boost::asio::buffer(&size, sizeof(size)));
+    std::memcpy(conn.readBuffer.data(), &size, sizeof(size));
 
-    // Read packet size
-    u16 size = 0;
-    std::memcpy(&size, request, sizeof(size));
-    request += sizeof(size);
+    SPDLOG_TRACE("Incoming packet of size '{}'", size);
 
-    auto const bodySize = size - sizeof(size);
+    if (conn.readBuffer.size() < size)
+    {
+        auto const oldSize = conn.readBuffer.size();
+        conn.readBuffer.resize(size);
+        SPDLOG_TRACE("readBuffer resized from '{}' to '{}'", oldSize, conn.readBuffer.size());
+    }
+
+    auto request  = conn.readBuffer.data() + sizeof(size);
+    auto bodySize = size - sizeof(size);
+
+    SPDLOG_TRACE("Attempt to read next {} bytes", bodySize);
+    boost::asio::read(conn.socket, boost::asio::buffer(request, bodySize));
 
     // Blowfish decrypt
     applyBlowfish(request, bodySize, conn.blowfish, BF_DECRYPT);
 
     // Read packet type
-    byte type = 0;
-    std::memcpy(&type, request, sizeof(type));
-    request += sizeof(type);
+    auto const type = request[0];
+    request  += sizeof(type);
+    bodySize -= sizeof(type);
 
     SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
 
-    // RSA decrypt the body of the packet
-    RSA_private_decrypt(RSA_size(conn.rsaKey.get()),
-                        request, request, conn.rsaKey.get(), RSA_NO_PADDING);
+    if (type != 0x07)
+    {
+        // RSA in-place decrypt the body of the packet
+        auto const decryptedSize = RSA_private_decrypt(RSA_size(conn.rsaKey.get()), request,
+                                                       request, conn.rsaKey.get(), RSA_NO_PADDING);
+        if (decryptedSize == -1)
+        {
+            auto const code = ERR_get_error();
+            SPDLOG_ERROR("RSA_private_decrypt failed with code {}: {}",
+                         code, ERR_error_string(code, nullptr));
+        }
+    }
 
     void (*handle)(Connection & conn) = {};
 
@@ -237,6 +297,7 @@ static PacketHandler readPacket(Connection & conn)
         case 0x00:
         {
             text = "handle_auth_request";
+            handle = &handleAuthPacket;
             break;
         }
         case 0x02:
@@ -275,8 +336,6 @@ int main() try
     spdlog::set_level(spdlog::level::trace);
 
     boost::asio::io_context io;
-    boost::asio::post(io, [] { SPDLOG_INFO("Hello, World!"); });
-
     tcp::acceptor acceptor{io};
     tcp::endpoint const endpoint { tcp::v4(), 2106 };
     acceptor.open(endpoint.protocol());
@@ -303,6 +362,11 @@ int main() try
 
             socket.close();
         }
+    });
+    boost::asio::post(io, [&]
+    {
+        auto const addr = endpoint.address().to_string();
+        SPDLOG_INFO("Listening on {}:{}", (addr == "0.0.0.0" ? "*" : addr), endpoint.port());
     });
 
     io.run();
