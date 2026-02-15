@@ -48,14 +48,20 @@ public:
     explicit Packet(byte const type)
         : Packet()
     {
-        append(type);
+        _buffer.emplace_back(type);
+    }
+
+    Packet & append(byte const b)
+    {
+        _buffer.emplace_back(b);
+        return *this;
     }
 
     template<typename T>
     Packet & append(T const & t)
     {
-        byte chunk[sizeof(T)];
-        std::memcpy(chunk, &t, sizeof(T));
+        std::array<byte, sizeof(T)> chunk;
+        std::memcpy(&chunk[0], &t, sizeof(T));
         _buffer.append_range(chunk);
         return *this;
     }
@@ -79,7 +85,7 @@ public:
 
         append(result);
 
-        while ((buffer().size() - sizeof(u16)) % 8 != 0) // Pad to 8 bytes with zeroes
+        while (bodySize() % 8 != 0) // Pad to 8 bytes with zeroes
             _buffer.emplace_back(0);
 
         // Write total size on the first two bytes of the buffer
@@ -92,9 +98,7 @@ public:
     auto rawBuffer() const -> byte const *              { return _buffer.data(); }
 
     auto size() const -> size_t { return _buffer.size(); }
-    auto type() const -> byte {
-        return _buffer.size() > sizeof(u16) + sizeof(byte) ? _buffer[3] : 0xFF;
-    }
+    auto type() const -> byte   { return _buffer.size() > sizeof(u16) ? _buffer[2] : 0xFF; }
 
     auto bodySize() const -> size_t       { return _buffer.size() - sizeof(u16); }
     auto body()     const -> byte const * { return _buffer.data() + sizeof(u16); }
@@ -134,14 +138,15 @@ struct Connection
 
     void send(Packet & p, bool const encryptPacket = true)
     {
-        p.finalize();
+        auto const type = p.type();
 
-        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.type(), p.size());
+        p.finalize();
 
         if (encryptPacket)
             applyBlowfish(p.body(), p.bodySize(), blowfish, BF_ENCRYPT);
 
         socket.send(boost::asio::buffer(p.buffer(), p.size()));
+        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", type, p.size());
     }
 };
 
