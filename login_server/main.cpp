@@ -252,6 +252,41 @@ static void handleAuthPacket(Connection & conn)
     conn.send(p);
 }
 
+static void handleServerListPacket(Connection & conn)
+{
+    struct ServerInfo
+    {
+        u8   id             = 1;
+        u32  host           = 0;
+        u32  port           = 7777;
+        u8   ageLimit       = 0;
+        bool isPvp          = false;
+        u16  curPlayerCount = 0;
+        u16  maxPlayerCount = 1'000;
+        u8   status         = 1;
+        u32  extra          = 0;
+        u8   brackets       = 0;
+    } const defaultServer;
+
+    constexpr u8 serverCount = 1;
+
+    Packet p(0x04);
+    p << serverCount
+      << u8(0)
+      << defaultServer.id
+      << defaultServer.host
+      << defaultServer.port
+      << defaultServer.ageLimit
+      << defaultServer.isPvp
+      << defaultServer.curPlayerCount
+      << defaultServer.maxPlayerCount
+      << defaultServer.status
+      << defaultServer.extra
+      << defaultServer.brackets;
+
+    conn.send(p);
+}
+
 static PacketHandler readPacket(Connection & conn)
 {
     conn.readBuffer.assign(conn.readBuffer.size(), '\0'); // Reset buffer
@@ -317,6 +352,7 @@ static PacketHandler readPacket(Connection & conn)
         case 0x05:
         {
             text = "handle_server_list_request";
+            handle = &handleServerListPacket;
             break;
         }
         case 0x07:
