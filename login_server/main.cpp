@@ -182,24 +182,15 @@ static void hexdump(void const * ptr, size_t const buflen)
 
 static void sendInitPacket(Connection & conn)
 {
-    struct {
-        byte session_id[4];
-        byte protocol[4];
-        byte modulus[128];
-    } init = {
-        {0xfd, 0x8a, 0x22, 0x00}, // SessionID (why this value?)
-        {0x5a, 0x78, 0x00, 0x00}, // C4 protocol 785a vs. c621
-        {0},
-    };
+    std::array<byte, 128> modulus;
 
     BIGNUM const * n = nullptr;
     RSA_get0_key(conn.rsaKey.get(), &n, nullptr, nullptr);
-    BN_bn2bin(n, init.modulus);
+    BN_bn2bin(n, &modulus[0]);
 
     // scramble modulus
     // credits: l2j
     {
-        auto const modulus = init.modulus;
         for (size_t i = 0; i < 4; ++i)
             std::swap(modulus[i], modulus[0x4d + i]);
 
@@ -217,7 +208,7 @@ static void sendInitPacket(Connection & conn)
     }
 
     Packet p(0x00);
-    p << init.session_id << init.protocol << init.modulus;
+    p << 0 << 0x785a << modulus;
     conn.send(p, false);
 }
 
