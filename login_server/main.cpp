@@ -213,6 +213,9 @@ static void hexdump(void const * ptr, size_t const buflen)
 
 static void sendInitPacket(Connection & conn)
 {
+    static u32 sessionId = 0;
+
+    constexpr u32 protocol = 0x785a;
     std::array<byte, 128> modulus;
 
     BIGNUM const * n = nullptr;
@@ -239,7 +242,7 @@ static void sendInitPacket(Connection & conn)
     }
 
     Packet p(Packet::Server::Initialization);
-    p << 0 << 0x785a << modulus;
+    p << sessionId++ << protocol << modulus;
     conn.send(p, false);
 }
 
