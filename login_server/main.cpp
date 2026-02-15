@@ -1,5 +1,4 @@
 #include <boost/asio.hpp>
-#include <iostream>
 #include <openssl/blowfish.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
@@ -49,11 +48,14 @@ public:
 
     enum class Server : u8
     {
-        Initialization      = 0x00,
-        Authentication      = 0x03,
-        GameServerList      = 0x04,
-        GameServerSelection = 0x07,
-        GameGuard           = 0x0b,
+        Initialization               = 0x00,
+        AuthenticationFailed         = 0x01,
+        AccountIsBlocked             = 0x02,
+        AuthenticationSuccess        = 0x03,
+        GameServerList               = 0x04,
+        GameServerSelectionFailure   = 0x06,
+        GameServerSelectionSuccess   = 0x07,
+        GameGuard                    = 0x0b,
     };
 
 public:
@@ -148,7 +150,7 @@ struct Connection
 
     std::vector<byte> readBuffer;
 
-    std::string username;
+    std::string userName;
     std::string password;
 
     explicit Connection(tcp::socket socket)
@@ -255,30 +257,30 @@ static void handleGameGuardPacket(Connection & conn)
 static void handleAuthPacket(Connection & conn)
 {
     auto const body = conn.readBuffer.data() + sizeof(u16) + sizeof(byte);
-    conn.username   = reinterpret_cast<char const *>(body + 0x62);
-    conn.password   = reinterpret_cast<char const *>(body + 0x70);
 
-    SPDLOG_INFO("username: '{}' | password: '{}'", conn.username, conn.password);
+    // RSA in-place decrypt the body of the packet
+    auto const decryptedSize = RSA_private_decrypt(RSA_size(conn.rsaKey.get()), body,
+                                                   body, conn.rsaKey.get(), RSA_NO_PADDING);
+    if (decryptedSize == -1)
+    {
+        auto const code = ERR_get_error();
+        SPDLOG_ERROR("RSA_private_decrypt failed with code {}: {}",
+                     code, ERR_error_string(code, nullptr));
+
+        return conn.send(Packet(Packet::Server::AuthenticationFailed) << 0x01); // system error
+    }
+
+    conn.userName = reinterpret_cast<char const *>(body + 0x62);
+    conn.password = reinterpret_cast<char const *>(body + 0x70);
+
+    SPDLOG_INFO("username: '{}' | password: '{}'", conn.userName, conn.password);
 
     u32 login1, login2;
     RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
     RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
 
-    constexpr byte unknown[] = {
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0xea, 0x03, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x02, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00,
-        0x60, 0x62, 0xe0, 0x00,
-        0x00, 0x00, 0x00,
-    };
-
-    Packet p(Packet::Server::Authentication);
-    p << login1 << login2 << unknown;
+    Packet p(Packet::Server::AuthenticationSuccess);
+    p << login1 << login2;
     conn.send(p);
 }
 
@@ -323,7 +325,7 @@ static void handleServerSelectionPacket(Connection & conn)
     RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
     RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
 
-    Packet p(Packet::Server::GameServerSelection);
+    Packet p(Packet::Server::GameServerSelectionSuccess);
     p << login1 << login2;
     conn.send(p);
 }
@@ -360,19 +362,6 @@ static PacketHandler readPacket(Connection & conn)
     bodySize -= sizeof(type);
 
     SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
-
-    if (type == Packet::Client::Authentication)
-    {
-        // RSA in-place decrypt the body of the packet
-        auto const decryptedSize = RSA_private_decrypt(RSA_size(conn.rsaKey.get()), request,
-                                                       request, conn.rsaKey.get(), RSA_NO_PADDING);
-        if (decryptedSize == -1)
-        {
-            auto const code = ERR_get_error();
-            SPDLOG_ERROR("RSA_private_decrypt failed with code {}: {}",
-                         code, ERR_error_string(code, nullptr));
-        }
-    }
 
     void (*handle)(Connection & conn) = {};
 
