@@ -20,7 +20,8 @@ using PacketHandler = void (*)(Connection &);
 template<typename T, typename D = std::default_delete<T>>
 auto makeUPtr(T * t, D deleter = {}) -> decltype(auto) { return std::unique_ptr<T, D>(t, deleter); }
 
-static void applyBlowfish(byte const * start, size_t size, BF_KEY & blowfish, bool mode)
+static void applyBlowfish(byte const * start, size_t const size,
+                          BF_KEY const & blowfish, bool const mode)
 {
     for (size_t i = 0; i < size; i += 8)
     {
@@ -35,16 +36,16 @@ static void applyBlowfish(byte const * start, size_t size, BF_KEY & blowfish, bo
     }
 }
 
-struct Packet
+class Packet
 {
-    std::vector<byte> buffer;
+public:
     Packet()
     {
-        buffer.reserve(256);
+        _buffer.reserve(256);
         append<u16>(0); // slot to write final size before sending
     }
 
-    Packet(byte const type)
+    explicit Packet(byte const type)
         : Packet()
     {
         append(type);
@@ -55,12 +56,51 @@ struct Packet
     {
         byte chunk[sizeof(T)];
         std::memcpy(chunk, &t, sizeof(T));
-        buffer.append_range(chunk);
+        _buffer.append_range(chunk);
         return *this;
     }
 
     template<typename T>
     Packet & operator<<(T const & t) { return append(t); }
+
+    void finalize()
+    {
+        u32 result = 0;
+
+        auto const buf  = _buffer.data();
+        for (auto start = buf + sizeof(u16), end = buf + size(); start + 4 < end; )
+        {
+            u32 ecx = *start++ & 0xff;
+            ecx |= (*start++ << 8) & 0xff00;
+            ecx |= (*start++ << 0x10) & 0xff0000;
+            ecx |= (*start++ << 0x18) & 0xff000000;
+            result ^= ecx;
+        }
+
+        append(result);
+
+        while ((buffer().size() - sizeof(u16)) % 8 != 0) // Pad to 8 bytes with zeroes
+            _buffer.emplace_back(0);
+
+        // Write total size on the first two bytes of the buffer
+        auto const finalSize = static_cast<u16>(size());
+        std::memcpy(_buffer.data(), &finalSize, sizeof(finalSize));
+    }
+
+public:
+    auto buffer()    const -> std::vector<byte> const & { return _buffer;        }
+    auto rawBuffer() const -> byte const *              { return _buffer.data(); }
+
+    auto size() const -> size_t { return _buffer.size(); }
+    auto type() const -> byte {
+        return _buffer.size() > sizeof(u16) + sizeof(byte) ? _buffer[3] : 0xFF;
+    }
+
+    auto bodySize() const -> size_t       { return _buffer.size() - sizeof(u16); }
+    auto body()     const -> byte const * { return _buffer.data() + sizeof(u16); }
+
+private:
+    std::vector<byte> _buffer;
 };
 
 struct Connection
@@ -76,7 +116,7 @@ struct Connection
     std::string username;
     std::string password;
 
-    Connection(tcp::socket socket) noexcept
+    explicit Connection(tcp::socket socket)
         : socket(std::move(socket))
         , rsaKey(RSA_new(), &RSA_free)
         , bigNum(nullptr, &BN_free)
@@ -92,47 +132,15 @@ struct Connection
         readBuffer.resize(sizeof(u16) + sizeof(u8) + RSA_size(rsaKey.get())); // size + type + rsa
     }
 
-    void send(Packet & p, bool encryptPacket = true)
+    void send(Packet & p, bool const encryptPacket = true)
     {
-        finalize(p);
-
-        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.buffer[3], p.buffer.size());
+        p.finalize();
 
         if (encryptPacket)
-            encrypt(p);
+            applyBlowfish(p.body(), p.bodySize(), blowfish, BF_ENCRYPT);
 
-        socket.send(boost::asio::buffer(p.buffer, p.buffer.size()));
-    }
-
-private:
-    void finalize(Packet & p)
-    {
-        u32 result = 0;
-
-        auto const buf = p.buffer.data();
-        for (auto start = buf + sizeof(u16), end = buf + p.buffer.size(); start + 4 < end; )
-        {
-            u32 ecx = *start++ & 0xff;
-            ecx |= (*start++ << 8) & 0xff00;
-            ecx |= (*start++ << 0x10) & 0xff0000;
-            ecx |= (*start++ << 0x18) & 0xff000000;
-            result ^= ecx;
-        }
-
-        p.append(result);
-
-        while ((p.buffer.size() - sizeof(u16)) % 8 != 0) // Pad to 8 bytes with zeroes
-            p.buffer.emplace_back(0);
-
-        // Write total size on the first two bytes of the buffer
-        auto const finalSize = static_cast<u16>(p.buffer.size());
-        std::memcpy(p.buffer.data(), &finalSize, sizeof(finalSize));
-    }
-
-    void encrypt(Packet & p)
-    {
-        applyBlowfish(p.buffer.data() + sizeof(u16),
-                      p.buffer.size() - sizeof(u16), blowfish, BF_ENCRYPT);
+        socket.send(boost::asio::buffer(p.buffer(), p.size()));
+        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.type(), p.size());
     }
 };
 
@@ -186,19 +194,19 @@ static void sendInitPacket(Connection & conn)
     // credits: l2j
     {
         auto const modulus = init.modulus;
-        for (int i = 0; i < 4; i++)
+        for (size_t i = 0; i < 4; ++i)
             std::swap(modulus[i], modulus[0x4d + i]);
 
         // step 2 xor first 0x40 bytes with last 0x40 bytes
-        for (int i = 0; i < 0x40; i++)
+        for (size_t i = 0; i < 0x40; ++i)
             modulus[i] = static_cast<byte>(modulus[i] ^ modulus[0x40 + i]);
 
         // step 3 xor bytes 0x0d-0x10 with bytes 0x34-0x38
-        for (int i = 0; i < 4; i++)
+        for (size_t i = 0; i < 4; ++i)
             modulus[0x0d + i] = static_cast<byte>(modulus[0x0d + i] ^ modulus[0x34 + i]);
 
         // step 4 xor last 0x40 bytes with first 0x40 bytes
-        for (int i = 0; i < 0x40; i++)
+        for (size_t i = 0; i < 0x40; ++i)
             modulus[0x40 + i] = static_cast<byte>(modulus[0x40 + i] ^ modulus[i]);
     }
 
@@ -276,7 +284,7 @@ static PacketHandler readPacket(Connection & conn)
 
     SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
 
-    if (type != 0x07)
+    if (type == 0x00)
     {
         // RSA in-place decrypt the body of the packet
         auto const decryptedSize = RSA_private_decrypt(RSA_size(conn.rsaKey.get()), request,
