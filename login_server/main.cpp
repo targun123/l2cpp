@@ -272,6 +272,7 @@ int main() try
 #else
     spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v (%s:%#:%!)");
 #endif
+    spdlog::set_level(spdlog::level::trace);
 
     boost::asio::io_context io;
     boost::asio::post(io, [] { SPDLOG_INFO("Hello, World!"); });
