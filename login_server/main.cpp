@@ -136,11 +136,12 @@ struct Connection
     {
         p.finalize();
 
+        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.type(), p.size());
+
         if (encryptPacket)
             applyBlowfish(p.body(), p.bodySize(), blowfish, BF_ENCRYPT);
 
         socket.send(boost::asio::buffer(p.buffer(), p.size()));
-        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.type(), p.size());
     }
 };
 
