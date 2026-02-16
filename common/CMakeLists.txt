@@ -1,7 +1,6 @@
 project(${CMAKE_PROJECT_NAME}-common)
 
 add_library(${PROJECT_NAME} OBJECT)
-set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 find_package(fmt REQUIRED COMPONENTS header_only)
 target_include_directories(${PROJECT_NAME} PRIVATE ${fmt_INCLUDE_DIRS})
