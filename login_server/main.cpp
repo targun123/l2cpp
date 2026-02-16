@@ -1,15 +1,16 @@
+#include "Packets.hpp"
+
+#include <l2cpp/Typedefs.hpp>
+#include <l2cpp/network/SocketListener.hpp>
+
 #include <boost/asio.hpp>
 #include <openssl/blowfish.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <spdlog/spdlog.h>
-#include <cstdlib>
 
-#include <l2cpp/Typedefs.hpp>
-#include "Packets.hpp"
-
-using tcp = boost::asio::ip::tcp;
+using boost::asio::ip::tcp;
 
 struct Connection;
 using PacketHandler = void (*)(Connection &);
@@ -79,7 +80,7 @@ public:
         for (auto start = buf + sizeof(u16), end = buf + size(); start + 4 < end; )
         {
             u32 ecx = *start++ & 0xff;
-            ecx |= (*start++ << 8) & 0xff00;
+            ecx |= (*start++ << 0x08) & 0xff00;
             ecx |= (*start++ << 0x10) & 0xff0000;
             ecx |= (*start++ << 0x18) & 0xff000000;
             checksum ^= ecx;
@@ -352,38 +353,21 @@ int main() try
     spdlog::set_level(spdlog::level::trace);
 
     boost::asio::io_context io;
-    tcp::acceptor acceptor{io};
-    tcp::endpoint const endpoint { tcp::v4(), 2106 };
-    acceptor.open(endpoint.protocol());
-    acceptor.set_option(tcp::acceptor::reuse_address{true});
-    acceptor.bind(endpoint);
-    acceptor.listen(boost::asio::socket_base::max_listen_connections);
-    acceptor.async_accept([] (boost::system::error_code const & ec, tcp::socket socket)
+    l2cpp::Network::SocketListener const listener(io);
+    auto onSocketAccepted = [] (tcp::socket && socket)
     {
-        if (ec)
-        {
-            SPDLOG_ERROR("Socket error {}: {}", ec.default_error_condition().value(),
-                                                ec.default_error_condition().message());
-            socket.close();
-        }
-        else
-        {
-            SPDLOG_INFO("Socket connected!");
-            Connection conn(std::move(socket));
-            sendInitPacket(conn);
+        SPDLOG_INFO("Socket connected!");
+        Connection conn(std::move(socket));
+        sendInitPacket(conn);
 
-            PacketHandler handle;
-            while ((handle = readPacket(conn)))
-                (*handle)(conn);
+        PacketHandler handle;
+        while ((handle = readPacket(conn)))
+            (*handle)(conn);
 
-            socket.close();
-        }
-    });
-    boost::asio::post(io, [&]
-    {
-        auto const addr = endpoint.address().to_string();
-        SPDLOG_INFO("Listening on {}:{}", (addr == "0.0.0.0" ? "*" : addr), endpoint.port());
-    });
+        conn.socket.close();
+    };
+    if (!listener.listen("127.0.0.1", 2106, std::move(onSocketAccepted)))
+        return EXIT_FAILURE;
 
     io.run();
 
