@@ -16,5 +16,7 @@ target_link_libraries(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME}
     PRIVATE
+        $<TARGET_OBJECTS:${CMAKE_PROJECT_NAME}-common>
+    PRIVATE
         main.cpp
 )

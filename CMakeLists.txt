@@ -7,7 +7,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(WIN32)
     add_compile_definitions(_WIN32_WINNT=0x0601 SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
-    add_compile_options(/Od /Z7 /W4 /diagnostics:column -FC -Gm- -GR-)
+    add_compile_options(/Od /Z7 /W4 /diagnostics:column -FC -Gm- -GR- /utf-8)
 endif()
+
+add_subdirectory(common)
+include_directories(common)
 
 add_subdirectory(login_server)

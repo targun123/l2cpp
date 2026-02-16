@@ -6,18 +6,13 @@
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
-using tcp = boost::asio::ip::tcp;
+#include <l2cpp/Typedefs.hpp>
+#include "Packets.hpp"
 
-using byte = std::uint8_t;
-using u8   = std::uint8_t;
-using u16  = std::uint16_t;
-using u32  = std::uint32_t;
+using tcp = boost::asio::ip::tcp;
 
 struct Connection;
 using PacketHandler = void (*)(Connection &);
-
-template<typename T, typename D = std::default_delete<T>>
-auto makeUPtr(T * t, D deleter = {}) -> decltype(auto) { return std::unique_ptr<T, D>(t, deleter); }
 
 static void applyBlowfish(byte const * start, size_t const size,
                           BF_KEY const & blowfish, bool const mode)
@@ -38,27 +33,6 @@ static void applyBlowfish(byte const * start, size_t const size,
 class Packet
 {
 public:
-    enum class Client : u8
-    {
-        Authentication      = 0x00,
-        GameServerSelection = 0x02,
-        GameServerList      = 0x05,
-        GameGuard           = 0x07,
-    };
-
-    enum class Server : u8
-    {
-        Initialization               = 0x00,
-        AuthenticationFailed         = 0x01,
-        AccountIsBlocked             = 0x02,
-        AuthenticationSuccess        = 0x03,
-        GameServerList               = 0x04,
-        GameServerSelectionFailure   = 0x06,
-        GameServerSelectionSuccess   = 0x07,
-        GameGuard                    = 0x0b,
-    };
-
-public:
     Packet()
     {
         _buffer.reserve(256);
@@ -71,11 +45,11 @@ public:
         _buffer.emplace_back(type);
     }
 
-    explicit Packet(Client const type)
+    explicit Packet(RecvPacket const type)
         : Packet(static_cast<byte>(type))
     {}
 
-    explicit Packet(Server const type)
+    explicit Packet(SentPacket const type)
         : Packet(static_cast<byte>(type))
     {}
 
@@ -97,9 +71,9 @@ public:
     template<typename T>
     Packet & operator<<(T const & t) { return append(t); }
 
-    void finalize()
+    void writeChecksumAndSize()
     {
-        u32 result = 0;
+        u32 checksum = 0;
 
         auto const buf  = _buffer.data();
         for (auto start = buf + sizeof(u16), end = buf + size(); start + 4 < end; )
@@ -108,10 +82,10 @@ public:
             ecx |= (*start++ << 8) & 0xff00;
             ecx |= (*start++ << 0x10) & 0xff0000;
             ecx |= (*start++ << 0x18) & 0xff000000;
-            result ^= ecx;
+            checksum ^= ecx;
         }
 
-        append(result);
+        append(checksum);
 
         while (bodySize() % 8 != 0) // Pad to 8 bytes with zeroes
             _buffer.emplace_back(0);
@@ -134,11 +108,6 @@ public:
 private:
     std::vector<byte> _buffer;
 };
-
-bool operator==(Packet::Client const p, byte const type)
-{
-    return static_cast<byte>(p) == type;
-}
 
 struct Connection
 {
@@ -173,7 +142,7 @@ struct Connection
     {
         auto const type = p.type();
 
-        p.finalize();
+        p.writeChecksumAndSize();
 
         if (encryptPacket)
             applyBlowfish(p.body(), p.bodySize(), blowfish, BF_ENCRYPT);
@@ -183,41 +152,11 @@ struct Connection
     }
 };
 
-static void hexdump(void const * ptr, size_t const buflen)
-{
-    std::string result;
-    result.reserve(buflen / 16 + (buflen % 16 ? 16 : 0));
-
-    auto const buf = static_cast<unsigned char const *>(ptr);
-    for (int i = 0; i < buflen; i += 16)
-    {
-        result += fmt::format("{:06X}: ", i);
-        for (int j = 0; j < 16; ++j)
-        {
-            if (i + j < buflen)
-                result += fmt::format("{:02X} ", buf[i + j]);
-            else
-                result += fmt::format(".. ");
-        }
-        for (int j = 0; j < 16; ++j)
-        {
-            if (i + j < buflen)
-                result += fmt::format("{:c}", std::isprint(buf[i + j]) ? buf[i + j] : '.');
-            else
-                result += fmt::format(".");
-        }
-        result += fmt::format("\n");
-    }
-
-    fmt::print("{}", result);
-    fflush(stdout);
-}
-
 static void sendInitPacket(Connection & conn)
 {
     static u32 sessionId = 0;
 
-    constexpr u32 protocol = 0x785a;
+    constexpr u32 protocol = 0xc621;
     std::array<byte, 128> modulus;
 
     BIGNUM const * n = nullptr;
@@ -225,7 +164,6 @@ static void sendInitPacket(Connection & conn)
     BN_bn2bin(n, &modulus[0]);
 
     // scramble modulus
-    // credits: l2j
     {
         for (size_t i = 0; i < 4; ++i)
             std::swap(modulus[i], modulus[0x4d + i]);
@@ -243,7 +181,7 @@ static void sendInitPacket(Connection & conn)
             modulus[0x40 + i] = static_cast<byte>(modulus[0x40 + i] ^ modulus[i]);
     }
 
-    Packet p(Packet::Server::Initialization);
+    Packet p(SentPacket::Initialization);
     p << sessionId++ << protocol << modulus;
     conn.send(p, false);
 }
@@ -251,7 +189,7 @@ static void sendInitPacket(Connection & conn)
 static void handleGameGuardPacket(Connection & conn)
 {
     constexpr u32 ignoreGg = 0x0b;
-    conn.send(Packet(Packet::Server::GameGuard) << ignoreGg);
+    conn.send(Packet(SentPacket::GameGuard) << ignoreGg);
 }
 
 static void handleAuthPacket(Connection & conn)
@@ -267,7 +205,7 @@ static void handleAuthPacket(Connection & conn)
         SPDLOG_ERROR("RSA_private_decrypt failed with code {}: {}",
                      code, ERR_error_string(code, nullptr));
 
-        return conn.send(Packet(Packet::Server::AuthenticationFailed) << 0x01); // system error
+        return conn.send(Packet(SentPacket::AuthenticationFailed) << 0x01); // system error
     }
 
     conn.userName = reinterpret_cast<char const *>(body + 0x62);
@@ -279,7 +217,7 @@ static void handleAuthPacket(Connection & conn)
     RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
     RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
 
-    Packet p(Packet::Server::AuthenticationSuccess);
+    Packet p(SentPacket::AuthenticationSuccess);
     p << login1 << login2;
     conn.send(p);
 }
@@ -302,7 +240,7 @@ static void handleServerListPacket(Connection & conn)
 
     constexpr u8 serverCount = 1;
 
-    Packet p(Packet::Server::GameServerList);
+    Packet p(SentPacket::GameServerList);
     p << serverCount
       << u8(0) // unused or reserved
       << defaultServer.id
@@ -325,7 +263,7 @@ static void handleServerSelectionPacket(Connection & conn)
     RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
     RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
 
-    Packet p(Packet::Server::GameServerSelectionSuccess);
+    Packet p(SentPacket::GameServerSelectionSuccess);
     p << login1 << login2;
     conn.send(p);
 }
@@ -368,7 +306,7 @@ static PacketHandler readPacket(Connection & conn)
     std::string text;
     switch (type)
     {
-#define CASE(id) case static_cast<decltype(type)>(Packet::Client::id)
+#define CASE(id) case static_cast<decltype(type)>(RecvPacket::id)
         CASE(Authentication):
         {
             text = "handle_auth_request";
@@ -395,7 +333,7 @@ static PacketHandler readPacket(Connection & conn)
         }
         default:
         {
-            text = fmt::format("unknown packet 0x{:02x}", type);
+            text = fmt::format("Unknown packet 0x{:02x}", type);
             break;
         }
 #undef CASE
