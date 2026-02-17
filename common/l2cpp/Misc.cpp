@@ -1,7 +1,7 @@
 /// @author    Chnossos
 /// @date      Created on 2026-02-16
 
-#include "l2cpp/Misc.hpp"
+#include "Misc.hpp"
 
 #include <fmt/core.h>
 

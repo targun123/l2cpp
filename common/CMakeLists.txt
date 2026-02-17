@@ -8,13 +8,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost spdlog::spdlog_header
 
 target_sources(${PROJECT_NAME}
     PUBLIC
-        Misc.cpp
+        l2cpp/Exception.cpp
+        l2cpp/Misc.cpp
         l2cpp/network/SocketListener.cpp
 )
 target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET  HEADERS
     BASE_DIRS l2cpp
     FILES
+        l2cpp/Exception.hpp
         l2cpp/Misc.hpp
         l2cpp/Typedefs.hpp
         l2cpp/network/SocketListener.hpp
