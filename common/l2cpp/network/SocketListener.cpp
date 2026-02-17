@@ -32,7 +32,7 @@ struct SL::SocketListenerImpl
 };
 
 SL::SocketListener(boost::asio::io_context & ioc)
-    : impl(new SocketListenerImpl(ioc))
+    : impl(std::make_unique<SocketListenerImpl>(ioc))
 {}
 
 SL::~SocketListener() = default;

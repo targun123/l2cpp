@@ -16,19 +16,21 @@ using boost::asio::ip::tcp;
 struct Connection;
 using PacketHandler = void (*)(Connection &);
 
-static void applyBlowfish(byte const * start, size_t const size,
-                          BF_KEY const & blowfish, bool const mode)
+static void applyBlowfish(std::span<byte> s, BF_KEY const & blowfish, bool const mode)
 {
-    for (size_t i = 0; i < size; i += 8)
+    constexpr size_t chunkSize = 2 * sizeof(u32);
+
+    if (s.size() >= chunkSize)
     {
-        union { u32 ints[2]; byte raw[8]; } chunk = {0};
-        chunk.ints[0] = htonl(*(u32 *) (start + i + 0));
-        chunk.ints[1] = htonl(*(u32 *) (start + i + 4));
-        BF_ecb_encrypt(chunk.raw, chunk.raw, &blowfish, mode);
-        chunk.ints[0] = ntohl(chunk.ints[0]);
-        chunk.ints[1] = ntohl(chunk.ints[1]);
-        *(u32 *) (start + i + 0) = chunk.ints[0];
-        *(u32 *) (start + i + 4) = chunk.ints[1];
+        union { u32 ints[2]; byte raw[sizeof(ints)]; } chunk;
+        for (size_t i = 0; i < s.size(); i += chunkSize)
+        {
+            chunk.ints[0] = htonl(*reinterpret_cast<u32 const *>(s.data() + i + 0));
+            chunk.ints[1] = htonl(*reinterpret_cast<u32 const *>(s.data() + i + 4));
+            BF_ecb_encrypt(chunk.raw, chunk.raw, &blowfish, mode);
+            *reinterpret_cast<u32 *>(s.data() + i + 0) = ntohl(chunk.ints[0]);
+            *reinterpret_cast<u32 *>(s.data() + i + 4) = ntohl(chunk.ints[1]);
+        }
     }
 }
 
@@ -63,15 +65,17 @@ struct Connection
 
     void send(Packet & p, bool const encryptPacket = true)
     {
-        auto const type = p.type();
+        // Save the value before it gets blowfished
+        auto const type = p.type().has_value() ? fmt::format("0x{:02x}", p.type().value())
+                                               : "<unknown>";
 
         p.writeChecksumAndSize();
 
         if (encryptPacket)
-            applyBlowfish(p.body().data(), p.bodySize(), blowfish, BF_ENCRYPT);
+            applyBlowfish(p.body(), blowfish, BF_ENCRYPT);
 
         socket.send(boost::asio::buffer(p.buffer(), p.size()));
-        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", type, p.size());
+        SPDLOG_INFO("sent: {} ({} bytes)", type, p.size());
     }
 };
 
@@ -117,11 +121,11 @@ static void handleGameGuardPacket(Connection & conn)
 
 static void handleAuthPacket(Connection & conn)
 {
-    auto const body = conn.readBuffer.data() + sizeof(u16) + sizeof(byte);
+    auto const content = conn.readBuffer.data() + sizeof(u16) + sizeof(byte);
 
-    // RSA in-place decrypt the body of the packet
-    auto const decryptedSize = RSA_private_decrypt(RSA_size(conn.rsaKey.get()), body,
-                                                   body, conn.rsaKey.get(), RSA_NO_PADDING);
+    // RSA in-place decrypt the content of the packet
+    auto const decryptedSize = RSA_private_decrypt(RSA_size(conn.rsaKey.get()), content,
+                                                   content, conn.rsaKey.get(), RSA_NO_PADDING);
     if (decryptedSize == -1)
     {
         auto const code = ERR_get_error();
@@ -131,8 +135,8 @@ static void handleAuthPacket(Connection & conn)
         return conn.send(Packet(SentPacket::AuthenticationFailed) << 0x01); // system error
     }
 
-    conn.userName = reinterpret_cast<char const *>(body + 0x62);
-    conn.password = reinterpret_cast<char const *>(body + 0x70);
+    conn.userName = reinterpret_cast<char const *>(content + 0x62); // max 14
+    conn.password = reinterpret_cast<char const *>(content + 0x70); // max 16
 
     SPDLOG_INFO("username: '{}' | password: '{}'", conn.userName, conn.password);
 
@@ -215,7 +219,7 @@ static PacketHandler readPacket(Connection & conn)
     boost::asio::read(conn.socket, boost::asio::buffer(request, bodySize));
 
     // Blowfish decrypt
-    applyBlowfish(request, bodySize, conn.blowfish, BF_DECRYPT);
+    applyBlowfish({request, bodySize}, conn.blowfish, BF_DECRYPT);
 
     // Read packet type
     auto const type = request[0];
@@ -278,15 +282,13 @@ int main() try
     l2cpp::Network::SocketListener const listener(io);
     auto onSocketAccepted = [] (tcp::socket && socket)
     {
-        SPDLOG_INFO("Socket connected!");
+        SPDLOG_INFO("Client connected!");
         Connection conn(std::move(socket));
         sendInitPacket(conn);
 
         PacketHandler handle;
         while ((handle = readPacket(conn)))
             (*handle)(conn);
-
-        conn.socket.close();
     };
     if (!listener.listen("127.0.0.1", 2106, std::move(onSocketAccepted)))
         return EXIT_FAILURE;
