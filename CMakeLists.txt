@@ -19,3 +19,4 @@ add_subdirectory(common)
 include_directories(common)
 
 add_subdirectory(login_server)
+add_subdirectory(game_server)
