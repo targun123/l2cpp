@@ -12,7 +12,7 @@ if(WIN32)
         WIN32_LEAN_AND_MEAN
         SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE
     )
-    add_compile_options(/Od /Z7 /W4 /diagnostics:column -FC -Gm- -GR- /utf-8)
+    add_compile_options(/EHsc /W4 /utf-8)
 endif()
 
 add_subdirectory(common)
