@@ -19,4 +19,7 @@ target_sources(${PROJECT_NAME}
         $<TARGET_OBJECTS:${CMAKE_PROJECT_NAME}-common>
     PRIVATE
         main.cpp
+        Packet.cpp
+        Packet.hpp
+        Packets.hpp
 )

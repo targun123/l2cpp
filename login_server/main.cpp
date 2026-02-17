@@ -1,3 +1,4 @@
+#include "Packet.hpp"
 #include "Packets.hpp"
 
 #include <l2cpp/Typedefs.hpp>
@@ -30,85 +31,6 @@ static void applyBlowfish(byte const * start, size_t const size,
         *(u32 *) (start + i + 4) = chunk.ints[1];
     }
 }
-
-class Packet
-{
-public:
-    Packet()
-    {
-        _buffer.reserve(256);
-        append<u16>(0); // slot to write final size before sending
-    }
-
-    explicit Packet(byte const type)
-        : Packet()
-    {
-        _buffer.emplace_back(type);
-    }
-
-    explicit Packet(RecvPacket const type)
-        : Packet(static_cast<byte>(type))
-    {}
-
-    explicit Packet(SentPacket const type)
-        : Packet(static_cast<byte>(type))
-    {}
-
-    Packet & append(byte const b)
-    {
-        _buffer.emplace_back(b);
-        return *this;
-    }
-
-    template<typename T>
-    Packet & append(T const & t)
-    {
-        std::array<byte, sizeof(T)> chunk;
-        std::memcpy(&chunk[0], &t, sizeof(T));
-        _buffer.append_range(chunk);
-        return *this;
-    }
-
-    template<typename T>
-    Packet & operator<<(T const & t) { return append(t); }
-
-    void writeChecksumAndSize()
-    {
-        u32 checksum = 0;
-
-        auto const buf  = _buffer.data();
-        for (auto start = buf + sizeof(u16), end = buf + size(); start + 4 < end; )
-        {
-            u32 ecx = *start++ & 0xff;
-            ecx |= (*start++ << 0x08) & 0xff00;
-            ecx |= (*start++ << 0x10) & 0xff0000;
-            ecx |= (*start++ << 0x18) & 0xff000000;
-            checksum ^= ecx;
-        }
-
-        append(checksum);
-
-        while (bodySize() % 8 != 0) // Pad to 8 bytes with zeroes
-            _buffer.emplace_back(0);
-
-        // Write total size on the first two bytes of the buffer
-        auto const finalSize = static_cast<u16>(size());
-        std::memcpy(_buffer.data(), &finalSize, sizeof(finalSize));
-    }
-
-public:
-    auto buffer()    const -> std::vector<byte> const & { return _buffer;        }
-    auto rawBuffer() const -> byte const *              { return _buffer.data(); }
-
-    auto size() const -> size_t { return _buffer.size(); }
-    auto type() const -> byte   { return _buffer.size() > sizeof(u16) ? _buffer[2] : 0xFF; }
-
-    auto bodySize() const -> size_t       { return _buffer.size() - sizeof(u16); }
-    auto body()     const -> byte const * { return _buffer.data() + sizeof(u16); }
-
-private:
-    std::vector<byte> _buffer;
-};
 
 struct Connection
 {
@@ -146,7 +68,7 @@ struct Connection
         p.writeChecksumAndSize();
 
         if (encryptPacket)
-            applyBlowfish(p.body(), p.bodySize(), blowfish, BF_ENCRYPT);
+            applyBlowfish(p.body().data(), p.bodySize(), blowfish, BF_ENCRYPT);
 
         socket.send(boost::asio::buffer(p.buffer(), p.size()));
         SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", type, p.size());
