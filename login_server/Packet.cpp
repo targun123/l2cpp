@@ -41,24 +41,24 @@ Packet & Packet::append(std::span<byte const> span)
 
 void Packet::writeChecksumAndSize()
 {
-    u32 checksum = 0;
-    for (auto start = body().data(), end = start + size(); start + sizeof(u32) < end; )
+    // Append checksum
     {
-        u32 ecx  = (*start++ << 0x00) & 0xFF;
-            ecx |= (*start++ << 0x08) & 0xFF00;
-            ecx |= (*start++ << 0x10) & 0xFF0000;
-            ecx |= (*start++ << 0x18) & 0xFF000000;
+        auto const raw = body().data();
+        auto const max = bodySize();
 
-        checksum ^= ecx;
+        u32 checksum = 0;
+        for (u32 i = 0; i < max; i += sizeof(u32))
+            checksum ^= *reinterpret_cast<u32 const *>(raw + i);
+
+        append(checksum);
     }
-    append(checksum);
 
-    while (bodySize() % 8 != 0) // Pad to 8 bytes with zeroes
+    // Pad to 8 bytes with zeroes
+    while (bodySize() % 8 != 0)
         impl->buffer.emplace_back(0);
 
     // Write total size on the first two bytes of the buffer
-    auto const finalSize = static_cast<u16>(size());
-    std::memcpy(impl->buffer.data(), &finalSize, sizeof(finalSize));
+    *reinterpret_cast<u16 *>(impl->buffer.data()) = static_cast<u16>(impl->buffer.size());
 }
 
 auto Packet::buffer() const -> std::span<byte const>
