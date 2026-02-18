@@ -1,11 +1,13 @@
+// Project includes
 #include "Packet.hpp"
 #include "Packets.hpp"
 
+#include <l2cpp/Blowfish.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/SocketListener.hpp>
 
+// Third-party includes
 #include <boost/asio.hpp>
-#include <openssl/blowfish.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
@@ -16,31 +18,15 @@ using boost::asio::ip::tcp;
 struct Connection;
 using PacketHandler = void (*)(Connection &);
 
-static void applyBlowfish(std::span<byte> s, BF_KEY const & blowfish, bool const mode)
-{
-    constexpr size_t chunkSize = 2 * sizeof(u32);
-
-    if (s.size() >= chunkSize)
-    {
-        union { u32 ints[2]; byte raw[sizeof(ints)]; } chunk;
-        for (size_t i = 0; i < s.size(); i += chunkSize)
-        {
-            chunk.ints[0] = htonl(*reinterpret_cast<u32 const *>(s.data() + i + 0));
-            chunk.ints[1] = htonl(*reinterpret_cast<u32 const *>(s.data() + i + 4));
-            BF_ecb_encrypt(chunk.raw, chunk.raw, &blowfish, mode);
-            *reinterpret_cast<u32 *>(s.data() + i + 0) = ntohl(chunk.ints[0]);
-            *reinterpret_cast<u32 *>(s.data() + i + 4) = ntohl(chunk.ints[1]);
-        }
-    }
-}
+constexpr byte gBlowfishToken[] = "_;5.]94-31==-%xT!^[$";
 
 struct Connection
 {
-    tcp::socket socket;
-    BF_KEY      blowfish;
+    tcp::socket     socket;
+    l2cpp::Blowfish blowfish;
 
-    std::unique_ptr<RSA,    decltype(&RSA_free)> rsaKey;
     std::unique_ptr<BIGNUM, decltype(&BN_free)>  bigNum;
+    std::unique_ptr<RSA,    decltype(&RSA_free)> rsaKey;
 
     std::vector<byte> readBuffer;
 
@@ -49,12 +35,10 @@ struct Connection
 
     explicit Connection(tcp::socket socket)
         : socket(std::move(socket))
-        , rsaKey(RSA_new(), &RSA_free)
+        , blowfish(gBlowfishToken)
         , bigNum(nullptr, &BN_free)
+        , rsaKey(RSA_new(), &RSA_free)
     {
-        constexpr unsigned char key[] = "_;5.]94-31==-%xT!^[$";
-        BF_set_key(&blowfish, sizeof(key), key);
-
         BIGNUM * n = nullptr;
         BN_dec2bn(&n, "65537");
         bigNum.reset(n);
@@ -72,7 +56,7 @@ struct Connection
         p.writeChecksumAndSize();
 
         if (encryptPacket)
-            applyBlowfish(p.body(), blowfish, BF_ENCRYPT);
+            blowfish.encrypt(p.body());
 
         socket.send(boost::asio::buffer(p.buffer(), p.size()));
         SPDLOG_INFO("sent: {} ({} bytes)", type, p.size());
@@ -219,7 +203,7 @@ static PacketHandler readPacket(Connection & conn)
     boost::asio::read(conn.socket, boost::asio::buffer(request, bodySize));
 
     // Blowfish decrypt
-    applyBlowfish({request, bodySize}, conn.blowfish, BF_DECRYPT);
+    conn.blowfish.decrypt({request, bodySize});
 
     // Read packet type
     auto const type = request[0];
