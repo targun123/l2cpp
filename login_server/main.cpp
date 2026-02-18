@@ -18,7 +18,7 @@ using boost::asio::ip::tcp;
 struct Connection;
 using PacketHandler = void (*)(Connection &);
 
-constexpr byte gBlowfishToken[] = "_;5.]94-31==-%xT!^[$";
+constexpr byte gBlowfishToken[] = "_;5.]94-31==-%xT!^[$"; // trailing zero is included by sizeof()
 
 struct Connection
 {
@@ -119,8 +119,14 @@ static void handleAuthPacket(Connection & conn)
         return conn.send(Packet(SentPacket::AuthenticationFailed) << 0x01); // system error
     }
 
-    conn.userName = reinterpret_cast<char const *>(content + 0x62); // max 14
-    conn.password = reinterpret_cast<char const *>(content + 0x70); // max 16
+    conn.userName = reinterpret_cast<char const *>(content + 0x62);
+    conn.password = reinterpret_cast<char const *>(content + 0x70);
+
+    if (conn.userName.size() > 14)
+        conn.userName.resize(14);
+
+    if (conn.password.size() > 16)
+        conn.password.resize(16);
 
     SPDLOG_INFO("username: '{}' | password: '{}'", conn.userName, conn.password);
 
