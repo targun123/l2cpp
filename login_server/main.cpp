@@ -150,26 +150,31 @@ static void handleServerListPacket(Connection & conn)
         bool isPvp          = false;
         u16  curPlayerCount = 0;
         u16  maxPlayerCount = 1'000;
-        u8   status         = 1;
+        bool isOnline       = true;
         u32  extra          = 0;
         u8   brackets       = 0;
-    } const defaultServer;
+    } const onlineServer, offlineServer{.id = 2, .isPvp = true, .isOnline = false};
 
-    constexpr u8 serverCount = 1;
+    constexpr u8 serverCount = 2;
 
     Packet p(SentPacket::GameServerList);
-    p << serverCount
-      << u8(0) // unused or reserved
-      << defaultServer.id
-      << defaultServer.host
-      << defaultServer.port
-      << defaultServer.ageLimit
-      << defaultServer.isPvp
-      << defaultServer.curPlayerCount
-      << defaultServer.maxPlayerCount
-      << defaultServer.status
-      << defaultServer.extra
-      << defaultServer.brackets;
+    p << serverCount << u8(0); // unused or reserved
+
+    for (auto srv : {&onlineServer, &offlineServer})
+    {
+        p
+            << srv->id
+            << srv->host
+            << srv->port
+            << srv->ageLimit
+            << srv->isPvp
+            << srv->curPlayerCount
+            << srv->maxPlayerCount
+            << srv->isOnline
+            << srv->extra
+            << srv->brackets
+        ;
+    }
 
     conn.send(p);
 }
