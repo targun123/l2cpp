@@ -3,8 +3,29 @@
 
 #include "Packet.hpp"
 
+// Project includes
+#include <l2cpp/Exception.hpp>
+
+// C++ includes
 #include <mutex>
 #include <vector>
+
+namespace
+{
+    u32 calculateChecksum(std::span<byte const> data)
+    {
+        L2CPP_B_ASSERT(data.size() >= sizeof(u32), "Cannot calculate checksum: size < sizeof(u32)");
+
+        u32 checksum = 0;
+
+        for (u32 i = 0; i < data.size(); i += sizeof(u32))
+            checksum ^= *reinterpret_cast<u32 const *>(data.data() + i);
+
+        return checksum;
+    }
+
+    // TODO: verifyChecksums
+}
 
 struct Packet::PacketImpl
 {
@@ -45,19 +66,13 @@ void Packet::writeChecksumAndSize()
 {
     std::call_once(impl->checksumOnceFlag, [&, this]
     {
-        // Pad to 4 bytes to perform checksum correctly
+        // Align to 4 bytes to perform checksum correctly
         while (bodySize() % sizeof(u32) != 0)
             impl->buffer.emplace_back(0);
 
-        // Calculate checksum
-        u32 checksum = 0;
+        append(calculateChecksum({body().data(), bodySize()}));
 
-        for (u32 i = 0; i < bodySize(); i += sizeof(u32))
-            checksum ^= *reinterpret_cast<u32 const *>(body().data() + i);
-
-        append(checksum);
-
-        // Pad to 8 bytes with zeroes, required by Blowfish
+        // Align to 8 bytes with zeroes, required by Blowfish
         while (bodySize() % sizeof(u64) != 0)
             impl->buffer.emplace_back(0);
 
