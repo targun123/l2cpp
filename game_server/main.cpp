@@ -1,11 +1,14 @@
 /// @author    Chnossos
 /// @date      Created on 2026-02-17
 
+// Project includes
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Misc.hpp>
 #include <l2cpp/Typedefs.hpp>
+#include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/SocketListener.hpp>
 
+// Third-party
 #include <boost/asio.hpp>
 #include <spdlog/spdlog.h>
 
@@ -32,7 +35,7 @@ static void encrypt(std::span<byte> data, std::array<byte, 16> & key)
     tmp1 |= (key[10] << 0x10) & 0xFF0000;
     tmp1 |= (key[11] << 0x18) & 0xFF000000;
 
-    tmp1 += data.size();
+    tmp1 += static_cast<u16>(data.size());
 
     key[ 8] = static_cast<byte>((tmp1 >> 0x00) & 0xFF);
     key[ 9] = static_cast<byte>((tmp1 >> 0x08) & 0xFF);
@@ -57,7 +60,7 @@ static void decrypt(std::span<byte> data, std::array<byte, 16> & key)
     tmp1 |= (key[10] << 0x10) & 0xFF0000;
     tmp1 |= (key[11] << 0x18) & 0xFF000000;
 
-    tmp1 += data.size();
+    tmp1 += static_cast<u16>(data.size());
 
     key[ 8] = static_cast<byte>((tmp1 >> 0x00) & 0xFF);
     key[ 9] = static_cast<byte>((tmp1 >> 0x08) & 0xFF);

@@ -12,6 +12,7 @@ target_sources(${PROJECT_NAME}
         l2cpp/Blowfish.cpp
         l2cpp/Exception.cpp
         l2cpp/Misc.cpp
+        l2cpp/network/Packet.cpp
         l2cpp/network/SocketListener.cpp
 )
 target_sources(${PROJECT_NAME} PUBLIC
@@ -23,5 +24,6 @@ target_sources(${PROJECT_NAME} PUBLIC
         l2cpp/Misc.hpp
         l2cpp/Pimpl.hpp
         l2cpp/Typedefs.hpp
+        l2cpp/network/Packet.hpp
         l2cpp/network/SocketListener.hpp
 )

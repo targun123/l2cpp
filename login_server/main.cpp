@@ -1,9 +1,12 @@
+/// @author    Chnossos
+/// @date      Created on 2026-02-13
+
 // Project includes
-#include "Packet.hpp"
 #include "Packets.hpp"
 
 #include <l2cpp/Blowfish.hpp>
 #include <l2cpp/Typedefs.hpp>
+#include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/SocketListener.hpp>
 
 // Third-party includes
@@ -44,21 +47,22 @@ struct Connection
         bigNum.reset(n);
 
         RSA_generate_key_ex(rsaKey.get(), 1024, bigNum.get(), nullptr);
-        readBuffer.resize(sizeof(u16) + sizeof(u8) + RSA_size(rsaKey.get())); // size + type + rsa
+        readBuffer.resize(sizeof(u16) + sizeof(u8) + RSA_size(rsaKey.get())); // size + opCode + rsa
     }
 
     void send(Packet & p, bool const encryptPacket = true)
     {
         // Save the value before it gets blowfished
-        auto const type = p.type().has_value() ? fmt::format("0x{:02x}", p.type().value())
-                                               : "<unknown>";
+        auto const type = p.opCode().has_value() ? fmt::format("0x{:02x}", p.opCode().value())
+                                                 : "<unknown>";
 
-        p.writeChecksumAndSize();
+        p.writeChecksum();
+        p.writeSize();
 
         if (encryptPacket)
             blowfish.encrypt(p.body());
 
-        socket.send(boost::asio::buffer(p.buffer(), p.size()));
+        socket.send(boost::asio::buffer(p.buffer()));
         SPDLOG_INFO("sent: {} ({} bytes)", type, p.size());
     }
 };
@@ -216,19 +220,19 @@ static PacketHandler readPacket(Connection & conn)
     // Blowfish decrypt
     conn.blowfish.decrypt({request, bodySize});
 
-    // Read packet type
-    auto const type = request[0];
-    request  += sizeof(type);
-    bodySize -= sizeof(type);
+    // Read packet opcode
+    auto const opCode = request[0];
+    request  += sizeof(opCode);
+    bodySize -= sizeof(opCode);
 
-    SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
+    SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", opCode, size);
 
     void (*handle)(Connection & conn) = {};
 
     std::string text;
-    switch (type)
+    switch (opCode)
     {
-#define CASE(id) case static_cast<decltype(type)>(RecvPacket::id)
+#define CASE(id) case static_cast<decltype(opCode)>(RecvPacket::id)
         CASE(Authentication):
         {
             text = "handle_auth_request";
@@ -255,12 +259,12 @@ static PacketHandler readPacket(Connection & conn)
         }
         default:
         {
-            text = fmt::format("Unknown packet 0x{:02x}", type);
+            text = fmt::format("Unknown packet 0x{:02x}", opCode);
             break;
         }
 #undef CASE
     }
-    SPDLOG_INFO("Packet string type: {}", text);
+    SPDLOG_INFO("Packet string opCode: {}", text);
     return handle;
 }
 

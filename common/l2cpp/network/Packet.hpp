@@ -3,8 +3,11 @@
 
 #pragma once
 
-#include "Packets.hpp"
-#include <memory>
+// Project includes
+#include "../Pimpl.hpp"
+#include "../Typedefs.hpp"
+
+// C++ includes
 #include <optional>
 #include <span>
 
@@ -12,9 +15,10 @@ class Packet
 {
 public:
     Packet();
-    explicit Packet(byte       type);
-    explicit Packet(RecvPacket type);
-    explicit Packet(SentPacket type);
+    explicit Packet(byte type);
+    /// Permits conversion from any Packet enumerations
+    template<typename E, typename = std::enable_if_t<std::is_enum_v<E>>>
+    explicit Packet(E e): Packet(std::to_underlying(e)) {}
     ~Packet();
 
 public:
@@ -36,9 +40,12 @@ public:
     Packet & append(T const (&a)[N]) { return append({reinterpret_cast<byte const *>(a), N}); }
 
 public:
-    /// Appends the checksum of the packet body and writes the total size at the beginning.
+    /// Appends the checksum of the packet body.
     /// @note Does nothing if called more than once.
-    void writeChecksumAndSize();
+    void writeChecksum();
+
+    /// Writes the total size at the beginning.
+    void writeSize();
 
 public:
     /// @returns A read-only span of the whole buffer.
@@ -47,16 +54,17 @@ public:
     /// @returns Size of the whole buffer.
     auto size() const -> size_t;
 
-    /// @returns Type of the packet if available, else @c 0xFF.
-    auto type() const -> std::optional<u8>;
+    /// @returns Opcode of the packet, if available.
+    auto opCode() const -> std::optional<u8>;
 
-    /// @returns A span of the buffer minus the initial size (thus including the type).
-    auto body() const -> std::span<byte>;
+    /// @returns A span of the buffer minus the initial size (thus including the opCode).
+    auto body()       -> std::span<byte>;
+    auto body() const -> std::span<byte const>;
 
     /// @returns Size of the body (buffer size minus the initial size).
     auto bodySize() const -> size_t;
 
 private:
     struct PacketImpl;
-    std::unique_ptr<PacketImpl> impl;
+    Pimpl<PacketImpl> impl;
 };

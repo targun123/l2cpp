@@ -4,7 +4,7 @@
 #include "Packet.hpp"
 
 // Project includes
-#include <l2cpp/Exception.hpp>
+#include "../Exception.hpp"
 
 // C++ includes
 #include <mutex>
@@ -18,13 +18,13 @@ namespace
 
         u32 checksum = 0;
 
-        for (u32 i = 0; i < data.size(); i += sizeof(u32))
+        for (size_t i = 0; i < data.size(); i += sizeof(u32))
             checksum ^= *reinterpret_cast<u32 const *>(data.data() + i);
 
         return checksum;
     }
 
-    // TODO: verifyChecksums
+    // TODO: verifyChecksum
 }
 
 struct Packet::PacketImpl
@@ -46,14 +46,6 @@ Packet::Packet(byte const type)
     impl->buffer.emplace_back(type);
 }
 
-Packet::Packet(RecvPacket const type)
-    : Packet(static_cast<byte>(type))
-{}
-
-Packet::Packet(SentPacket const type)
-    : Packet(static_cast<byte>(type))
-{}
-
 Packet::~Packet() = default;
 
 Packet & Packet::append(std::span<byte const> span)
@@ -62,7 +54,7 @@ Packet & Packet::append(std::span<byte const> span)
     return *this;
 }
 
-void Packet::writeChecksumAndSize()
+void Packet::writeChecksum()
 {
     std::call_once(impl->checksumOnceFlag, [&, this]
     {
@@ -72,13 +64,15 @@ void Packet::writeChecksumAndSize()
 
         append(calculateChecksum({body().data(), bodySize()}));
 
-        // Align to 8 bytes with zeroes, required by Blowfish
-        while (bodySize() % sizeof(u64) != 0)
-            impl->buffer.emplace_back(0);
-
-        // Write total size on the first two bytes of the buffer
-        *reinterpret_cast<u16 *>(impl->buffer.data()) = static_cast<u16>(impl->buffer.size());
+        if (bodySize() % sizeof(u64))
+            append<u32>(0); // Align to 8 bytes with zeroes, required by Blowfish
     });
+}
+
+void Packet::writeSize()
+{
+    // Write total size on the first two bytes of the buffer
+    *reinterpret_cast<u16 *>(impl->buffer.data()) = static_cast<u16>(impl->buffer.size());
 }
 
 auto Packet::buffer() const -> std::span<byte const>
@@ -91,7 +85,7 @@ auto Packet::size() const -> size_t
     return impl->buffer.size();
 }
 
-auto Packet::type() const -> std::optional<u8>
+auto Packet::opCode() const -> std::optional<u8>
 {
     std::optional<u8> type;
 
@@ -101,7 +95,12 @@ auto Packet::type() const -> std::optional<u8>
     return type;
 }
 
-auto Packet::body() const -> std::span<byte>
+auto Packet::body() -> std::span<byte>
+{
+    return {impl->buffer.data() + sizeof(u16), bodySize()};
+}
+
+auto Packet::body() const -> std::span<byte const>
 {
     return {impl->buffer.data() + sizeof(u16), bodySize()};
 }
