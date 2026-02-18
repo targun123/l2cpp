@@ -45,18 +45,20 @@ void Packet::writeChecksumAndSize()
 {
     std::call_once(impl->checksumOnceFlag, [&, this]
     {
-        // Calculate checksum
-        auto const raw = body().data();
-        auto const max = bodySize();
+        // Pad to 4 bytes to perform checksum correctly
+        while (bodySize() % sizeof(u32) != 0)
+            impl->buffer.emplace_back(0);
 
+        // Calculate checksum
         u32 checksum = 0;
-        for (u32 i = 0; i < max; i += sizeof(u32))
-            checksum ^= *reinterpret_cast<u32 const *>(raw + i);
+
+        for (u32 i = 0; i < bodySize(); i += sizeof(u32))
+            checksum ^= *reinterpret_cast<u32 const *>(body().data() + i);
 
         append(checksum);
 
-        // Pad to 8 bytes with zeroes
-        while (bodySize() % 8 != 0)
+        // Pad to 8 bytes with zeroes, required by Blowfish
+        while (bodySize() % sizeof(u64) != 0)
             impl->buffer.emplace_back(0);
 
         // Write total size on the first two bytes of the buffer

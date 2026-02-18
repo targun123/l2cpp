@@ -17,7 +17,7 @@ struct Blowfish::BlowfishImpl
 {
     BF_KEY key;
 
-    size_t apply(std::span<byte>, bool) const;
+    void apply(std::span<byte>, bool) const;
 };
 
 Blowfish::Blowfish(std::span<byte const> const key)
@@ -28,34 +28,32 @@ Blowfish::Blowfish(std::span<byte const> const key)
 
 Blowfish::~Blowfish() = default;
 
-size_t Blowfish::encrypt(std::span<byte> data) const
+void Blowfish::encrypt(std::span<byte> data) const
 {
-    return _pimpl->apply(std::move(data), BF_ENCRYPT);
+    _pimpl->apply(std::move(data), BF_ENCRYPT);
 }
 
-size_t Blowfish::decrypt(std::span<byte> data) const
+void Blowfish::decrypt(std::span<byte> data) const
 {
-    return _pimpl->apply(std::move(data), BF_DECRYPT);
+    _pimpl->apply(std::move(data), BF_DECRYPT);
 }
 
-size_t Blowfish::BlowfishImpl::apply(std::span<byte> const s, bool const mode) const
+void Blowfish::BlowfishImpl::apply(std::span<byte> const s, bool const mode) const
 {
-    constexpr size_t chunkSize = 2 * sizeof(u32);
+    constexpr size_t chunkSize = sizeof(u64);
 
-    size_t i = 0;
-    if (s.size() >= chunkSize)
+    if (s.size() < chunkSize)
+        return;
+
+    union { u32 ints[2]; byte raw[sizeof(ints)]; } chunk;
+    for (size_t i = 0; i < s.size(); i += chunkSize)
     {
-        union { u32 ints[2]; byte raw[sizeof(ints)]; } chunk;
-        for (; i < s.size(); i += chunkSize)
-        {
-            chunk.ints[0] = htonl(*reinterpret_cast<u32 const *>(s.data() + i + 0));
-            chunk.ints[1] = htonl(*reinterpret_cast<u32 const *>(s.data() + i + 4));
+        chunk.ints[0] = htonl(*reinterpret_cast<u32 const *>(s.data() + i + 0));
+        chunk.ints[1] = htonl(*reinterpret_cast<u32 const *>(s.data() + i + 4));
 
-            BF_ecb_encrypt(chunk.raw, chunk.raw, &key, mode);
+        BF_ecb_encrypt(chunk.raw, chunk.raw, &key, mode);
 
-            *reinterpret_cast<u32 *>(s.data() + i + 0) = ntohl(chunk.ints[0]);
-            *reinterpret_cast<u32 *>(s.data() + i + 4) = ntohl(chunk.ints[1]);
-        }
+        *reinterpret_cast<u32 *>(s.data() + i + 0) = ntohl(chunk.ints[0]);
+        *reinterpret_cast<u32 *>(s.data() + i + 4) = ntohl(chunk.ints[1]);
     }
-    return i;
 }

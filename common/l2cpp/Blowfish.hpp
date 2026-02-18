@@ -19,8 +19,8 @@ public:
     ~Blowfish();
 
 public:
-    size_t encrypt(std::span<byte> data) const;
-    size_t decrypt(std::span<byte> data) const;
+    void encrypt(std::span<byte> data) const;
+    void decrypt(std::span<byte> data) const;
 
 private:
     struct BlowfishImpl;
