@@ -67,6 +67,18 @@ struct Connection
     }
 };
 
+static bool verifyChecksum(std::span<byte const> data)
+{
+    auto       start = reinterpret_cast<u32 const *>(data.data());
+    auto const end   = reinterpret_cast<u32 const *>(data.data() + data.size() - sizeof(u64));
+
+    u32 checksum = 0;
+    while (start < end)
+        checksum ^= *start++;
+
+    return checksum == *start;
+}
+
 static void sendInitPacket(Connection & conn)
 {
     static u32 sessionId = 0;
@@ -220,10 +232,13 @@ static PacketHandler readPacket(Connection & conn)
     // Blowfish decrypt
     conn.blowfish.decrypt({request, bodySize});
 
-    // Read packet opcode
+    if (!verifyChecksum({request, bodySize}))
+    {
+        SPDLOG_ERROR("Checksum verification failed");
+        return handle;
+    }
+
     auto const opCode = request[0];
-    request  += sizeof(opCode);
-    bodySize -= sizeof(opCode);
 
     SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", opCode, size);
 

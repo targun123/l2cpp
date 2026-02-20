@@ -58,14 +58,12 @@ void Packet::writeChecksum()
 {
     std::call_once(impl->checksumOnceFlag, [&, this]
     {
-        // Align to 4 bytes to perform checksum correctly
-        while (bodySize() % sizeof(u32) != 0)
+        // Align to 8 bytes then append checksum
+        while (bodySize() % 8 != 0)
             impl->buffer.emplace_back(0);
 
         append(calculateChecksum({body().data(), bodySize()}));
-
-        if (bodySize() % sizeof(u64))
-            append<u32>(0); // Align to 8 bytes with zeroes, required by Blowfish
+        append<u32>(0); // Align to 8 bytes with zeroes, required by Blowfish
     });
 }
 
