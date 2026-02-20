@@ -129,9 +129,9 @@ static void readPacket(Connection & conn)
 int main() try
 {
 #ifdef NDEBUG
-    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v (%s:%#)");
+    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
 #else
-    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v (%s:%#:%!)");
+    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#] [%!()]");
 #endif
     spdlog::set_level(spdlog::level::trace);
 
