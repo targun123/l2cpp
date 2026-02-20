@@ -7,7 +7,6 @@
 
 #include <exception>
 #include <functional>
-#include <iostream>
 #include <string_view>
 #include <vector>
 #include <source_location>
@@ -47,8 +46,7 @@ namespace l2cpp
         }
 
         template<typename... Args>
-        Exception(std::source_location src, int const code,
-                  fmt::format_string<Args...> fmt, Args &&...args)
+        Exception(std::source_location src, int const code, fmt::format_string<Args...> fmt, Args &&...args)
         {
             init(std::move(src), code, fmt::format(std::move(fmt), std::forward<Args>(args)...));
         }
@@ -102,34 +100,19 @@ namespace l2cpp
 
     auto getExceptionStack(Exception const & e) -> ExceptionStack;
 
-    void printExceptionStack(std::exception const & e, int level = 0, int increment = 1,
-                             std::string_view prefix = " * ", std::string_view suffix = "\n",
-                             std::ostream & out = std::cerr);
+    auto formatExceptionStack(std::exception const & e, int level = 0, int increment = 1,
+                             std::string_view prefix = " * ", std::string_view suffix = "\n") -> std::string;
 
-    void printExceptionStack(Exception const & e, int level = 0, int increment = 1,
-                             std::string_view prefix = " * ", std::string_view suffix = "\n",
-                             std::ostream & out = std::cerr);
+    auto formatExceptionStack(Exception const & e, int level = 0, int increment = 1,
+                             std::string_view prefix = " * ", std::string_view suffix = "\n") -> std::string;
 
-    void printExceptionStack(ExceptionStack const & e, int level = 0, int increment = 1,
-                             std::string_view prefix = " * ", std::string_view suffix = "\n",
-                             std::ostream & out = std::cerr);
+    auto formatExceptionStack(ExceptionStack const & e, int level = 0, int increment = 1,
+                             std::string_view prefix = " * ", std::string_view suffix = "\n") -> std::string;
 
-    /// Shorter overload for when you like the formatting as it is but need another destination
-    inline void printExceptionStack(std::exception const & e, std::ostream & out)
+    template<typename E, typename... Args>
+    void printExceptionStack(E const & e, Args &&... args)
     {
-        printExceptionStack(e, 0, 1, " * ", "\n", out);
-    }
-
-    /// Shorter overload for when you like the formatting as it is but need another destination
-    inline void printExceptionStack(Exception const & e, std::ostream & out)
-    {
-        printExceptionStack(e, 0, 1, " * ", "\n", out);
-    }
-
-    /// Shorter overload for when you like the formatting as it is but need another destination
-    inline void printExceptionStack(ExceptionStack const & s, std::ostream & out)
-    {
-        printExceptionStack(s, 0, 1, " * ", "\n", out);
+        fmt::print("{}", formatExceptionStack(e, std::forward<Args>(args)...));
     }
 }
 

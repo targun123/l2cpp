@@ -20,40 +20,21 @@ namespace
     void getExceptionStack(l2cpp::Exception const & e, l2cpp::ExceptionStack & stack)
     {
         stack.emplace_back(e);
-
         try
         {
             std::rethrow_if_nested(e);
         }
-        catch (l2cpp::Exception const & nested) {
+        catch (l2cpp::Exception const & nested)
+        {
             getExceptionStack(nested, stack);
         }
-        catch (std::exception const & nested) {
+        catch (std::exception const & nested)
+        {
             getExceptionStack(l2cpp::Exception({}, 0, "{}",  nested.what()), stack);
         }
     }
 
-    void printExceptionStack(std::exception const & e, int level, int increment,
-                             std::string_view prefix, std::string_view message,
-                             std::string_view suffix, std::ostream & out)
-    {
-        out << fmt::format("{:>{}}{}{}",
-                           prefix, static_cast<int>(prefix.size()) + level, message, suffix);
-
-        try
-        {
-            std::rethrow_if_nested(e);
-            out << std::flush;
-        }
-        catch (l2cpp::Exception const & nested) {
-            l2cpp::printExceptionStack(nested, level + increment, increment, prefix, suffix, out);
-        }
-        catch (std::exception  const & nested) {
-            l2cpp::printExceptionStack(nested, level + increment, increment, prefix, suffix, out);
-        }
-    }
-
-    auto formatSourceLocation(l2cpp::Exception const & e) -> std::string
+    std::string formatSourceLocation(l2cpp::Exception const & e)
     {
         std::string src;
 
@@ -75,7 +56,6 @@ namespace
         if (!e.functionName().empty())
             src += fmt::format(" [{}]", e.functionName());
 #endif
-
         return src;
     }
 } // !namespace
@@ -136,29 +116,46 @@ auto l2cpp::getExceptionStack(Exception const & e) -> ExceptionStack
     return stack;
 }
 
-void l2cpp::printExceptionStack(std::exception const & e, int level, int increment,
-                               std::string_view prefix, std::string_view suffix, std::ostream & out)
+auto l2cpp::formatExceptionStack(std::exception const & e, int level, int increment,
+                                 std::string_view prefix, std::string_view suffix)
+    -> std::string
 {
-    ::printExceptionStack(e, level, increment, prefix, e.what(), suffix, out);
+    ExceptionStack stack;
+    stack.emplace_back(Exception("{}",  e.what()));
+    try
+    {
+        std::rethrow_if_nested(e);
+    }
+    catch (Exception const & nested)
+    {
+        ::getExceptionStack(nested, stack);
+    }
+    catch (std::exception const & nested)
+    {
+        ::getExceptionStack(Exception("{}",  nested.what()), stack);
+    }
+    return formatExceptionStack(stack, level, increment, prefix, suffix);
 }
 
-void l2cpp::printExceptionStack(Exception const & e, int level, int increment,
-                               std::string_view prefix, std::string_view suffix, std::ostream & out)
+auto l2cpp::formatExceptionStack(Exception const & e, int level, int increment,
+                                 std::string_view prefix, std::string_view suffix)
+    -> std::string
 {
-    auto const code = e.code() ? fmt::format(" (code: {})", e.code()) : "";
-    auto const src  = formatSourceLocation(e);
-    ::printExceptionStack(e, level, increment, prefix, e.what() + code + src, suffix, out);
+    return formatExceptionStack(getExceptionStack(e), level, increment, prefix, suffix);
 }
 
-void l2cpp::printExceptionStack(ExceptionStack const & s, int level, int increment,
-                               std::string_view prefix, std::string_view suffix, std::ostream & out)
+auto l2cpp::formatExceptionStack(ExceptionStack const & s, int level, int increment,
+                                 std::string_view prefix, std::string_view suffix)
+    -> std::string
 {
+    std::string str;
     for (auto const & e : s)
     {
         auto const code = e.code() ? fmt::format(" (code: {})", e.code()) : "";
         auto const src  = formatSourceLocation(e);
-        out << fmt::format("{:>{}}{}{}{}{}", prefix, static_cast<int>(prefix.size()) + level,
-                                             e.what(), code, src, suffix);
+        str += fmt::format("{:>{}}{}{}{}{}",
+                           prefix, static_cast<int>(prefix.size()) + level, e.what(), code, src, suffix);
         level += increment;
     }
+    return str;
 }

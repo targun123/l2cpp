@@ -5,6 +5,7 @@
 #include "Packets.hpp"
 
 #include <l2cpp/Blowfish.hpp>
+#include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/SocketListener.hpp>
@@ -208,12 +209,22 @@ static void handleServerSelectionPacket(Connection & conn)
 
 static PacketHandler readPacket(Connection & conn)
 {
-    conn.readBuffer.assign(conn.readBuffer.size(), '\0'); // Reset buffer
+    L2CPP_B_ASSERT(conn.socket.is_open(), "Cannot read packet: socket is not opened");
 
-    u16 size;
-    boost::asio::read(conn.socket, boost::asio::buffer(&size, sizeof(size)));
-    std::memcpy(conn.readBuffer.data(), &size, sizeof(size));
+    // Reset buffer
+    std::ranges::fill(conn.readBuffer, 0);
 
+    // Read packet size
+    boost::system::error_code ec;
+    boost::asio::read(conn.socket, boost::asio::buffer(conn.readBuffer.data(), sizeof(u16)), ec);
+    if (ec.value() == boost::asio::error::eof)
+    {
+        SPDLOG_INFO("Client disconnected");
+        return nullptr;
+    }
+    L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
+
+    auto const size = *reinterpret_cast<u16 *>(conn.readBuffer.data());
     SPDLOG_TRACE("Incoming packet of size '{}'", size);
 
     if (conn.readBuffer.size() < size)
@@ -227,59 +238,46 @@ static PacketHandler readPacket(Connection & conn)
     auto bodySize = size - sizeof(size);
 
     SPDLOG_TRACE("Attempt to read next {} bytes", bodySize);
-    boost::asio::read(conn.socket, boost::asio::buffer(request, bodySize));
+    boost::asio::read(conn.socket, boost::asio::buffer(request, bodySize), ec);
+    L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
 
-    // Blowfish decrypt
     conn.blowfish.decrypt({request, bodySize});
-
-    if (!verifyChecksum({request, bodySize}))
-    {
-        SPDLOG_ERROR("Checksum verification failed");
-        return handle;
-    }
+    L2CPP_B_ASSERT(verifyChecksum({request, bodySize}), "Checksum verification failed");
 
     auto const opCode = request[0];
-
     SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", opCode, size);
 
     void (*handle)(Connection & conn) = {};
-
-    std::string text;
     switch (opCode)
     {
 #define CASE(id) case static_cast<decltype(opCode)>(RecvPacket::id)
         CASE(Authentication):
         {
-            text = "handle_auth_request";
             handle = &handleAuthPacket;
             break;
         }
         CASE(GameServerSelection):
         {
-            text = "handle_game_server";
             handle = &handleServerSelectionPacket;
             break;
         }
         CASE(GameServerList):
         {
-            text = "handle_server_list_request";
             handle = &handleServerListPacket;
             break;
         }
         CASE(GameGuard):
         {
-            text = "ignore_gg_packet";
             handle = &handleGameGuardPacket;
             break;
         }
         default:
         {
-            text = fmt::format("Unknown packet 0x{:02x}", opCode);
+            SPDLOG_WARN("Received unknown packet type '{}'", opCode);
             break;
         }
 #undef CASE
     }
-    SPDLOG_INFO("Packet string opCode: {}", text);
     return handle;
 }
 
@@ -300,9 +298,16 @@ int main() try
         Connection conn(std::move(socket));
         sendInitPacket(conn);
 
-        PacketHandler handle;
-        while ((handle = readPacket(conn)))
-            (*handle)(conn);
+        try
+        {
+            PacketHandler handle;
+            while ((handle = readPacket(conn)))
+                (*handle)(conn);
+        }
+        catch (l2cpp::Exception const & e)
+        {
+            SPDLOG_ERROR("Packet reading failed, disconnecting client:\n{}", l2cpp::formatExceptionStack(e));
+        }
     };
     if (!listener.listen("127.0.0.1", 2106, std::move(onSocketAccepted)))
         return EXIT_FAILURE;
