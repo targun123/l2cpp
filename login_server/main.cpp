@@ -2,9 +2,9 @@
 /// @date      Created on 2026-02-13
 
 // Project includes
+#include "Blowfish.hpp"
 #include "Packets.hpp"
 
-#include <l2cpp/Blowfish.hpp>
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Packet.hpp>

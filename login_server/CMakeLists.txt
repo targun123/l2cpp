@@ -20,4 +20,6 @@ target_sources(${PROJECT_NAME}
     PRIVATE
         main.cpp
         Packets.hpp
+        Blowfish.cpp
+        Blowfish.hpp
 )

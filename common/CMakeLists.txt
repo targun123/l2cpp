@@ -9,7 +9,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost OpenSSL::Crypto spdlo
 
 target_sources(${PROJECT_NAME}
     PUBLIC
-        l2cpp/Blowfish.cpp
         l2cpp/Exception.cpp
         l2cpp/Misc.cpp
         l2cpp/network/Packet.cpp
@@ -19,7 +18,6 @@ target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET  HEADERS
     BASE_DIRS l2cpp
     FILES
-        l2cpp/Blowfish.hpp
         l2cpp/Exception.hpp
         l2cpp/Misc.hpp
         l2cpp/Pimpl.hpp
