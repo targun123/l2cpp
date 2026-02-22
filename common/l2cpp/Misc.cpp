@@ -21,10 +21,15 @@ std::string l2cpp::hexdump(void const * const ptr, size_t const size)
             result += fmt::format("{:06X}: ", i);
 
             for (size_t j = 0; j < 16; ++j)
-                result += i + j < size ? fmt::format("{:02X} ", buf[i + j]) : ".. ";
+                result += i + j < size ? fmt::format("{:02X} ", buf[i + j]) : "__ ";
 
             for (size_t j = 0; j < 16; ++j)
-                result += i + j < size && std::isprint(buf[i + j]) ? buf[i + j] : '.';
+            {
+                if (i + j < size)
+                    result += std::isprint(buf[i + j]) ? buf[i + j] : '.';
+                else
+                    result += '_';
+            }
 
             result += '\n';
         }

@@ -2,6 +2,7 @@ project(${CMAKE_PROJECT_NAME}-game_server)
 
 add_executable(${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME game_server)
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<BOOL:WIN32>:SPDLOG_WCHAR_TO_UTF8_SUPPORT>)
 
 find_package(Boost   REQUIRED)
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)

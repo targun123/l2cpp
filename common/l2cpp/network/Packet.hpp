@@ -36,7 +36,7 @@ public:
     Packet & append(T const & t) { return append({reinterpret_cast<byte const *>(&t), sizeof(T)}); }
 
     /// Appends a contiguous array of integrals as bytes to the packet.
-    template<typename T, size_t N, typename = std::enable_if_t<std::is_integral_v<T>>>
+    template<typename T, size_t N, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
     Packet & append(T const (&a)[N]) { return append({reinterpret_cast<byte const *>(a), N * sizeof(T)}); }
 
 public:
