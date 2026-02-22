@@ -37,7 +37,7 @@ SL::SocketListener(boost::asio::io_context & ioc)
 
 SL::~SocketListener() = default;
 
-bool SL::listen(std::string_view const host, u16 const port, AcceptCallback cb) const
+bool SL::listen(std::string_view const host, u16 const port, AcceptCallback cb)
 {
     error_code ec;
     auto addr = ip::make_address(host.data(), ec);

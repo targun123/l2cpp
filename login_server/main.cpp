@@ -139,20 +139,14 @@ static void handleAuthPacket(Connection & conn)
     conn.userName = reinterpret_cast<char const *>(content + 0x62);
     conn.password = reinterpret_cast<char const *>(content + 0x70);
 
-    if (conn.userName.size() > 14)
-        conn.userName.resize(14);
+    SPDLOG_TRACE("username: '{}' | password: '{}'", conn.userName, conn.password);
 
-    if (conn.password.size() > 16)
-        conn.password.resize(16);
-
-    SPDLOG_INFO("username: '{}' | password: '{}'", conn.userName, conn.password);
-
-    u32 login1, login2;
-    RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
-    RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
+    u32 loginOk1, loginOk2;
+    RAND_bytes(reinterpret_cast<byte *>(&loginOk1), sizeof(loginOk1));
+    RAND_bytes(reinterpret_cast<byte *>(&loginOk2), sizeof(loginOk2));
 
     Packet p(SentPacket::AuthenticationSuccess);
-    p << login1 << login2;
+    p << loginOk1 << loginOk2;
     conn.send(p);
 }
 
@@ -198,12 +192,12 @@ static void handleServerListPacket(Connection & conn)
 
 static void handleServerSelectionPacket(Connection & conn)
 {
-    u32 login1, login2;
-    RAND_bytes(reinterpret_cast<byte *>(&login1), sizeof(login1));
-    RAND_bytes(reinterpret_cast<byte *>(&login2), sizeof(login2));
+    u32 playOk1, playOk2;
+    RAND_bytes(reinterpret_cast<byte *>(&playOk1), sizeof(playOk1));
+    RAND_bytes(reinterpret_cast<byte *>(&playOk2), sizeof(playOk2));
 
     Packet p(SentPacket::GameServerSelectionSuccess);
-    p << login1 << login2;
+    p << playOk1 << playOk2;
     conn.send(p);
 }
 
@@ -291,7 +285,7 @@ int main() try
     spdlog::set_level(spdlog::level::trace);
 
     boost::asio::io_context io;
-    l2cpp::Network::SocketListener const listener(io);
+    l2cpp::Network::SocketListener listener(io);
     auto onSocketAccepted = [] (tcp::socket && socket)
     {
         SPDLOG_INFO("Client connected!");
