@@ -11,8 +11,20 @@ class Pimpl
 {
 public:
     explicit Pimpl(T * impl)                   noexcept: _impl(impl)                     {}
-             Pimpl(void * impl, D deleter)     noexcept: _impl(impl, std::move(deleter)) {}
+             Pimpl(T * impl, D deleter)        noexcept: _impl(impl, std::move(deleter)) {}
     explicit Pimpl(std::unique_ptr<T, D> impl) noexcept: _impl(std::move(impl))          {}
+
+public:
+    Pimpl(Pimpl const &)             = delete;
+    Pimpl & operator=(Pimpl const &) = delete;
+
+public:
+    Pimpl(Pimpl && other) noexcept: _impl(std::move(other._impl)) {}
+    Pimpl & operator=(Pimpl && other)
+    {
+        _impl = std::move(other._impl);
+        return *this;
+    }
 
 public:
     auto operator->()       -> T *       { return static_cast<T *      >(_impl.get()); }
