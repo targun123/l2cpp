@@ -2,6 +2,7 @@
 /// @date      Created on 2026-02-17
 
 // Project includes
+#include "game/Character.hpp"
 #include "network/Connection.hpp"
 
 #include <l2cpp/Exception.hpp>
@@ -16,104 +17,117 @@
 // C++ includes
 #include <iostream>
 
+class PacketReader
+{
+public:
+    explicit PacketReader(std::span<byte const> packet) noexcept: cursor(std::move(packet)) {}
+
+public:
+    template<typename T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
+    PacketReader & operator>>(T & t)
+    {
+        std::memcpy(&t, cursor.data(), sizeof(t));
+        cursor = cursor.subspan(sizeof(T));
+        return *this;
+    }
+
+    template<typename C>
+    PacketReader & operator>>(std::basic_string<C> & str)
+    {
+        str = reinterpret_cast<C const *>(cursor.data());
+        cursor = cursor.subspan(str.size() * sizeof(C) + sizeof(C));
+        return *this;
+    }
+
+private:
+    std::span<byte const> cursor;
+};
+
+struct
+{
+    std::wstring userName;
+    u32 playOk1;
+    std::vector<Character> characters;
+} gApp;
+
 void onSocketAccepted(boost::asio::ip::tcp::socket && socket);
 
 static void handleProtocol(Connection & conn)
 {
-    auto const protocol = *reinterpret_cast<u32 const *>(conn.readBuffer().data() + sizeof(u16) + sizeof(u8));
-    SPDLOG_INFO("Client protocol: {}", protocol);
+    PacketReader reader(conn.readBuffer().subspan(3));
 
+    u32 protocol;
+    reader >> protocol;
+
+    SPDLOG_INFO("Client protocol: {}", protocol);
     conn.send(Packet(0x00).append<u8>(1) << conn.encryptionKey(), false);
 }
 
-static void handleAuth(Connection & conn)
+static void handleAuth(Connection const & conn)
 {
-    auto content = conn.readBuffer().data() + sizeof(u16) + sizeof(u8);
+    PacketReader reader(conn.readBuffer().subspan(3));
 
-    std::wstring userName = reinterpret_cast<wchar_t const *>(content);
-    content += userName.size() * sizeof(wchar_t) + sizeof(wchar_t);
-
-    u32 playOk1, playOk2, loginOk1, loginOk2;
-    for (auto const n : {&playOk1, &playOk2, &loginOk1, &loginOk2})
-    {
-        *n = *reinterpret_cast<u32 const *>(content);
-        content += sizeof(u32);
-    }
-
-    SPDLOG_DEBUG(L"'{}' | {} | {} | {} | {}", userName, loginOk1, loginOk2, playOk1, playOk2);
-}
-
-static void handleCharacterList(Connection & conn)
-{
-    u32 count = 1;
-    u32 id = 0;
-    wchar_t name[] = L"MyNameIsAdmin";
-    u32 clanId = 0;
-    u32 sex = 0;
-    u32 raceId = 0;
-    u32 active = 1;
-    double currentHp = 500;
-    double currentMp = 500;
-    u32 sp = 0;
-    u32 xp = 0;
-    u32 level = 1;
-    u32 karma = 0;
-    u32 hairStyleId = 0;
-    u32 hairColorId = 0;
-    u32 faceId = 0;
-    double maxHp = 500;
-    double maxMp = 500;
-    u32 deleteTime = 0;
-    u32 classId = 0;
-    u32 autoSelect = 0;
-    u8 enchantEffect = 0;
-
-    Packet p(0x13);
-    p << 0;
-    conn.send(p);
-    // p << count
-    //   << name
-    //   << id
-    //   << L"AccountName"
-    //   << 0
-    //   << clanId
-    //   << 0
-    //   << sex
-    //   << raceId
-    //   << classId
-    //   << active
-    //   << 0 // x
-    //   << 0 // y
-    //   << 0 // z
-    //   << currentHp
-    //   << currentMp
-    //   << sp
-    //   << xp
-    //   << level
-    //   << karma;
-    //
-    // // ???
-    // p << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0
-    //   << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0
-    //   << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0
-    //   << 0 << 0 << 0 << 0 << 0 << 0 << 0 << 0;
-    //
-    // p << hairStyleId
-    //   << hairColorId
-    //   << faceId
-    //   << maxHp
-    //   << maxMp
-    //   << deleteTime
-    //   << classId
-    //   << autoSelect
-    //   << enchantEffect;
-    //
-    // conn.send(p);
+    u32 playOk2, loginOk1, loginOk2;
+    reader >> gApp.userName >> gApp.playOk1 >> playOk2 >> loginOk1 >> loginOk2;
+    SPDLOG_DEBUG(L"'{}' | {} | {} | {} | {}", gApp.userName, loginOk1, loginOk2, gApp.playOk1, playOk2);
 }
 
 static void handleConnectionClosing(Connection & conn)
 {
+    if (!gApp.characters.empty())
+        conn.send(Packet() << 0x7e);
+
     conn.close();
+}
+
+static void handleCharacterList(Connection & conn)
+{
+    Packet p(0x13);
+    p << static_cast<u32>(gApp.characters.size());
+
+    for (auto const & c : gApp.characters)
+    {
+        p << c.name
+          << c.id
+          << gApp.userName
+          << gApp.playOk1
+          << c.clanId
+          << 0
+          << c.sex
+          << c.raceId
+          << c.classId
+          << 1 // active
+          << c.posX // x
+          << c.posY // y
+          << c.posZ // z
+          << c.currentHp
+          << c.currentMp
+          << c.sp
+          << c.xp
+          << c.level
+          << c.karma
+          << c.pkCount
+          // << c.pvpCount
+        ;
+
+        constexpr std::array<u32, 40> unknown{};
+        p << unknown;
+
+        p << c.hairStyleId
+          << c.hairColorId
+          << c.faceId
+          << c.maxHp
+          << c.maxMp
+          << c.deleteTime
+          << c.classId
+          << c.selected
+          << c.enchantEffect
+          // << c.augmentationId
+          // << c.transformationId
+        ;
+    }
+
+    conn.send(p);
 }
 
 static void handleCharacterCreationScreen(Connection & conn)
@@ -123,10 +137,197 @@ static void handleCharacterCreationScreen(Connection & conn)
 
 static void handleCharacterCreation(Connection & conn)
 {
+    PacketReader reader(conn.readBuffer().subspan(3));
+
+    u32 ignore;
+
+    auto & c = gApp.characters.emplace_back();
+    reader >> c.name >> c.raceId >> c.sex >> c.classId >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
+           >> c.hairStyleId >> c.hairColorId >> c.faceId;
+    c.selected = 1;
+
+    SPDLOG_DEBUG(L"Character name: '{}', race: {}, sex: {}, class: {}", c.name, c.raceId, c.sex, c.classId);
+
     conn.send(Packet(0x19) << 1);
+    handleCharacterList(conn);
 }
 
-static void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
+static void handleSelectCharacter(Connection & conn)
+{
+    PacketReader reader(conn.readBuffer().subspan(3));
+
+    u32 id;
+    reader >> id;
+
+    auto & c = gApp.characters.front();
+
+    Packet p(0x15);
+    p << c.name
+      << c.id
+      << L"l2cpp" // title
+      << gApp.playOk1
+      << c.clanId
+      << 0
+      << c.sex
+      << c.raceId
+      << c.classId
+      << 1 // active
+      << c.posX // x
+      << c.posY // y
+      << c.posZ // z
+      << c.currentHp
+      << c.currentMp
+      << c.sp
+      << c.xp
+      << c.level
+      << c.karma
+      << c.pkCount
+      << 10 // INT
+      << 10 // STR
+      << 10 // CON
+      << 10 // MEN
+      << 10 // DEX
+      << 10 // WIT
+    ;
+
+    constexpr std::array<u32, 53> unknown{};
+    p << unknown;
+
+    conn.send(p);
+}
+
+static void handleAutoShots(Connection & conn)
+{
+    conn.send(Packet(0x1b).append<u16>(0) << 0);
+}
+
+static void handleEnterWorld(Connection & conn)
+{
+    auto & c = gApp.characters.front();
+
+    // AKA UserInfo packet
+    Packet p(0x04);
+    p
+        << c.posX // x
+        << c.posY // y
+        << c.posZ // z
+        << 0 // heading
+        << c.id
+        << c.name
+        << c.raceId
+        << c.sex
+        << c.classId
+        << c.level
+        << c.xp
+        << 10 // STR
+        << 10 // DEX
+        << 10 // CON
+        << 10 // INT
+        << 10 // WIT
+        << 10 // MEN
+        << c.maxHp
+        << c.currentHp
+        << c.maxMp
+        << c.currentMp
+        << c.sp
+        << 0 // current weight
+        << 0 // mac weight
+        << 0x28 // ?
+    ;
+
+    constexpr std::array<u32, 32> unknown{};
+    p << unknown;
+
+    p
+        << 0 // p_atk,
+        << 0 // p_atk_speed,
+        << 0 // p_def,
+        << 0 // evasion_rate,
+        << 0 // accuracy,
+        << 0 // critical_hit,
+        << 0 // m_atk,
+        << 0 // m_atk_speed,
+        << 0 // p_atk_speed,
+        << 0 // m_def,
+        << 0 // pvp_flag,
+        << 0 // karma,
+        << 180 // run_speed,
+        << 100 // walk_speed,
+        << 0 // swim_run_speed,
+        << 0 // swim_walk_speed,
+        << 0 // fly_run_speed,
+        << 0 // fly_walk_speed,
+        << 0 // fly_run_speed,
+        << 0 // fly_walk_speed,
+        << 1.0 // movement_speed_multiplier,
+        << 1.0 // atk_speed_multiplier,
+        << 20.0 // collision_radius,
+        << 20.0 // collision_height,
+        << c.hairStyleId
+        << c.hairColorId
+        << c.faceId
+        << 1 // access level
+        << L"l2cpp" // title
+        << c.clanId
+        << 0 // crest id
+        << 0 // ally id
+        << 0 // ally crest id
+        << 0 // clan leader
+        << u8(0) // mount type
+        << u8(0) // private store type
+        << u8(0) // dwarven craft
+        << c.pkCount
+        << c.pvpCount
+        << u16(0) // cubics
+        << u8(0) // party members
+        << 0 // abnormal effects
+        << u8(0) // ?
+        << 0 // clan privileges
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << u16(0) // recommendations left
+        << u16(0) // recommendations have
+        << 0 // ?
+        << u16(0) // inventory limit
+        << c.classId
+        << 0 // ?
+        << 1000 // max CP
+        << 1000 // cur CP
+        << false // mounted
+        << u8(0) // duel color: 1=blue 2=red
+        << 0 // clan crest large id
+        << u8(0) // hero symbol
+        << u8(0) // hero
+        << u8(0) // ?
+        << 0 // fish x
+        << 0 // fish y
+        << 0 // fish z
+        << 0xFFFFFF // name color
+    ;
+
+    conn.send(p);
+}
+
+static void handleCancelCharacterDeletion(Connection & conn)
+{
+    PacketReader reader(conn.readBuffer().subspan(3));
+
+    u32 characterId;
+    reader >> characterId;
+
+    auto const it = std::ranges::find_if(gApp.characters, [=] (auto const & c) { return c.id == characterId; });
+    if (it != gApp.characters.cend())
+        it->deleteTime = 0;
+
+    handleCharacterList(conn);
+}
+
+void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
 {
     Connection conn(std::move(socket));
     conn.read(false); // First packet is not encrypted
@@ -142,6 +343,10 @@ static void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
         { 0x09, &handleConnectionClosing       },
         { 0x0e, &handleCharacterCreationScreen },
         { 0x0b, &handleCharacterCreation       },
+        { 0x0d, &handleSelectCharacter         },
+        { 0xd0, &handleAutoShots               },
+        { 0x03, &handleEnterWorld              },
+        { 0x62, &handleCancelCharacterDeletion },
     };
 
     while (conn.isAlive())

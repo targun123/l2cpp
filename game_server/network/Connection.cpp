@@ -123,7 +123,7 @@ void Connection::read(bool const needDecryption)
 
     // Read packet type
     auto const type = request[0];
-    SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", type, size);
+    SPDLOG_INFO("recv: 0x{:02x} ({} bytes)", type, size);
     std::cout << l2cpp::hexdump(_impl->readBuffer.data(), size) << std::endl;
 }
 

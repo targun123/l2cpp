@@ -28,7 +28,7 @@ std::string l2cpp::hexdump(void const * const ptr, size_t const size)
                 if (i + j < size)
                     result += std::isprint(buf[i + j]) ? buf[i + j] : '.';
                 else
-                    result += '_';
+                    result += ' ';
             }
 
             result += '\n';

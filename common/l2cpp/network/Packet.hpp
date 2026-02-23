@@ -10,6 +10,7 @@
 // C++ includes
 #include <optional>
 #include <span>
+#include <string>
 
 class Packet
 {
@@ -25,19 +26,29 @@ public:
     /// Appends a span of bytes to the packet.
     Packet & append(std::span<byte const> span);
 
-    /// Appends a single byte to the packet.
-    Packet & append(byte b) { return append({&b, 1}); }
+    template<typename T, size_t N>
+    Packet & append(std::array<T, N> const & a)
+    {
+        return append({reinterpret_cast<byte const *>(a.data()), a.size() * sizeof(T)});
+    }
 
-    /// Shortened way to append to the packet.
-    Packet & operator<<(auto && t) { return append(t); }
+    template<typename C>
+    Packet & append(std::basic_string<C> const & str)
+    {
+        // Include \0 into packet
+        return append({reinterpret_cast<byte const *>(str.c_str()), str.size() * sizeof(C) + sizeof(C)});
+    }
 
     /// Allows to append any integral type as bytes to the packet.
     template<typename T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
-    Packet & append(T const & t) { return append({reinterpret_cast<byte const *>(&t), sizeof(T)}); }
+    Packet & append(T t) { return append({reinterpret_cast<byte const *>(&t), sizeof(T)}); }
 
     /// Appends a contiguous array of integrals as bytes to the packet.
     template<typename T, size_t N, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
     Packet & append(T const (&a)[N]) { return append({reinterpret_cast<byte const *>(a), N * sizeof(T)}); }
+
+    /// Shortened way to append to the packet.
+    Packet & operator<<(auto && t) { return append(t); }
 
 public:
     /// Appends the checksum of the packet body.
