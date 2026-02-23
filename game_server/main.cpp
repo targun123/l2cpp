@@ -200,6 +200,12 @@ static void handleAutoShots(Connection & conn)
     conn.send(Packet(0x1b).append<u16>(0) << 0);
 }
 
+static void handleQuestList(Connection & conn)
+{
+    constexpr u16 questAmount = 0, questItems = 0;
+    conn.send(Packet(0x80) << questAmount << questItems);
+}
+
 static void handleUserInfo(Connection & conn)
 {
     auto & c = gApp.characters.front();
@@ -342,6 +348,7 @@ void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
         HANDLER(0x0d, SelectCharacter),
         HANDLER(0x62, CancelCharacterDeletion),
         HANDLER(0xd0, AutoShots),
+        HANDLER(0x63, QuestList),
         HANDLER(0x03, UserInfo),
         HANDLER(0x46, LeaveWorld),
 #undef HANDLER
