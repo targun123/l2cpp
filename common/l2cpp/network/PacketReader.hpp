@@ -10,9 +10,9 @@
 #include <span>
 #include <string>
 
-namespace l2cpp::network { class PacketReader; }
+namespace l2cpp::Network { class PacketReader; }
 
-class l2cpp::network::PacketReader
+class l2cpp::Network::PacketReader
 {
 public:
     explicit PacketReader(std::span<byte const> packet) noexcept: cursor(std::move(packet)) {}
@@ -21,7 +21,7 @@ public:
     template<typename T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
     PacketReader & operator>>(T & t)
     {
-        std::memcpy(&t, cursor.data(), sizeof(t));
+        t = *reinterpret_cast<T const *>(cursor.data());
         cursor = cursor.subspan(sizeof(T));
         return *this;
     }

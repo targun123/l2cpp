@@ -19,7 +19,7 @@
 // C++ includes
 #include <iostream>
 
-using l2cpp::network::PacketReader;
+using l2cpp::Network::PacketReader;
 
 struct
 {
