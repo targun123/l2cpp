@@ -8,6 +8,7 @@
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Packet.hpp>
+#include <l2cpp/network/PacketReader.hpp>
 #include <l2cpp/network/SocketListener.hpp>
 
 // Third-party
@@ -17,31 +18,7 @@
 // C++ includes
 #include <iostream>
 
-class PacketReader
-{
-public:
-    explicit PacketReader(std::span<byte const> packet) noexcept: cursor(std::move(packet)) {}
-
-public:
-    template<typename T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
-    PacketReader & operator>>(T & t)
-    {
-        std::memcpy(&t, cursor.data(), sizeof(t));
-        cursor = cursor.subspan(sizeof(T));
-        return *this;
-    }
-
-    template<typename C>
-    PacketReader & operator>>(std::basic_string<C> & str)
-    {
-        str = reinterpret_cast<C const *>(cursor.data());
-        cursor = cursor.subspan(str.size() * sizeof(C) + sizeof(C));
-        return *this;
-    }
-
-private:
-    std::span<byte const> cursor;
-};
+using l2cpp::network::PacketReader;
 
 struct
 {
