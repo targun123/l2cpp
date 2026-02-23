@@ -46,8 +46,7 @@ static void handleAuth(Connection const & conn)
     PacketReader reader(conn.readBuffer().subspan(3));
 
     u32 playOk2, loginOk1, loginOk2;
-    reader >> gApp.userName >> gApp.playOk1 >> playOk2 >> loginOk1 >> loginOk2;
-    SPDLOG_DEBUG(L"'{}' | {} | {} | {} | {}", gApp.userName, loginOk1, loginOk2, gApp.playOk1, playOk2);
+    reader >> gApp.userName >> playOk2 >> gApp.playOk1 >> loginOk1 >> loginOk2;
 }
 
 static void handleConnectionClosing(Connection & conn)
@@ -128,8 +127,6 @@ static void handleCharacterCreation(Connection & conn)
     reader >> c.name >> c.raceId >> c.sex >> c.classId >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
            >> c.hairStyleId >> c.hairColorId >> c.faceId;
     c.selected = 1;
-
-    SPDLOG_DEBUG(L"Character name: '{}', race: {}, sex: {}, class: {}", c.name, c.raceId, c.sex, c.classId);
 
     conn.send(Packet(0x19) << 1);
     handleCharacterList(conn);
@@ -254,7 +251,7 @@ static void handleUserInfo(Connection & conn)
         << c.stats.castSpeed
         << c.stats.pAtkSpeed
         << c.stats.mDef
-        << 0 // pvp_flag,
+        << 0 // pvp_flag: 0=normal 1=purple,
         << c.karma
         << c.stats.runSpeed
         << c.stats.walkSpeed
@@ -267,7 +264,7 @@ static void handleUserInfo(Connection & conn)
         << 1.0 // movement_speed_multiplier,
         << 1.0 // atk_speed_multiplier,
         << 20.0 // collision_radius,
-        << 100.0 // collision_height,
+        << 30.0 // collision_height,
         << c.hairStyleId
         << c.hairColorId
         << c.faceId
@@ -277,10 +274,10 @@ static void handleUserInfo(Connection & conn)
         << 0 // crest id
         << 0 // ally id
         << 0 // ally crest id
-        << 0 // clan leader
+        << 0 // clan leader: 0x60 | in-siege: 0x40 | leader rights: 0x20
         << static_cast<u8>(0) // mount type
         << static_cast<u8>(0) // private store type
-        << static_cast<u8>(0) // dwarven craft
+        << false // can dwarven craft
         << c.pkCount
         << c.pvpCount
         << static_cast<u16>(0) // cubics
@@ -288,31 +285,31 @@ static void handleUserInfo(Connection & conn)
         << 0 // abnormal effects
         << static_cast<u8>(0) // ?
         << 0 // clan privileges
+        << 0 // 0x100 // swim
         << 0 // ?
         << 0 // ?
         << 0 // ?
         << 0 // ?
         << 0 // ?
         << 0 // ?
+        << c.evalAmount
+        << c.evalScore
         << 0 // ?
-        << static_cast<u16>(42) // recommendations left
-        << static_cast<u16>(100) // recommendations have
-        << 0 // ?
-        << static_cast<u16>(1000) // inventory limit
+        << c.inventoryLimit
         << c.classId
-        << 0 // ?
+        << 0 // special effects? circles around player...
         << static_cast<u32>(c.cp.max)
         << static_cast<u32>(c.cp.current)
-        << false // mounted
-        << static_cast<u8>(0) // duel color: 1=blue 2=red
+        << c.enchantEffect
+        << static_cast<u8>(0) // duel team color: 0=none 1=blue 2=red
         << 0 // clan crest large id
-        << static_cast<u8>(0) // hero symbol
-        << static_cast<u8>(0) // hero
-        << static_cast<u8>(0) // ?
+        << true // hero symbol in status window
+        << true // hero aura
+        << static_cast<u8>(0) // fishing mode (unused)
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z
-        << 0xFFFFFF // name color
+        << c.nameColor
     ;
 
     conn.send(p);

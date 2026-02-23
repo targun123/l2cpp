@@ -43,6 +43,9 @@ struct Character
     u32 augmentationId = 0;
     u32 transformationId = 0;
     u32 clanId = 0;
+    u16 evalAmount = 100, evalScore = 42;
+    u16 inventoryLimit = std::numeric_limits<u16>::max();
+    u32 nameColor = 0xFFFFFF; // RGB
 
     struct
     {
