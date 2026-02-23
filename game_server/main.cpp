@@ -195,9 +195,9 @@ static void handleCancelCharacterDeletion(Connection & conn)
     handleCharacterList(conn);
 }
 
-static void handleAutoShots(Connection & conn)
+static void handleManorList(Connection & conn)
 {
-    conn.send(Packet(0x1b).append<u16>(0) << 0);
+    conn.send(Packet(0xfe).append<u16>(0x1b) << 0);
 }
 
 static void handleQuestList(Connection & conn)
@@ -347,7 +347,7 @@ void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
         HANDLER(0x0b, CharacterCreation),
         HANDLER(0x0d, SelectCharacter),
         HANDLER(0x62, CancelCharacterDeletion),
-        HANDLER(0xd0, AutoShots),
+        HANDLER(0xd0, ManorList),
         HANDLER(0x63, QuestList),
         HANDLER(0x03, UserInfo),
         HANDLER(0x46, LeaveWorld),
@@ -366,7 +366,7 @@ void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
             (*handler)(conn);
         }
         else
-            SPDLOG_INFO("Unsupported packet 0x{:02x}", conn.readBuffer()[2]);
+            SPDLOG_WARN("Unsupported packet 0x{:02x}", conn.readBuffer()[2]);
     }
 }
 catch (l2cpp::Exception const & e)
