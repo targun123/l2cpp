@@ -6,6 +6,7 @@
 #include "network/Connection.hpp"
 
 #include <l2cpp/Exception.hpp>
+#include <l2cpp/Misc.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/PacketReader.hpp>
@@ -59,6 +60,11 @@ static void handleConnectionClosing(Connection & conn)
 
 static void handleCharacterList(Connection & conn)
 {
+    if (gApp.characters.empty())
+    {
+        gApp.characters.emplace_back();
+    }
+
     Packet p(0x13);
     p << static_cast<u32>(gApp.characters.size());
 
@@ -74,11 +80,11 @@ static void handleCharacterList(Connection & conn)
           << c.raceId
           << c.classId
           << 1 // active
-          << c.posX // x
-          << c.posY // y
-          << c.posZ // z
-          << c.currentHp
-          << c.currentMp
+          << c.pos.x
+          << c.pos.y
+          << c.pos.z
+          << c.hp.current
+          << c.mp.current
           << c.sp
           << c.xp
           << c.level
@@ -93,8 +99,8 @@ static void handleCharacterList(Connection & conn)
         p << c.hairStyleId
           << c.hairColorId
           << c.faceId
-          << c.maxHp
-          << c.maxMp
+          << c.hp.max
+          << c.mp.max
           << c.deleteTime
           << c.classId
           << c.selected
@@ -139,153 +145,37 @@ static void handleSelectCharacter(Connection & conn)
     auto & c = gApp.characters.front();
 
     Packet p(0x15);
-    p << c.name
-      << c.id
-      << L"l2cpp" // title
-      << gApp.playOk1
-      << c.clanId
-      << 0
-      << c.sex
-      << c.raceId
-      << c.classId
-      << 1 // active
-      << c.posX // x
-      << c.posY // y
-      << c.posZ // z
-      << c.currentHp
-      << c.currentMp
-      << c.sp
-      << c.xp
-      << c.level
-      << c.karma
-      << c.pkCount
-      << 10 // INT
-      << 10 // STR
-      << 10 // CON
-      << 10 // MEN
-      << 10 // DEX
-      << 10 // WIT
+    p
+        << c.name
+        << c.id
+        << c.title
+        << gApp.playOk1
+        << c.clanId
+        << 0 // unknown
+        << c.sex
+        << c.raceId
+        << c.classId
+        << 1 // active
+        << c.pos.x
+        << c.pos.y
+        << c.pos.z
+        << c.hp.current
+        << c.mp.current
+        << c.sp
+        << c.xp
+        << c.level
+        << c.karma
+        << c.pkCount
+        << c.attributes.INT
+        << c.attributes.STR
+        << c.attributes.CON
+        << c.attributes.MEN
+        << c.attributes.DEX
+        << c.attributes.WIT
     ;
 
     constexpr std::array<u32, 53> unknown{};
     p << unknown;
-
-    conn.send(p);
-}
-
-static void handleAutoShots(Connection & conn)
-{
-    conn.send(Packet(0x1b).append<u16>(0) << 0);
-}
-
-static void handleEnterWorld(Connection & conn)
-{
-    auto & c = gApp.characters.front();
-
-    // AKA UserInfo packet
-    Packet p(0x04);
-    p
-        << c.posX // x
-        << c.posY // y
-        << c.posZ // z
-        << 0 // heading
-        << c.id
-        << c.name
-        << c.raceId
-        << c.sex
-        << c.classId
-        << c.level
-        << c.xp
-        << 10 // STR
-        << 10 // DEX
-        << 10 // CON
-        << 10 // INT
-        << 10 // WIT
-        << 10 // MEN
-        << c.maxHp
-        << c.currentHp
-        << c.maxMp
-        << c.currentMp
-        << c.sp
-        << 0 // current weight
-        << 0 // mac weight
-        << 0x28 // ?
-    ;
-
-    constexpr std::array<u32, 32> unknown{};
-    p << unknown;
-
-    p
-        << 0 // p_atk,
-        << 0 // p_atk_speed,
-        << 0 // p_def,
-        << 0 // evasion_rate,
-        << 0 // accuracy,
-        << 0 // critical_hit,
-        << 0 // m_atk,
-        << 0 // m_atk_speed,
-        << 0 // p_atk_speed,
-        << 0 // m_def,
-        << 0 // pvp_flag,
-        << 0 // karma,
-        << 180 // run_speed,
-        << 100 // walk_speed,
-        << 0 // swim_run_speed,
-        << 0 // swim_walk_speed,
-        << 0 // fly_run_speed,
-        << 0 // fly_walk_speed,
-        << 0 // fly_run_speed,
-        << 0 // fly_walk_speed,
-        << 1.0 // movement_speed_multiplier,
-        << 1.0 // atk_speed_multiplier,
-        << 20.0 // collision_radius,
-        << 20.0 // collision_height,
-        << c.hairStyleId
-        << c.hairColorId
-        << c.faceId
-        << 1 // access level
-        << L"l2cpp" // title
-        << c.clanId
-        << 0 // crest id
-        << 0 // ally id
-        << 0 // ally crest id
-        << 0 // clan leader
-        << u8(0) // mount type
-        << u8(0) // private store type
-        << u8(0) // dwarven craft
-        << c.pkCount
-        << c.pvpCount
-        << u16(0) // cubics
-        << u8(0) // party members
-        << 0 // abnormal effects
-        << u8(0) // ?
-        << 0 // clan privileges
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
-        << u16(0) // recommendations left
-        << u16(0) // recommendations have
-        << 0 // ?
-        << u16(0) // inventory limit
-        << c.classId
-        << 0 // ?
-        << 1000 // max CP
-        << 1000 // cur CP
-        << false // mounted
-        << u8(0) // duel color: 1=blue 2=red
-        << 0 // clan crest large id
-        << u8(0) // hero symbol
-        << u8(0) // hero
-        << u8(0) // ?
-        << 0 // fish x
-        << 0 // fish y
-        << 0 // fish z
-        << 0xFFFFFF // name color
-    ;
 
     conn.send(p);
 }
@@ -297,6 +187,7 @@ static void handleCancelCharacterDeletion(Connection & conn)
     u32 characterId;
     reader >> characterId;
 
+    // ReSharper disable once CppTooWideScopeInitStatement
     auto const it = std::ranges::find_if(gApp.characters, [=] (auto const & c) { return c.id == characterId; });
     if (it != gApp.characters.cend())
         it->deleteTime = 0;
@@ -304,33 +195,169 @@ static void handleCancelCharacterDeletion(Connection & conn)
     handleCharacterList(conn);
 }
 
+static void handleAutoShots(Connection & conn)
+{
+    conn.send(Packet(0x1b).append<u16>(0) << 0);
+}
+
+static void handleUserInfo(Connection & conn)
+{
+    auto & c = gApp.characters.front();
+
+    // AKA UserInfo packet
+    Packet p(0x04);
+    p
+        << c.pos.x
+        << c.pos.y
+        << c.pos.z
+        << 0 // head angle
+        << c.id
+        << c.name
+        << c.raceId
+        << c.sex
+        << c.classId
+        << c.level
+        << c.xp
+        << c.attributes.STR
+        << c.attributes.DEX
+        << c.attributes.CON
+        << c.attributes.INT
+        << c.attributes.WIT
+        << c.attributes.MEN
+        << static_cast<u32>(c.hp.max)
+        << static_cast<u32>(c.hp.current)
+        << static_cast<u32>(c.mp.max)
+        << static_cast<u32>(c.mp.current)
+        << c.sp
+        << c.weight.current
+        << c.weight.max
+        << 0x28 // ?
+    ;
+
+    constexpr std::array<u32, 32> unknown{};
+    p << unknown;
+
+    p
+        << c.stats.pAtk
+        << c.stats.pAtkSpeed
+        << c.stats.pDef
+        << c.stats.evasion
+        << c.stats.accuracy
+        << c.stats.critRate
+        << c.stats.mAtk
+        << c.stats.castSpeed
+        << c.stats.pAtkSpeed
+        << c.stats.mDef
+        << 0 // pvp_flag,
+        << c.karma
+        << c.stats.runSpeed
+        << c.stats.walkSpeed
+        << c.stats.swimRunSpeed
+        << c.stats.swimWalkSpeed
+        << c.stats.flyRunSpeed
+        << c.stats.flyWalkSpeed
+        << c.stats.flyRunSpeed
+        << c.stats.flyWalkSpeed
+        << 1.0 // movement_speed_multiplier,
+        << 1.0 // atk_speed_multiplier,
+        << 20.0 // collision_radius,
+        << 100.0 // collision_height,
+        << c.hairStyleId
+        << c.hairColorId
+        << c.faceId
+        << 1 // access level
+        << c.title
+        << c.clanId
+        << 0 // crest id
+        << 0 // ally id
+        << 0 // ally crest id
+        << 0 // clan leader
+        << static_cast<u8>(0) // mount type
+        << static_cast<u8>(0) // private store type
+        << static_cast<u8>(0) // dwarven craft
+        << c.pkCount
+        << c.pvpCount
+        << static_cast<u16>(0) // cubics
+        << false // looking for party members
+        << 0 // abnormal effects
+        << static_cast<u8>(0) // ?
+        << 0 // clan privileges
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << 0 // ?
+        << static_cast<u16>(42) // recommendations left
+        << static_cast<u16>(100) // recommendations have
+        << 0 // ?
+        << static_cast<u16>(1000) // inventory limit
+        << c.classId
+        << 0 // ?
+        << static_cast<u32>(c.cp.max)
+        << static_cast<u32>(c.cp.current)
+        << false // mounted
+        << static_cast<u8>(0) // duel color: 1=blue 2=red
+        << 0 // clan crest large id
+        << static_cast<u8>(0) // hero symbol
+        << static_cast<u8>(0) // hero
+        << static_cast<u8>(0) // ?
+        << 0 // fish x
+        << 0 // fish y
+        << 0 // fish z
+        << 0xFFFFFF // name color
+    ;
+
+    conn.send(p);
+}
+
+static void handleLeaveWorld(Connection & conn)
+{
+    conn.send(Packet(0x5f) << 1);
+    handleCharacterList(conn);
+}
+
 void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
 {
     Connection conn(std::move(socket));
     conn.read(false); // First packet is not encrypted
+    auto size = *reinterpret_cast<u16 const *>(conn.readBuffer().data());
+    std::cout << l2cpp::hexdump(conn.readBuffer().data(), size) << std::endl;
     handleProtocol(conn);
 
     conn.read();
+    size = *reinterpret_cast<u16 const *>(conn.readBuffer().data());
+    std::cout << l2cpp::hexdump(conn.readBuffer().data(), size) << std::endl;
     handleAuth(conn);
     handleCharacterList(conn);
 
     using PacketHandler = void(*)(Connection & conn);
-    std::unordered_map<byte, PacketHandler> const handlers
+    std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> const handlers
     {
-        { 0x09, &handleConnectionClosing       },
-        { 0x0e, &handleCharacterCreationScreen },
-        { 0x0b, &handleCharacterCreation       },
-        { 0x0d, &handleSelectCharacter         },
-        { 0xd0, &handleAutoShots               },
-        { 0x03, &handleEnterWorld              },
-        { 0x62, &handleCancelCharacterDeletion },
+#define HANDLER(opCode, name) { opCode, {&handle ## name, #name} }
+        HANDLER(0x09, ConnectionClosing),
+        HANDLER(0x0e, CharacterCreationScreen),
+        HANDLER(0x0b, CharacterCreation),
+        HANDLER(0x0d, SelectCharacter),
+        HANDLER(0x62, CancelCharacterDeletion),
+        HANDLER(0xd0, AutoShots),
+        HANDLER(0x03, UserInfo),
+        HANDLER(0x46, LeaveWorld),
+#undef HANDLER
     };
 
     while (conn.isAlive())
     {
         conn.read();
         if (auto const it = handlers.find(conn.readBuffer()[2]); it != handlers.end())
-            (*it->second)(conn);
+        {
+            auto const & [handler, handlerName] = it->second;
+            SPDLOG_DEBUG("-> {}", handlerName);
+            size = *reinterpret_cast<u16 const *>(conn.readBuffer().data());
+            std::cout << l2cpp::hexdump(conn.readBuffer().data(), size) << std::endl;
+            (*handler)(conn);
+        }
         else
             SPDLOG_INFO("Unsupported packet 0x{:02x}", conn.readBuffer()[2]);
     }
