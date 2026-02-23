@@ -101,20 +101,14 @@ void Connection::read(bool const needDecryption)
     L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
 
     auto const size = *reinterpret_cast<u16 *>(_impl->readBuffer.data());
-    L2CPP_B_ASSERT(size, "Packet without body");
-    SPDLOG_TRACE("Incoming packet of size '{}'", size);
+    L2CPP_B_ASSERT(size, "Packet announced without any opCode");
 
     if (_impl->readBuffer.size() < size)
-    {
-        auto const oldSize = _impl->readBuffer.size();
         _impl->readBuffer.resize(size);
-        SPDLOG_TRACE("_impl->readBuffer resized from '{}' to '{}'", oldSize, _impl->readBuffer.size());
-    }
 
     auto request  = _impl->readBuffer.data() + sizeof(size);
     auto bodySize = size - sizeof(size);
 
-    SPDLOG_TRACE("Attempt to read next {} bytes", bodySize);
     boost::asio::read(_impl->socket, boost::asio::buffer(request, bodySize), ec);
     L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
 
@@ -128,9 +122,11 @@ void Connection::read(bool const needDecryption)
 
 void Connection::send(Packet & p, bool const needEncryption)
 {
+    L2CPP_B_ASSERT(p.opCode().has_value(), "Trying to send a packet without any opCode");
+
     p.writeSize();
 
-    SPDLOG_DEBUG("About to send packet 0x{:02x} ({} bytes)", p.opCode().value_or(0xFF), p.size());
+    SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.opCode().value(), p.size());
     std::cout << l2cpp::hexdump(p.buffer().data(), p.buffer().size()) << std::endl;
 
     if (needEncryption)
