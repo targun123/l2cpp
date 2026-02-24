@@ -7,7 +7,7 @@
 
 DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
 {
-    auto & c = player.characters().front();
+    auto & c = player.currentCharacter().value().get();
 
     Packet p(0x04);
     p

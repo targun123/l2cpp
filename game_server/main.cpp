@@ -35,7 +35,7 @@ void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
         if (auto const it = gPacketHandlers.find(opCode); it != gPacketHandlers.end())
         {
             auto const & [handler, handlerName] = it->second;
-            SPDLOG_INFO("recv: {} (0x{:02x} • {} bytes)", handlerName, opCode, size);
+            SPDLOG_INFO("recv: {} (0x{:02x}) ({} bytes)", handlerName, opCode, size);
             std::cout << l2cpp::hexdump(buffer.data(), size) << std::endl;
             (*handler)(player);
         }

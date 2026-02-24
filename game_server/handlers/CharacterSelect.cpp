@@ -9,11 +9,17 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    u32 id;
-    reader >> id;
+    u32 index;
+    reader >> index;
 
-    auto & c = *std::ranges::find_if(player.characters(), [id] (auto const & c) { return c.id == id; });;
+    if (index >= player.characters().size())
+    {
+        SPDLOG_ERROR("Invalid character selection index: {}", index);
+        index = 0;
+    }
 
+    player.setCurrentCharacter(index);
+    auto & c = player.currentCharacter().value().get();
     Packet p(0x15);
     p
         << c.name

@@ -28,6 +28,7 @@ public:
 
     auto characters()       -> std::span<Character>;
     auto characters() const -> std::span<Character const>;
+    auto currentCharacter() -> OptionalRef<Character>;
 
     auto accountName()   const -> std::wstring_view;
     auto playOk1()       const -> u32;
@@ -36,6 +37,7 @@ public:
     void setAccountName(std::wstring userName);
     void setPlayOk1(u32 playOk1);
     auto addCharacter() -> Character &;
+    void setCurrentCharacter(size_t index);
 
 private:
     struct PlayerImpl;
