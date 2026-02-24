@@ -207,7 +207,6 @@ static void handleUserInfo(Connection & conn)
 {
     auto & c = gApp.characters.front();
 
-    // AKA UserInfo packet
     Packet p(0x04);
     p
         << c.pos.x
@@ -235,12 +234,7 @@ static void handleUserInfo(Connection & conn)
         << c.weight.current
         << c.weight.max
         << 0x28 // ?
-    ;
-
-    constexpr std::array<u32, 32> unknown{};
-    p << unknown;
-
-    p
+        << std::array<u32, 32>{} // gear
         << c.stats.pAtk
         << c.stats.pAtkSpeed
         << c.stats.pDef
@@ -248,10 +242,10 @@ static void handleUserInfo(Connection & conn)
         << c.stats.accuracy
         << c.stats.critRate
         << c.stats.mAtk
-        << c.stats.castSpeed
+        << c.stats.mAtkSpeed
         << c.stats.pAtkSpeed
         << c.stats.mDef
-        << 0 // pvp_flag: 0=normal 1=purple,
+        << (c.isPvpFlagged ? 1 : 0)
         << c.karma
         << c.stats.runSpeed
         << c.stats.walkSpeed
@@ -263,12 +257,12 @@ static void handleUserInfo(Connection & conn)
         << c.stats.flyWalkSpeed
         << 1.0 // movement_speed_multiplier,
         << 1.0 // atk_speed_multiplier,
-        << 20.0 // collision_radius,
-        << 30.0 // collision_height,
+        << c.collisionRadius
+        << c.collisionHeight
         << c.hairStyleId
         << c.hairColorId
         << c.faceId
-        << 1 // access level
+        << (c.accessLevel > 0 ? 1 : 0)
         << c.title
         << c.clanId
         << 0 // crest id
@@ -280,7 +274,13 @@ static void handleUserInfo(Connection & conn)
         << false // can dwarven craft
         << c.pkCount
         << c.pvpCount
-        << static_cast<u16>(0) // cubics
+    ;
+
+    p << static_cast<u16>(c.cubics.size());
+    for (auto id : c.cubics)
+        p << id;
+
+    p
         << false // looking for party members
         << 0 // abnormal effects
         << static_cast<u8>(0) // ?
@@ -301,10 +301,10 @@ static void handleUserInfo(Connection & conn)
         << static_cast<u32>(c.cp.max)
         << static_cast<u32>(c.cp.current)
         << c.enchantEffect
-        << static_cast<u8>(0) // duel team color: 0=none 1=blue 2=red
+        << c.team // duel team color: 0=none 1=blue 2=red
         << 0 // clan crest large id
-        << true // hero symbol in status window
-        << true // hero aura
+        << c.isHero // hero symbol in status window
+        << c.isHero // hero aura
         << static_cast<u8>(0) // fishing mode (unused)
         << 0 // fish x
         << 0 // fish y

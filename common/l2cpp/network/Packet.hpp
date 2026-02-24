@@ -26,7 +26,26 @@ public:
     /// Appends a span of bytes to the packet.
     Packet & append(std::span<byte const> span);
 
-    template<typename T, size_t N>
+    /// Allows to append any integral type as bytes to the packet.
+    template<typename T,
+             typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>>>
+    Packet & append(T t)
+    {
+        if constexpr (std::is_enum_v<T>)
+            return append(std::to_underlying(t));
+        else
+            return append({reinterpret_cast<byte const *>(&t), sizeof(T)});
+    }
+
+    /// Appends a contiguous array of integrals as bytes to the packet.
+    template<typename T, size_t N, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
+    Packet & append(T const (&a)[N])
+    {
+        return append({reinterpret_cast<byte const *>(a), N * sizeof(T)});
+    }
+
+    /// Appends a contiguous array of integrals to the packet
+    template<typename T, size_t N, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
     Packet & append(std::array<T, N> const & a)
     {
         return append({reinterpret_cast<byte const *>(a.data()), a.size() * sizeof(T)});
@@ -38,14 +57,6 @@ public:
         // Include \0 into packet
         return append({reinterpret_cast<byte const *>(str.c_str()), str.size() * sizeof(C) + sizeof(C)});
     }
-
-    /// Allows to append any integral type as bytes to the packet.
-    template<typename T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
-    Packet & append(T t) { return append({reinterpret_cast<byte const *>(&t), sizeof(T)}); }
-
-    /// Appends a contiguous array of integrals as bytes to the packet.
-    template<typename T, size_t N, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
-    Packet & append(T const (&a)[N]) { return append({reinterpret_cast<byte const *>(a), N * sizeof(T)}); }
 
     /// Shortened way to append to the packet.
     Packet & operator<<(auto && t) { return append(t); }

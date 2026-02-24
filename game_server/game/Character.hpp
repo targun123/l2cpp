@@ -8,17 +8,19 @@
 
 // C++ includes
 #include <string>
+#include <vector>
 
 template<typename T>
 struct Gauge
 {
-    T max{};
-    T current{max};
+    T current{};
+    T max{current};
 };
 
 struct Character
 {
-    u32 id = 0;
+    u32 id = 1;
+    u32 accessLevel = 1;
     std::wstring name = L"test", title = L"{l2cpp}";
     u32 raceId = 0;
     u32 sex = 0;
@@ -27,7 +29,7 @@ struct Character
     Gauge<double> cp{500};
     Gauge<double> hp{500};
     Gauge<double> mp{500};
-    Gauge<u32> weight{10'000};
+    Gauge<u32> weight{0, 10'000};
     u32 sp = 0;
     u32 xp = 0;
     u32 level = 1;
@@ -43,9 +45,18 @@ struct Character
     u32 augmentationId = 0;
     u32 transformationId = 0;
     u32 clanId = 0;
-    u16 evalAmount = 100, evalScore = 42;
-    u16 inventoryLimit = std::numeric_limits<u16>::max();
+    u16 evalAmount = 32, evalScore = 0;
+    u16 inventoryLimit = 1000;
     u32 nameColor = 0xFFFFFF; // RGB
+    bool isPvpFlagged = false;
+    bool isHero = false;
+
+    double collisionRadius = 20;
+    double collisionHeight = 23.5;
+
+    std::vector<u16> cubics;
+
+    enum class Team : u8 { None, Blue, Red } team = Team::None;
 
     struct
     {
@@ -62,7 +73,7 @@ struct Character
     {
         u32 pAtk          = 10,  pDef         = 10;
         u32 mAtk          = 10,  mDef         = 10;
-        u32 pAtkSpeed     = 10,  castSpeed    = 10;
+        u32 pAtkSpeed     = 10,  mAtkSpeed    = 10;
         u32 accuracy      = 10,  evasion      = 10;
         u32 critRate      = 10;
         u32 walkSpeed     = 120, runSpeed     = 180;
