@@ -18,6 +18,7 @@
 #include <spdlog/spdlog.h>
 
 using boost::asio::ip::tcp;
+using l2cpp::Network::Packet;
 
 struct Connection;
 using PacketHandler = void (*)(Connection &);
@@ -68,7 +69,7 @@ struct Connection
     }
 };
 
-static bool verifyChecksum(std::span<byte const> data)
+static bool verifyChecksum(std::span<byte const> const data)
 {
     auto       start = reinterpret_cast<u32 const *>(data.data());
     auto const end   = reinterpret_cast<u32 const *>(data.data() + data.size() - sizeof(u64));
@@ -169,9 +170,10 @@ static void handleServerListPacket(Connection & conn)
     constexpr u8 serverCount = 2;
 
     Packet p(SentPacket::GameServerList);
-    p << serverCount << u8(0); // unused or reserved
+    p << serverCount
+      << static_cast<u8>(0); // unused or reserved
 
-    for (auto srv : {&onlineServer, &offlineServer})
+    for (auto const srv : {&onlineServer, &offlineServer})
     {
         p
             << srv->id

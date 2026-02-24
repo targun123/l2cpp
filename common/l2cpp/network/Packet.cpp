@@ -10,6 +10,8 @@
 #include <mutex>
 #include <vector>
 
+using l2cpp::Network::Packet;
+
 namespace
 {
     u32 calculateChecksum(std::span<byte const> data)

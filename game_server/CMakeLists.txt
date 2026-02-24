@@ -20,7 +20,25 @@ target_sources(${PROJECT_NAME}
         $<TARGET_OBJECTS:${CMAKE_PROJECT_NAME}-common>
     PRIVATE
         main.cpp
+        Player.cpp
+        Player.hpp
         game/Character.hpp
+        handlers/_Common.hpp
+        handlers/Authenticate.cpp
+        handlers/CharacterCancelDeletion.cpp
+        handlers/CharacterCreate.cpp
+        handlers/CharacterList.cpp
+        handlers/CharacterSelect.cpp
+        handlers/CharacterShowCreationScreen.cpp
+        handlers/CharacterUpdateStatus.cpp
+        handlers/ConnectionClosing.cpp
+        handlers/LeaveWorld.cpp
+        handlers/ManorList.cpp
+        handlers/Move.cpp
+        handlers/PacketHandlers.cpp
+        handlers/PacketHandlers.hpp
+        handlers/Protocol.cpp
+        handlers/QuestList.cpp
         network/Connection.cpp
         network/Connection.hpp
 )

@@ -1,0 +1,41 @@
+/// @author    Chnossos
+/// @date      Created on 2026-02-24
+
+#include "PacketHandlers.hpp"
+
+namespace Handler
+{
+#define HANDLER(name) void handle ## name(Player & player);
+    HANDLER(Protocol)
+    HANDLER(Authenticate)
+    HANDLER(CharacterCancelDeletion)
+    HANDLER(CharacterCreate)
+    HANDLER(CharacterList)
+    HANDLER(CharacterSelect)
+    HANDLER(CharacterShowCreationScreen)
+    HANDLER(CharacterUpdateStatus)
+    HANDLER(ConnectionClosing)
+    HANDLER(LeaveWorld)
+    HANDLER(ManorList)
+    HANDLER(Move)
+    HANDLER(QuestList)
+#undef HANDLER
+}
+
+std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gPacketHandlers
+{
+#define HANDLER(opCode, name) { opCode, {&Handler::handle ## name, #name} }
+    HANDLER(0x00, Protocol),
+    HANDLER(0x08, Authenticate),
+    HANDLER(0x01, Move),
+    HANDLER(0x03, CharacterUpdateStatus),
+    HANDLER(0x09, ConnectionClosing),
+    HANDLER(0x0b, CharacterCreate),
+    HANDLER(0x0d, CharacterSelect),
+    HANDLER(0x0e, CharacterShowCreationScreen),
+    HANDLER(0x46, LeaveWorld),
+    HANDLER(0x62, CharacterCancelDeletion),
+    HANDLER(0x63, QuestList),
+    HANDLER(0xd0, ManorList),
+#undef HANDLER
+};

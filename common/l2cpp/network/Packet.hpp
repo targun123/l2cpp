@@ -12,7 +12,9 @@
 #include <span>
 #include <string>
 
-class Packet
+namespace l2cpp::Network { class Packet; }
+
+class l2cpp::Network::Packet
 {
 public:
     Packet();
@@ -51,11 +53,14 @@ public:
         return append({reinterpret_cast<byte const *>(a.data()), a.size() * sizeof(T)});
     }
 
-    template<typename C>
-    Packet & append(std::basic_string<C> const & str)
+    Packet & append(std::string_view const str)
     {
-        // Include \0 into packet
-        return append({reinterpret_cast<byte const *>(str.c_str()), str.size() * sizeof(C) + sizeof(C)});
+        return append({reinterpret_cast<byte const *>(str.data()), str.size() * sizeof(char)}).append<char>(0);
+    }
+
+    Packet & append(std::wstring_view const str)
+    {
+        return append({reinterpret_cast<byte const *>(str.data()), str.size() * sizeof(wchar_t)}).append<wchar_t>(0);
     }
 
     /// Shortened way to append to the packet.

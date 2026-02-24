@@ -17,8 +17,9 @@ struct Gauge
     T max{current};
 };
 
-struct Character
+class Character
 {
+public:
     u32 id = 1;
     u32 accessLevel = 1;
     std::wstring name = L"test", title = L"{l2cpp}";
