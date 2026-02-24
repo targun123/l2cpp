@@ -6,6 +6,7 @@
 // Project includes
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include <l2cpp/Exception.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/PacketReader.hpp>
 

@@ -7,6 +7,7 @@
 #include <l2cpp/Typedefs.hpp>
 
 // C++ includes
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -56,6 +57,8 @@ public:
     double collisionHeight = 23.5;
 
     std::vector<u16> cubics;
+
+    std::optional<u32> targetId;
 
     enum class Team : u8 { None, Blue, Red } team = Team::None;
 

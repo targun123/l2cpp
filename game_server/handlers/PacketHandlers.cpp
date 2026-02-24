@@ -19,6 +19,8 @@ namespace Handler
     HANDLER(ManorList)
     HANDLER(Move)
     HANDLER(QuestList)
+    HANDLER(TargetClear)
+    HANDLER(TargetSelect)
 #undef HANDLER
 }
 
@@ -29,10 +31,12 @@ std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gP
     HANDLER(0x08, Authenticate),
     HANDLER(0x01, Move),
     HANDLER(0x03, CharacterUpdateStatus),
+    HANDLER(0x04, TargetSelect),
     HANDLER(0x09, ConnectionClosing),
     HANDLER(0x0b, CharacterCreate),
     HANDLER(0x0d, CharacterSelect),
     HANDLER(0x0e, CharacterShowCreationScreen),
+    HANDLER(0x37, TargetClear),
     HANDLER(0x46, LeaveWorld),
     HANDLER(0x62, CharacterCancelDeletion),
     HANDLER(0x63, QuestList),
