@@ -9,9 +9,9 @@ DEFINE_PACKET_HANDLER(Move)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    i32 targetX, targetY, targetZ;
-    i32 originX, originY, originZ;
-    i32 movement;
+    s32 targetX, targetY, targetZ;
+    s32 originX, originY, originZ;
+    s32 movement;
 
     reader >> targetX >> targetY >> targetZ;
     reader >> originX >> originY >> originZ;

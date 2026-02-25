@@ -8,7 +8,7 @@ DEFINE_PACKET_HANDLER(Protocol)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    i32 protocol;
+    s32 protocol;
     reader >> protocol;
 
     /**/ if (protocol == -2)

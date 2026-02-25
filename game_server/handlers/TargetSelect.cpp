@@ -10,7 +10,7 @@ DEFINE_PACKET_HANDLER(TargetSelect)
     L2CPP_B_ASSERT(player.currentCharacter(), "Cannot select target, no current character");
 
     u32 targetId;
-    i32 originX, originY, originZ;
+    s32 originX, originY, originZ;
     u8 actionId; // 0=click 1=shift+click
 
     PacketReader p(player.connection().readBuffer().subspan(3));
