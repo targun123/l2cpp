@@ -8,9 +8,19 @@ DEFINE_PACKET_HANDLER(Protocol)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    u32 protocol;
+    i32 protocol;
     reader >> protocol;
 
-    SPDLOG_INFO("Client protocol: {}", protocol);
-    player.connection().send(Packet(0x00).append<u8>(1) << player.connection().encryptionKey());
+    /**/ if (protocol == -2)
+        SPDLOG_INFO("Client ping");
+    else if (protocol == 656)
+    {
+        SPDLOG_INFO("Client protocol: {}", protocol);
+        player.connection().send(Packet(0x00).append<u8>(1) << player.connection().encryptionKey());
+        return;
+    }
+    else
+        SPDLOG_ERROR("Unsupported protocol {}, closing connection", protocol);
+
+    player.connection().close();
 }
