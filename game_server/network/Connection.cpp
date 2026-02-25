@@ -19,11 +19,14 @@
 
 using Network::Connection;
 
+using EncryptionKey = std::array<byte, sizeof(u64)>;
+constexpr EncryptionKey gEncryptionKey {{0x94, 0x35, 0x00, 0x00, 0xa1, 0x6c, 0x54, 0x87}};
+
 struct Connection::ConnectionImpl
 {
     boost::asio::ip::tcp::socket socket;
     std::vector<byte> readBuffer;
-    std::array<byte, sizeof(u64)> encryptionKey, decryptionKey;
+    EncryptionKey encryptionKey{}, decryptionKey{};
 
     explicit ConnectionImpl(boost::asio::ip::tcp::socket && socket);
 
@@ -33,8 +36,6 @@ struct Connection::ConnectionImpl
 
 Connection::ConnectionImpl::ConnectionImpl(boost::asio::ip::tcp::socket && socket)
     : socket(std::move(socket))
-    , encryptionKey{{0x94, 0x35, 0x00, 0x00, 0xa1, 0x6c, 0x54, 0x87}}
-    , decryptionKey(encryptionKey)
 {
     readBuffer.resize(sizeof(u16));
 }
@@ -97,7 +98,7 @@ Connection::Connection(boost::asio::ip::tcp::socket && socket)
 
 Connection::~Connection() = default;
 
-void Connection::read(bool const decrypt)
+void Connection::read()
 {
     // Reset buffer
     std::ranges::fill(_impl->readBuffer, 0);
@@ -111,7 +112,7 @@ void Connection::read(bool const decrypt)
     L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
 
     auto const size = *reinterpret_cast<u16 *>(_impl->readBuffer.data());
-    L2CPP_B_ASSERT(size, "Packet announced without any opCode");
+    L2CPP_B_ASSERT(size > 2, "Packet announced without any opCode");
 
     if (_impl->readBuffer.size() < size)
         _impl->readBuffer.resize(size);
@@ -122,11 +123,13 @@ void Connection::read(bool const decrypt)
     boost::asio::read(_impl->socket, boost::asio::buffer(request, bodySize), ec);
     L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
 
-    if (decrypt)
+    if (std::ranges::any_of(_impl->decryptionKey, [] (auto const c) { return c != 0x00; })) [[likely]]
         _impl->decrypt({request, bodySize});
+    else
+        _impl->decryptionKey = gEncryptionKey;
 }
 
-void Connection::send(l2cpp::Network::Packet & p, bool const encrypt)
+void Connection::send(l2cpp::Network::Packet & p)
 {
     L2CPP_B_ASSERT(p.opCode().has_value(), "Trying to send a packet without any opCode");
 
@@ -135,8 +138,10 @@ void Connection::send(l2cpp::Network::Packet & p, bool const encrypt)
     SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.opCode().value(), p.size());
     std::cout << l2cpp::hexdump(p.buffer().data(), p.buffer().size()) << std::endl;
 
-    if (encrypt)
+    if (std::ranges::any_of(_impl->encryptionKey, [] (auto const c) { return c != 0x00; })) [[likely]]
         _impl->encrypt(p.body());
+    else
+        _impl->encryptionKey = gEncryptionKey;
 
     _impl->socket.send(boost::asio::buffer(p.buffer()));
 }
@@ -158,5 +163,5 @@ auto Connection::readBuffer() const -> std::span<byte const>
 
 auto Connection::encryptionKey() const -> std::span<byte const>
 {
-    return _impl->encryptionKey;
+    return gEncryptionKey;
 }

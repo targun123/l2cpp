@@ -23,8 +23,8 @@ public:
     ~Connection();
 
 public:
-    void read(bool decrypt = true);
-    void send(l2cpp::Network::Packet & p, bool encrypt = true);
+    void read();
+    void send(l2cpp::Network::Packet & p);
     void close();
 
 public:

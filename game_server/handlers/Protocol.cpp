@@ -12,5 +12,5 @@ DEFINE_PACKET_HANDLER(Protocol)
     reader >> protocol;
 
     SPDLOG_INFO("Client protocol: {}", protocol);
-    player.connection().send(Packet(0x00).append<u8>(1) << player.connection().encryptionKey(), false);
+    player.connection().send(Packet(0x00).append<u8>(1) << player.connection().encryptionKey());
 }

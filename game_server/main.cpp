@@ -17,16 +17,13 @@
 // C++ includes
 #include <iostream>
 
-void onSocketAccepted(boost::asio::ip::tcp::socket && socket);
-
-void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
+static void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
 {
     Player player(std::move(socket));
 
-    bool decrypt = false;
     while (player.connection().isAlive())
     {
-        player.connection().read(decrypt); // First packet is not encrypted
+        player.connection().read();
 
         auto const buffer = player.connection().readBuffer();
         auto const opCode = buffer[2];
@@ -41,8 +38,6 @@ void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
         }
         else
             SPDLOG_WARN("Unsupported packet 0x{:02x} ({} bytes)", opCode, size);
-
-        decrypt = true;
     }
 }
 catch (l2cpp::Exception const & e)
