@@ -17,6 +17,14 @@
 // C++ includes
 #include <iostream>
 
+static void hexdump(std::span<byte const> const buffer)
+{
+#ifndef NDEBUG
+    if (!buffer.empty())
+        std::cout << l2cpp::hexdump(buffer.data(), buffer.size()) << std::endl;
+#endif
+}
+
 static void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
 {
     Player player(std::move(socket));
@@ -33,11 +41,14 @@ static void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
         {
             auto const & [handler, handlerName] = it->second;
             SPDLOG_INFO("recv: {} (0x{:02x}) ({} bytes)", handlerName, opCode, size);
-            std::cout << l2cpp::hexdump(buffer.data(), size) << std::endl;
+            ::hexdump(buffer.subspan(3, size - 3));
             (*handler)(player);
         }
         else
+        {
             SPDLOG_WARN("Unsupported packet 0x{:02x} ({} bytes)", opCode, size);
+            ::hexdump(buffer.subspan(3, size - 3));
+        }
     }
 }
 catch (l2cpp::Exception const & e)

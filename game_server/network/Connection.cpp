@@ -132,11 +132,14 @@ void Connection::read()
 void Connection::send(l2cpp::Network::Packet & p)
 {
     L2CPP_B_ASSERT(p.opCode().has_value(), "Trying to send a packet without any opCode");
+    auto const opCode = p.opCode().value();
 
     p.writeSize();
 
-    SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.opCode().value(), p.size());
-    std::cout << l2cpp::hexdump(p.buffer().data(), p.buffer().size()) << std::endl;
+#ifndef NDEBUG
+    SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", opCode, p.size());
+    std::cout << l2cpp::hexdump(p.body().data() + sizeof(u8), p.bodySize() - sizeof(u8)) << std::endl;
+#endif
 
     if (std::ranges::any_of(_impl->encryptionKey, [] (auto const c) { return c != 0x00; })) [[likely]]
         _impl->encrypt(p.body());
@@ -144,6 +147,10 @@ void Connection::send(l2cpp::Network::Packet & p)
         _impl->encryptionKey = gEncryptionKey;
 
     _impl->socket.send(boost::asio::buffer(p.buffer()));
+
+#ifndef NDEBUG
+    SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", opCode, p.size());
+#endif
 }
 
 void Connection::close()
