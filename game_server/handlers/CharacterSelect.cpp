@@ -19,7 +19,7 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
     }
 
     player.setCurrentCharacter(index);
-    auto & c = player.currentCharacter().value().get();
+    auto & c = player.currentCharacter()->get();
     Packet p(0x15);
     p
         << c.name
@@ -31,7 +31,7 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
         << c.sex
         << c.raceId
         << c.classId
-        << 1 // active
+        << c.active
         << c.pos.x
         << c.pos.y
         << c.pos.z
@@ -42,12 +42,12 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
         << c.level
         << c.karma
         << c.pkCount
-        << c.attributes.INT
-        << c.attributes.STR
-        << c.attributes.CON
-        << c.attributes.MEN
-        << c.attributes.DEX
-        << c.attributes.WIT
+        << c.baseStats.INT
+        << c.baseStats.STR
+        << c.baseStats.CON
+        << c.baseStats.MEN
+        << c.baseStats.DEX
+        << c.baseStats.WIT
         << std::array<u32, 53>{} // unknown
     ;
     player.connection().send(p);

@@ -27,6 +27,7 @@ public:
     u32 raceId = 0;
     u32 sex = 0;
     u32 classId = 0;
+    s32 headAngle = 0;
     u32 active = 1;
     Gauge<double> cp{500};
     Gauge<double> hp{500};
@@ -53,8 +54,8 @@ public:
     bool isPvpFlagged = false;
     bool isHero = false;
 
-    double collisionRadius = 20;
-    double collisionHeight = 23.5;
+    double collisionRadius = 9;
+    double collisionHeight = 23;
 
     std::vector<u16> cubics;
 
@@ -62,26 +63,24 @@ public:
 
     enum class Team : u8 { None, Blue, Red } team = Team::None;
 
-    struct
+    struct Position
     {
         s32 x = -83968, y = 244634, z = -3500;
     } pos;
 
-    struct
+    struct Stats
     {
-        u32 STR = 10, DEX = 10, CON = 10;
-        u32 INT = 10, WIT = 10, MEN = 10;
-    } attributes;
+        u32 STR = 40, DEX = 30, CON = 43;
+        u32 INT = 21, WIT = 11, MEN = 25;
 
-    struct
-    {
-        u32 pAtk          = 10,  pDef         = 10;
-        u32 mAtk          = 10,  mDef         = 10;
-        u32 pAtkSpeed     = 10,  mAtkSpeed    = 10;
-        u32 accuracy      = 10,  evasion      = 10;
-        u32 critRate      = 10;
-        u32 walkSpeed     = 120, runSpeed     = 180;
-        u32 swimWalkSpeed = 80,  swimRunSpeed = 100;
-        u32 flyWalkSpeed  = 150, flyRunSpeed  = 200;
-    } stats{};
+        u32 pAtk         = 10,  pDef          = 80;
+        u32 mAtk         = 6,   mDef          = 40;
+        u32 pAtkSpeed    = 300, mAtkSpeed     = 10;
+        u32 pAtkRange    = 20,  pAtkRandom    = 10;
+        u32 accuracy     = 10,  evasion       = 10;
+        u32 critRate     = 10;
+        u32 runSpeed     = 115, walkSpeed     = 80;
+        u32 swimRunSpeed = 50,  swimWalkSpeed = 50;
+        u32 flyRunSpeed  = 200, flyWalkSpeed  = 150;
+    } baseStats, finalStats;
 };

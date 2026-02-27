@@ -5,9 +5,29 @@
 #include "_Common.hpp"
 #include "../game/Character.hpp"
 
+template<typename T, typename F>
+void assign(T & t, F f)
+{
+    t = static_cast<T>(f);
+}
+
+static void updateFinalStats(Character & c)
+{
+    // First update race stats from gear & buffs
+
+    // Then update dependent stats
+    assign(c.finalStats.pAtkSpeed, c.baseStats.pAtkSpeed * (1.f + (c.finalStats.DEX - 20) / 100.f)); // 30 DEX => 1.10
+    assign(c.finalStats.runSpeed,  c.baseStats.runSpeed  * (1.f + (c.finalStats.DEX - 20) / 100.f)); // 21 DEX => 1.01
+}
+
 DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
 {
-    auto & c = player.currentCharacter().value().get();
+    auto & c = player.currentCharacter()->get();
+
+    updateFinalStats(c); // TODO: lazy update
+
+    auto const pAtkSpeedMultiplier     = static_cast<double>(c.finalStats.pAtkSpeed) / c.baseStats.pAtkSpeed;
+    auto const movementSpeedMultiplier = static_cast<double>(c.finalStats.runSpeed)  / c.baseStats.runSpeed;
 
     Packet p(0x04);
     p
@@ -22,12 +42,12 @@ DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
         << c.classId
         << c.level
         << c.xp
-        << c.attributes.STR
-        << c.attributes.DEX
-        << c.attributes.CON
-        << c.attributes.INT
-        << c.attributes.WIT
-        << c.attributes.MEN
+        << c.finalStats.STR
+        << c.finalStats.DEX
+        << c.finalStats.CON
+        << c.finalStats.INT
+        << c.finalStats.WIT
+        << c.finalStats.MEN
         << static_cast<u32>(c.hp.max)
         << static_cast<u32>(c.hp.current)
         << static_cast<u32>(c.mp.max)
@@ -37,28 +57,28 @@ DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
         << c.weight.max
         << 0x28 // ?
         << std::array<u32, 32>{} // gear
-        << c.stats.pAtk
-        << c.stats.pAtkSpeed
-        << c.stats.pDef
-        << c.stats.evasion
-        << c.stats.accuracy
-        << c.stats.critRate
-        << c.stats.mAtk
-        << c.stats.mAtkSpeed
-        << c.stats.pAtkSpeed
-        << c.stats.mDef
+        << c.finalStats.pAtk
+        << c.finalStats.pAtkSpeed
+        << c.finalStats.pDef
+        << c.finalStats.evasion
+        << c.finalStats.accuracy
+        << c.finalStats.critRate
+        << c.finalStats.mAtk
+        << c.finalStats.mAtkSpeed
+        << c.baseStats.pAtkSpeed
+        << c.finalStats.mDef
         << (c.isPvpFlagged ? 1 : 0)
         << c.karma
-        << c.stats.runSpeed
-        << c.stats.walkSpeed
-        << c.stats.swimRunSpeed
-        << c.stats.swimWalkSpeed
-        << c.stats.flyRunSpeed
-        << c.stats.flyWalkSpeed
-        << c.stats.flyRunSpeed
-        << c.stats.flyWalkSpeed
-        << 1.0 // movement_speed_multiplier,
-        << 1.0 // atk_speed_multiplier,
+        << c.baseStats.runSpeed
+        << c.baseStats.walkSpeed
+        << c.baseStats.swimRunSpeed
+        << c.baseStats.swimWalkSpeed
+        << c.baseStats.flyRunSpeed
+        << c.baseStats.flyWalkSpeed
+        << c.baseStats.flyRunSpeed
+        << c.baseStats.flyWalkSpeed
+        << movementSpeedMultiplier
+        << pAtkSpeedMultiplier
         << c.collisionRadius
         << c.collisionHeight
         << c.hairStyleId
