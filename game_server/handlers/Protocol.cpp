@@ -14,13 +14,12 @@ DEFINE_PACKET_HANDLER(Protocol)
     /**/ if (protocol == -2)
         SPDLOG_INFO("Client ping");
     else if (protocol == 656)
-    {
-        SPDLOG_INFO("Client protocol: {}", protocol);
-        player.connection().send(Packet(0x00).append<u8>(1) << player.connection().encryptionKey());
-        return;
-    }
+        return player.connection().send(Packet(0x00) << true << player.connection().encryptionKey());
     else
+    {
         SPDLOG_ERROR("Unsupported protocol {}, closing connection", protocol);
+        player.connection().send(Packet(0x00) << false);
+    }
 
     player.connection().close();
 }
