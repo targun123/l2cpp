@@ -20,6 +20,7 @@ namespace Handler
     HANDLER(Move)
     HANDLER(MoveUpdate)
     HANDLER(QuestList)
+    HANDLER(SkillList)
     HANDLER(TargetClear)
     HANDLER(TargetSelect)
 #undef HANDLER
@@ -38,6 +39,7 @@ std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gP
     HANDLER(0x0d, CharacterSelect),
     HANDLER(0x0e, CharacterShowCreationScreen),
     HANDLER(0x37, TargetClear),
+    HANDLER(0x3f, SkillList),
     HANDLER(0x46, LeaveWorld),
     HANDLER(0x48, MoveUpdate),
     HANDLER(0x62, CharacterCancelDeletion),

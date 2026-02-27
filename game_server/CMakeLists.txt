@@ -40,6 +40,7 @@ target_sources(${PROJECT_NAME}
         handlers/PacketHandlers.hpp
         handlers/Protocol.cpp
         handlers/QuestList.cpp
+        handlers/SkillList.cpp
         handlers/TargetClear.cpp
         handlers/TargetSelect.cpp
         network/Connection.cpp
