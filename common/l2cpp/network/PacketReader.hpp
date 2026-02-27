@@ -18,10 +18,15 @@ public:
     explicit PacketReader(std::span<byte const> packet) noexcept: cursor(std::move(packet)) {}
 
 public:
-    template<typename T, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
+    template<typename T,
+             typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>>>
     PacketReader & operator>>(T & t)
     {
-        t = *reinterpret_cast<T const *>(cursor.data());
+        if constexpr (std::is_enum_v<T>) // TODO: better handling of overflow values
+            t = static_cast<T>(*reinterpret_cast<std::underlying_type_t<T> const *>(cursor.data()));
+        else
+            t = *reinterpret_cast<T const *>(cursor.data());
+
         cursor = cursor.subspan(sizeof(T));
         return *this;
     }

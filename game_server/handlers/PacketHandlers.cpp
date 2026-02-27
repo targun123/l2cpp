@@ -18,6 +18,7 @@ namespace Handler
     HANDLER(LeaveWorld)
     HANDLER(ManorList)
     HANDLER(Move)
+    HANDLER(MoveUpdate)
     HANDLER(QuestList)
     HANDLER(TargetClear)
     HANDLER(TargetSelect)
@@ -38,6 +39,7 @@ std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gP
     HANDLER(0x0e, CharacterShowCreationScreen),
     HANDLER(0x37, TargetClear),
     HANDLER(0x46, LeaveWorld),
+    HANDLER(0x48, MoveUpdate),
     HANDLER(0x62, CharacterCancelDeletion),
     HANDLER(0x63, QuestList),
     HANDLER(0xd0, ManorList),

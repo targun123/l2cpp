@@ -35,6 +35,7 @@ target_sources(${PROJECT_NAME}
         handlers/LeaveWorld.cpp
         handlers/ManorList.cpp
         handlers/Move.cpp
+        handlers/MoveUpdate.cpp
         handlers/PacketHandlers.cpp
         handlers/PacketHandlers.hpp
         handlers/Protocol.cpp

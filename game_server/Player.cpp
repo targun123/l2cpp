@@ -9,6 +9,7 @@
 #include <l2cpp/Exception.hpp>
 
 // C++ includes
+#include <deque>
 #include <vector>
 
 struct Player::PlayerImpl
@@ -18,6 +19,7 @@ struct Player::PlayerImpl
     u32                    playOk1;
     std::vector<Character> characters;
     OptionalRef<Character> currentCharacter;
+    std::deque<std::unique_ptr<Action>> actionQueue;
 
     explicit PlayerImpl(boost::asio::ip::tcp::socket && socket);
 };
@@ -68,6 +70,11 @@ auto Player::characters() const -> std::span<Character const>
 auto Player::currentCharacter() -> OptionalRef<Character>
 {
     return _impl->currentCharacter;
+}
+
+auto Player::actions() -> std::deque<std::unique_ptr<Action>> &
+{
+    return _impl->actionQueue;
 }
 
 void Player::setAccountName(std::wstring userName)
