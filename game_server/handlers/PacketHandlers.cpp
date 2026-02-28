@@ -17,6 +17,7 @@ namespace Handler
     HANDLER(ConnectionClosing)
     HANDLER(LeaveWorld)
     HANDLER(ManorList)
+    HANDLER(MiniMapShow)
     HANDLER(Move)
     HANDLER(MoveUpdate)
     HANDLER(QuestList)
@@ -46,6 +47,7 @@ std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gP
     HANDLER(0x48, MoveUpdate),
     HANDLER(0x62, CharacterCancelDeletion),
     HANDLER(0x63, QuestList),
+    HANDLER(0xcd, MiniMapShow),
     HANDLER(0xd0, ManorList),
 #undef HANDLER
 };
