@@ -30,12 +30,12 @@ target_sources(${PROJECT_NAME}
         handlers/CharacterList.cpp
         handlers/CharacterSelect.cpp
         handlers/CharacterShowCreationScreen.cpp
-        handlers/CharacterUpdateStatus.cpp
         handlers/ConnectionClosing.cpp
+        handlers/EnterWorld.cpp
         handlers/LeaveWorld.cpp
         handlers/ManorList.cpp
-        handlers/Move.cpp
         handlers/MiniMapShow.cpp
+        handlers/Move.cpp
         handlers/MoveUpdate.cpp
         handlers/PacketHandlers.cpp
         handlers/PacketHandlers.hpp

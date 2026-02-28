@@ -79,9 +79,12 @@ public:
         u32 pAtkSpeed    = 300, mAtkSpeed     = 10;
         u32 pAtkRange    = 20,  pAtkRandom    = 10;
         u32 accuracy     = 10,  evasion       = 10;
-        u32 critRate     = 10;
+        u32 pCritRate    = 10,  mCritRate     = 10;
         u32 runSpeed     = 115, walkSpeed     = 80;
         u32 swimRunSpeed = 50,  swimWalkSpeed = 50;
         u32 flyRunSpeed  = 200, flyWalkSpeed  = 150;
+
+        double moveSpeedMutliplier = 1;
+        double pAtkSpeedMutliplier = 1;
     } baseStats, finalStats;
 };

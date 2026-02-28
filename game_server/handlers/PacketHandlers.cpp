@@ -5,7 +5,7 @@
 
 namespace Handler
 {
-#define HANDLER(name) void handle ## name(Player & player);
+#define HANDLER(name) void handle ## name(Player &);
     HANDLER(Protocol)
     HANDLER(Authenticate)
     HANDLER(CharacterCancelDeletion)
@@ -13,8 +13,8 @@ namespace Handler
     HANDLER(CharacterList)
     HANDLER(CharacterSelect)
     HANDLER(CharacterShowCreationScreen)
-    HANDLER(CharacterUpdateStatus)
     HANDLER(ConnectionClosing)
+    HANDLER(EnterWorld)
     HANDLER(LeaveWorld)
     HANDLER(ManorList)
     HANDLER(MiniMapShow)
@@ -34,7 +34,7 @@ std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gP
     HANDLER(0x00, Protocol),
     HANDLER(0x08, Authenticate),
     HANDLER(0x01, Move),
-    HANDLER(0x03, CharacterUpdateStatus),
+    HANDLER(0x03, EnterWorld),
     HANDLER(0x04, TargetSelect),
     HANDLER(0x09, ConnectionClosing),
     HANDLER(0x0b, CharacterCreate),

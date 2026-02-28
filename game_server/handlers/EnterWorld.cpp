@@ -16,25 +16,22 @@ static void updateFinalStats(Character & c)
     // First update race stats from gear & buffs
 
     // Then update dependent stats
-    assign(c.finalStats.pAtkSpeed, c.baseStats.pAtkSpeed * (1.f + (c.finalStats.DEX - 20) / 100.f)); // 30 DEX => 1.10
-    assign(c.finalStats.runSpeed,  c.baseStats.runSpeed  * (1.f + (c.finalStats.DEX - 20) / 100.f)); // 21 DEX => 1.01
+    assign(c.finalStats.pAtkSpeedMutliplier, c.baseStats.pAtkSpeedMutliplier + (c.finalStats.DEX - 20) / 100.);
+    assign(c.finalStats.moveSpeedMutliplier, c.baseStats.moveSpeedMutliplier + (c.finalStats.DEX - 20) / 100.);
 }
 
-DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
+DEFINE_PACKET_HANDLER(EnterWorld)
 {
     auto & c = player.currentCharacter()->get();
 
-    updateFinalStats(c); // TODO: lazy update
-
-    auto const pAtkSpeedMultiplier     = static_cast<double>(c.finalStats.pAtkSpeed) / c.baseStats.pAtkSpeed;
-    auto const movementSpeedMultiplier = static_cast<double>(c.finalStats.runSpeed)  / c.baseStats.runSpeed;
+    updateFinalStats(c);
 
     Packet p(0x04);
     p
         << c.pos.x
         << c.pos.y
         << c.pos.z
-        << 0 // head angle
+        << c.headAngle
         << c.id
         << c.name
         << c.raceId
@@ -62,7 +59,7 @@ DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
         << c.finalStats.pDef
         << c.finalStats.evasion
         << c.finalStats.accuracy
-        << c.finalStats.critRate
+        << c.finalStats.pCritRate
         << c.finalStats.mAtk
         << c.finalStats.mAtkSpeed
         << c.baseStats.pAtkSpeed
@@ -77,8 +74,8 @@ DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
         << c.baseStats.flyWalkSpeed
         << c.baseStats.flyRunSpeed
         << c.baseStats.flyWalkSpeed
-        << movementSpeedMultiplier
-        << pAtkSpeedMultiplier
+        << c.finalStats.moveSpeedMutliplier
+        << c.finalStats.pAtkSpeedMutliplier
         << c.collisionRadius
         << c.collisionHeight
         << c.hairStyleId
@@ -123,7 +120,7 @@ DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
         << static_cast<u32>(c.cp.max)
         << static_cast<u32>(c.cp.current)
         << c.enchantEffect
-        << c.team // duel team color: 0=none 1=blue 2=red
+        << c.team
         << 0 // clan crest large id
         << c.isNoble // noble symbol in status window
         << c.isHero  // hero aura
