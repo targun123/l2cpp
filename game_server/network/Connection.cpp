@@ -148,7 +148,7 @@ void Connection::send(l2cpp::Network::Packet & p)
 
     _impl->socket.send(boost::asio::buffer(p.buffer()));
 
-#ifndef NDEBUG
+#ifdef NDEBUG
     SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", opCode, p.size());
 #endif
 }
