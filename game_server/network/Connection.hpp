@@ -25,6 +25,7 @@ public:
 public:
     void read();
     void send(l2cpp::Network::Packet & p);
+    void send(l2cpp::Network::Packet && p);
     void close();
 
 public:

@@ -153,6 +153,11 @@ void Connection::send(l2cpp::Network::Packet & p)
 #endif
 }
 
+void Connection::send(l2cpp::Network::Packet && p)
+{
+    send(p);
+}
+
 void Connection::close()
 {
     _impl->socket.close();
