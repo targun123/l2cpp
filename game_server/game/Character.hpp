@@ -25,7 +25,7 @@ public:
     u32 accessLevel = 1;
     std::wstring name = L"test", title = L"{l2cpp}";
     u32 raceId = 0;
-    u32 sex = 0;
+    enum class Sex : u32 { Male, Female } sex = Sex::Male;
     u32 classId = 0;
     s32 headAngle = 0;
     u32 active = 1;
