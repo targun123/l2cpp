@@ -47,4 +47,8 @@ target_sources(${PROJECT_NAME}
         handlers/TargetSelect.cpp
         network/Connection.cpp
         network/Connection.hpp
+        network/packets/server/CharacterStatusUpdatePacket.cpp
+        network/packets/server/CharacterStatusUpdatePacket.hpp
+        network/packets/server/EntityStatusUpdatePacket.cpp
+        network/packets/server/EntityStatusUpdatePacket.hpp
 )

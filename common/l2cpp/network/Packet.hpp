@@ -22,7 +22,7 @@ public:
     /// Permits conversion from any Packet enumerations
     template<typename E, typename = std::enable_if_t<std::is_enum_v<E>>>
     explicit Packet(E e): Packet(std::to_underlying(e)) {}
-    ~Packet();
+    virtual ~Packet();
 
 public:
     /// Appends a span of bytes to the packet.
