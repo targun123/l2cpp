@@ -4,6 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/Character.hpp"
+#include "../network/packets/server/CharacterStatusUpdatePacket.hpp"
 
 DEFINE_PACKET_HANDLER(SkillUse)
 {
@@ -13,8 +14,8 @@ DEFINE_PACKET_HANDLER(SkillUse)
     bool shiftPressed;
     reader >> skillId >> ctrlPressed >> shiftPressed;
 
-    auto const & c = player.currentCharacter()->get();
-    auto duration  = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::hours(2)).count();
+    auto & c      = player.currentCharacter()->get();
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::hours(2)).count();
 
     // Packet p(0x48);
     // p
@@ -33,13 +34,30 @@ DEFINE_PACKET_HANDLER(SkillUse)
     //     << c.pos.z
     // ;
 
-    // Display Super Haste effect in buff bar
-    Packet p(0x7f);
-    p
-        << u16(1)
-        << skillId
-        << u16(4)
-        << duration
-    ;
-    player.connection().send(p);
+    static bool toggle = true;
+
+    if (toggle)
+    {
+        // Super Haste lv. 4 effect on move speed
+        c.finalStats.moveSpeedMutliplier += 5;
+
+        // Display Super Haste effect in buff bar
+        Packet p(0x7f);
+        p
+            << u16(1)
+            << skillId
+            << u16(4)
+            << duration
+        ;
+        player.connection().send(p);
+    }
+    else
+    {
+        c.finalStats.moveSpeedMutliplier -= 5;
+        player.connection().send(Packet(0x7f) << 0); // Remove from bar
+    }
+    toggle = !toggle;
+
+    // Update status info
+    player.connection().send(Network::Packet::Server::CharacterStatusUpdatePacket(c));
 }
