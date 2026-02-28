@@ -41,6 +41,7 @@ target_sources(${PROJECT_NAME}
         handlers/Protocol.cpp
         handlers/QuestList.cpp
         handlers/SkillList.cpp
+        handlers/SkillUse.cpp
         handlers/TargetClear.cpp
         handlers/TargetSelect.cpp
         network/Connection.cpp

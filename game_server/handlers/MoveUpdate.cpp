@@ -14,6 +14,12 @@ DEFINE_PACKET_HANDLER(MoveUpdate)
     s32 x, y;
     reader >> x >> y >> c.pos.z >> c.headAngle;
 
+    if (player.actions().empty())
+    {
+        SPDLOG_WARN("MoveUpdate called with no prior Move");
+        return;
+    }
+
     auto & move = static_cast<MoveAction &>(*player.actions().front());
 
     auto const now             = std::chrono::steady_clock::now();
