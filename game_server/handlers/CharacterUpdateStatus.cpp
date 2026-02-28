@@ -55,7 +55,7 @@ DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
         << c.sp
         << c.weight.current
         << c.weight.max
-        << 0x28 // ?
+        << 20 // 20 no weapon, 40 weapon equipped
         << std::array<u32, 32>{} // gear
         << c.finalStats.pAtk
         << c.finalStats.pAtkSpeed
@@ -104,16 +104,16 @@ DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
 
     p
         << false // looking for party members
-        << 0 // abnormal effects
-        << static_cast<u8>(0) // ?
-        << 0 // clan privileges
-        << 0 // 0x100 // swim
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
-        << 0 // ?
+        << 0     // abnormal effects
+        << false // is inside water
+        << 0     // clan privileges
+        << 0     // 0x100 - swim?
+        << 0     // ?
+        << 0     // ?
+        << 0     // ?
+        << 0     // ?
+        << 0     // ?
+        << 0     // ?
         << c.evalAmount
         << c.evalScore
         << 0 // ?
@@ -125,9 +125,9 @@ DEFINE_PACKET_HANDLER(CharacterUpdateStatus)
         << c.enchantEffect
         << c.team // duel team color: 0=none 1=blue 2=red
         << 0 // clan crest large id
-        << c.isHero // hero symbol in status window
-        << c.isHero // hero aura
-        << static_cast<u8>(0) // fishing mode (unused)
+        << c.isNoble // noble symbol in status window
+        << c.isHero  // hero aura
+        << false // is fishing
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z

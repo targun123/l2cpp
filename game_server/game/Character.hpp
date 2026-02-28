@@ -53,6 +53,7 @@ public:
     u32 nameColor = 0xFFFFFF; // RGB
     bool isPvpFlagged = false;
     bool isHero = false;
+    bool isNoble = false;
 
     double collisionRadius = 9;
     double collisionHeight = 23;
