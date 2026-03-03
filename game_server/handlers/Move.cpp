@@ -37,23 +37,26 @@ DEFINE_PACKET_HANDLER(Move)
 
     // TODO: trust originX/Y/Z only if they are close enough to server position
 
-    SPDLOG_TRACE("Moving requested to {{{}, {}, {}}} (input: {})",
-                 action.targetX, action.targetY, action.targetZ,
-                 (action.input == MoveAction::Input::Mouse ? "mouse" : "keyboard"));
-
+    // SPDLOG_TRACE("Moving requested to {{x={}, y={}, z={}}} (input: {})",
+    //              action.targetX, action.targetY, action.targetZ,
+    //              (action.input == MoveAction::Input::Mouse ? "mouse" : "keyboard"));
+    //
     auto & c = player.currentCharacter()->get();
-    float const distanceX = action.targetX - c.pos.x;
-    float const distanceY = action.targetY - c.pos.y;
-    float const distanceZ = action.targetZ - c.pos.z;
-    action.totalDistance = std::sqrt(distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ);
-
-    float const distanceCoveredInOneMs = c.finalStats.runSpeed / 1000.f;
-
-    std::chrono::duration<float, std::milli> const totalDuration(action.totalDistance / distanceCoveredInOneMs);
-    SPDLOG_TRACE("Character must travel through {} units. At a speed of {} units per 1s, it will take {:%Q%q}",
-                 action.totalDistance, c.finalStats.runSpeed, std::chrono::duration_cast<std::chrono::seconds>(totalDuration));
-
-    player.setNextAction<MoveAction>(action);
+    c.pos.x = action.originX;
+    c.pos.y = action.originY;
+    c.pos.z = action.originZ;
+    // float const distanceX = action.targetX - c.pos.x;
+    // float const distanceY = action.targetY - c.pos.y;
+    // float const distanceZ = action.targetZ - c.pos.z;
+    // action.totalDistance = std::sqrt(distanceX * distanceX + distanceY * distanceY/* + distanceZ * distanceZ*/);
+    //
+    // float const distanceCoveredInOneMs = c.finalStats.runSpeed / 1000.f;
+    //
+    // std::chrono::duration<float, std::milli> const totalDuration(action.totalDistance / distanceCoveredInOneMs);
+    // SPDLOG_TRACE("Character must travel through {} units. At a speed of {} units per 1s, it will take {:%Q%q}",
+    //              action.totalDistance, c.finalStats.runSpeed, std::chrono::duration_cast<std::chrono::milliseconds>(totalDuration));
+    //
+    // player.setNextAction<MoveAction>(action);
 
     Packet p(0x01); // Make character start moving, position will be validated in MoveUpdate handler
     p << c.id
