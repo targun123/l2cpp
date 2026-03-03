@@ -19,6 +19,14 @@ static void updateFinalStats(l2::Character & c)
     // Then update dependent stats
     assign(c.finalStats.pAtkSpeedMutliplier, c.baseStats.pAtkSpeedMutliplier + (c.finalStats.DEX - 20) / 100.);
     assign(c.finalStats.moveSpeedMutliplier, c.baseStats.moveSpeedMutliplier + (c.finalStats.DEX - 20) / 100.);
+
+    assign(c.finalStats.pAtkSpeed,     c.baseStats.pAtkSpeed     * c.finalStats.pAtkSpeedMutliplier);
+    assign(c.finalStats.runSpeed,      c.baseStats.runSpeed      * c.finalStats.moveSpeedMutliplier);
+    assign(c.finalStats.walkSpeed,     c.baseStats.walkSpeed     * c.finalStats.moveSpeedMutliplier);
+    assign(c.finalStats.swimRunSpeed,  c.baseStats.swimRunSpeed  * c.finalStats.moveSpeedMutliplier);
+    assign(c.finalStats.swimWalkSpeed, c.baseStats.swimWalkSpeed * c.finalStats.moveSpeedMutliplier);
+    assign(c.finalStats.flyRunSpeed,   c.baseStats.flyRunSpeed   * c.finalStats.moveSpeedMutliplier);
+    assign(c.finalStats.flyWalkSpeed,  c.baseStats.flyWalkSpeed  * c.finalStats.moveSpeedMutliplier);
 }
 
 DEFINE_PACKET_HANDLER(EnterWorld)
