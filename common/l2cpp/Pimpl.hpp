@@ -6,30 +6,26 @@
 // C++ includes
 #include <memory>
 
-template<typename T, typename D = std::default_delete<T>>
+template<typename T>
 class Pimpl
 {
 public:
-    explicit Pimpl(T * impl)                   noexcept: _impl(impl)                     {}
-             Pimpl(T * impl, D deleter)        noexcept: _impl(impl, std::move(deleter)) {}
-    explicit Pimpl(std::unique_ptr<T, D> impl) noexcept: _impl(std::move(impl))          {}
+    template<typename... Args>
+    explicit Pimpl(Args &&...);
+    ~Pimpl();
 
 public:
     Pimpl(Pimpl const &)             = delete;
     Pimpl & operator=(Pimpl const &) = delete;
 
 public:
-    Pimpl(Pimpl && other) noexcept: _impl(std::move(other._impl)) {}
-    Pimpl & operator=(Pimpl && other)
-    {
-        _impl = std::move(other._impl);
-        return *this;
-    }
+    Pimpl(Pimpl && other) noexcept;
+    Pimpl & operator=(Pimpl && other) noexcept;
 
 public:
-    auto operator->()       -> T *       { return static_cast<T *      >(_impl.get()); }
-    auto operator->() const -> T const * { return static_cast<T const *>(_impl.get()); }
+    auto operator->()       -> T *      ;
+    auto operator->() const -> T const *;
 
 private:
-    std::unique_ptr<T, D> _impl;
+    std::unique_ptr<T> _impl;
 };

@@ -6,7 +6,9 @@
 // Project includes
 #include "game/Character.hpp"
 #include "network/Connection.hpp"
+
 #include <l2cpp/Exception.hpp>
+#include <l2cpp/details/Pimpl.hpp>
 
 // C++ includes
 #include <deque>
@@ -32,7 +34,7 @@ Player::PlayerImpl::PlayerImpl(boost::asio::ip::tcp::socket && socket)
 }
 
 Player::Player(boost::asio::ip::tcp::socket && socket)
-    : _impl(std::make_unique<Player::PlayerImpl>(std::move(socket)))
+    : _impl(std::move(socket))
 {}
 
 Player::~Player() = default;

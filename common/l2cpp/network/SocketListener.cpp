@@ -3,8 +3,13 @@
 
 #include "SocketListener.hpp"
 
+// Project includes
+#include "../details/Pimpl.hpp"
+
+// Third-party includes
 #include <spdlog/spdlog.h>
 
+// C++ includes
 #include <functional>
 #include <unordered_map>
 
@@ -32,7 +37,7 @@ struct SL::SocketListenerImpl
 };
 
 SL::SocketListener(boost::asio::io_context & ioc)
-    : impl(std::make_unique<SocketListenerImpl>(ioc))
+    : impl(ioc)
 {}
 
 SL::~SocketListener() = default;

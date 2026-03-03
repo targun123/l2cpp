@@ -3,6 +3,9 @@
 
 #include "Blowfish.hpp"
 
+// Project includes
+#include <l2cpp/details/Pimpl.hpp>
+
 // Third-party includes
 #include <openssl/blowfish.h>
 
@@ -21,7 +24,6 @@ struct Blowfish::BlowfishImpl
 };
 
 Blowfish::Blowfish(std::span<byte const> const key)
-    : _pimpl(std::make_unique<BlowfishImpl>())
 {
     BF_set_key(&_pimpl->key, static_cast<int>(key.size()), key.data());
 }

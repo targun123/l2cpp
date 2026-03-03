@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../Exception.hpp"
+#include "../details/Pimpl.hpp"
 
 // C++ includes
 #include <mutex>
@@ -36,7 +37,6 @@ struct Packet::PacketImpl
 };
 
 Packet::Packet()
-    : impl(std::make_unique<PacketImpl>())
 {
     impl->buffer.reserve(256);
     append<u16>(0); // slot to write final size before sending

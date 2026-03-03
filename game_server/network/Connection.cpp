@@ -6,6 +6,7 @@
 // Project includes
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Misc.hpp>
+#include <l2cpp/details/Pimpl.hpp>
 #include <l2cpp/network/Packet.hpp>
 
 // Third-party includes
@@ -93,7 +94,7 @@ void Connection::ConnectionImpl::decrypt(std::span<byte> data)
 // ---------------------------------------------------------------------------------------------------------------------
 
 Connection::Connection(boost::asio::ip::tcp::socket && socket)
-    : _impl(std::make_unique<ConnectionImpl>(std::move(socket)))
+    : _impl(std::move(socket))
 {}
 
 Connection::~Connection() = default;
