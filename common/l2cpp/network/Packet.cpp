@@ -36,15 +36,10 @@ struct Packet::PacketImpl
     std::once_flag    checksumOnceFlag;
 };
 
-Packet::Packet()
+Packet::Packet(byte const type)
 {
     impl->buffer.reserve(256);
     append<u16>(0); // slot to write final size before sending
-}
-
-Packet::Packet(byte const type)
-    : Packet()
-{
     impl->buffer.emplace_back(type);
 }
 

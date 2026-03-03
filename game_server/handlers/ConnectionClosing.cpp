@@ -7,7 +7,7 @@
 DEFINE_PACKET_HANDLER(ConnectionClosing)
 {
     if (!player.characters().empty())
-        player.connection().send(Packet() << 0x7e);
+        player.connection().send(Packet(0x7e));
 
     player.connection().close();
 }

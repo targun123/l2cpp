@@ -4,6 +4,7 @@
 #pragma once
 
 // Project includes
+#include "Serialization.hpp"
 #include "../Pimpl.hpp"
 #include "../Typedefs.hpp"
 
@@ -17,7 +18,6 @@ namespace l2cpp::Network { class Packet; }
 class l2cpp::Network::Packet
 {
 public:
-    Packet();
     explicit Packet(byte type);
     /// Permits conversion from any Packet enumerations
     template<typename E, typename = std::enable_if_t<std::is_enum_v<E>>>
@@ -28,9 +28,8 @@ public:
     /// Appends a span of bytes to the packet.
     Packet & append(std::span<byte const> span);
 
-    /// Allows to append any integral type as bytes to the packet.
-    template<typename T,
-             typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>>>
+    /// Allows to append any "basic" type as bytes to the packet.
+    template<typename T> requires std::integral<T> || std::floating_point<T> || std::is_enum_v<T>
     Packet & append(T t)
     {
         if constexpr (std::is_enum_v<T>)
@@ -39,15 +38,19 @@ public:
             return append({reinterpret_cast<byte const *>(&t), sizeof(T)});
     }
 
-    /// Appends a contiguous array of integrals as bytes to the packet.
-    template<typename T, size_t N, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
+    /// Class/Struct instances must have an overloaded @c serialize(Packet&) function returning a @c Packet&.
+    template<class T> requires std::is_base_of_v<Serializable, T>
+    Packet & append(T const & t) { return static_cast<Serializable const &>(t).serialize(*this); }
+
+    /// Appends a contiguous array of basic types as bytes to the packet.
+    template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
     Packet & append(T const (&a)[N])
     {
         return append({reinterpret_cast<byte const *>(a), N * sizeof(T)});
     }
 
-    /// Appends a contiguous array of integrals to the packet
-    template<typename T, size_t N, typename = std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>>>
+    /// Appends a contiguous array of integrals to the packet.
+    template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
     Packet & append(std::array<T, N> const & a)
     {
         return append({reinterpret_cast<byte const *>(a.data()), a.size() * sizeof(T)});

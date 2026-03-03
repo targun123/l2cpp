@@ -24,5 +24,6 @@ target_sources(${PROJECT_NAME} PUBLIC
         l2cpp/Typedefs.hpp
         l2cpp/network/Packet.hpp
         l2cpp/network/PacketReader.hpp
+        l2cpp/network/Serialization.hpp
         l2cpp/network/SocketListener.hpp
 )
