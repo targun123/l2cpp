@@ -53,6 +53,8 @@ target_sources(${PROJECT_NAME}
         network/Connection.cpp
         network/Connection.hpp
         network/packets/client/OpCodes.hpp
+        network/packets/server/ProtocolHandshakePacket.cpp
+        network/packets/server/ProtocolHandshakePacket.hpp
         network/packets/server/CharacterStatusUpdatePacket.cpp
         network/packets/server/CharacterStatusUpdatePacket.hpp
         network/packets/server/EntityStatusUpdatePacket.cpp

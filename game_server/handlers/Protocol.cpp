@@ -3,6 +3,9 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../network/packets/server/ProtocolHandshakePacket.hpp"
+
+using namespace Network::Packet::Server;
 
 DEFINE_PACKET_HANDLER(Protocol)
 {
@@ -14,11 +17,11 @@ DEFINE_PACKET_HANDLER(Protocol)
     /**/ if (protocol == -2)
         SPDLOG_INFO("Client ping");
     else if (protocol == 656)
-        return player.connection().send(Packet(0x00) << true << player.connection().encryptionKey());
+        return player.connection().send(ProtocolHandshakeOkPacket(player.connection().encryptionKey()));
     else
     {
         SPDLOG_ERROR("Unsupported protocol {}, closing connection", protocol);
-        player.connection().send(Packet(0x00) << false);
+        player.connection().send(ProtocolHandshakeFailPacket());
     }
 
     player.connection().close();
