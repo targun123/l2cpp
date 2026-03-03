@@ -16,11 +16,11 @@
 
 struct Player::PlayerImpl
 {
-    Network::Connection    conn;
-    std::wstring           accountName;
-    u32                    playOk1;
-    std::vector<Character> characters;
-    OptionalRef<Character> currentCharacter;
+    Network::Connection                 conn;
+    std::wstring                        accountName;
+    u32                                 playOk1;
+    std::vector<l2::Character>          characters;
+    OptionalRef<l2::Character>          currentCharacter;
     std::deque<std::unique_ptr<Action>> actionQueue;
 
     explicit PlayerImpl(boost::asio::ip::tcp::socket && socket);
@@ -59,17 +59,17 @@ auto Player::playOk1() const -> u32
     return _impl->playOk1;
 }
 
-auto Player::characters() -> std::span<Character>
+auto Player::characters() -> std::span<l2::Character>
 {
     return _impl->characters;
 }
 
-auto Player::characters() const -> std::span<Character const>
+auto Player::characters() const -> std::span<l2::Character const>
 {
     return _impl->characters;
 }
 
-auto Player::currentCharacter() -> OptionalRef<Character>
+auto Player::currentCharacter() -> OptionalRef<l2::Character>
 {
     return _impl->currentCharacter;
 }
@@ -89,7 +89,7 @@ void Player::setPlayOk1(u32 playOk1)
     _impl->playOk1 = playOk1;
 }
 
-auto Player::addCharacter() -> Character &
+auto Player::addCharacter() -> l2::Character &
 {
     return _impl->characters.emplace_back();
 }

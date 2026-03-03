@@ -22,6 +22,7 @@ target_sources(${PROJECT_NAME}
         main.cpp
         Player.cpp
         Player.hpp
+        game/Character.cpp
         game/Character.hpp
         game/Shortcut.cpp
         game/Shortcut.hpp

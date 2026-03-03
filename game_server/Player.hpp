@@ -14,7 +14,7 @@
 #include <deque>
 #include <span>
 
-class Character;
+namespace l2      { class Character;  }
 namespace Network { class Connection; }
 
 class Action
@@ -26,7 +26,7 @@ public:
     };
 
 public:
-    explicit Action(Type type) noexcept: _type(type) {}
+    explicit Action(Type const type) noexcept: _type(type) {}
     virtual ~Action() noexcept = default;
 
 public:
@@ -42,6 +42,7 @@ struct MoveAction : public Action
         : Action(Type::Move)
         , startTime(std::chrono::steady_clock::now())
         , lastUpdateTime(startTime)
+        , input()
     {}
 
     s32 originX = 0, originY = 0, originZ = 0;
@@ -64,9 +65,9 @@ public:
     auto connection()       -> Network::Connection &;
     auto connection() const -> Network::Connection const &;
 
-    auto characters()       -> std::span<Character>;
-    auto characters() const -> std::span<Character const>;
-    auto currentCharacter() -> OptionalRef<Character>;
+    auto characters()       -> std::span<l2::Character>;
+    auto characters() const -> std::span<l2::Character const>;
+    auto currentCharacter() -> OptionalRef<l2::Character>;
 
     auto actions() -> std::deque<std::unique_ptr<Action>> &;
 
@@ -76,7 +77,7 @@ public:
 public:
     void setAccountName(std::wstring userName);
     void setPlayOk1(u32 playOk1);
-    auto addCharacter() -> Character &;
+    auto addCharacter() -> l2::Character &;
     void setCurrentCharacter(size_t index);
 
     template<typename A, typename... Args, typename = std::enable_if_t<std::is_base_of_v<Action, A>>>

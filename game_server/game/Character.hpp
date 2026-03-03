@@ -6,10 +6,10 @@
 // Project includes
 #include "Shortcut.hpp"
 
+#include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
 
 // C++ includes
-#include <array>
 #include <optional>
 #include <string>
 #include <vector>
@@ -21,8 +21,17 @@ struct Gauge
     T max{current};
 };
 
-class Character
+namespace l2 { class Character; }
+
+class l2::Character
 {
+public:
+    Character();
+    ~Character();
+
+    Character(Character &&) noexcept;
+    Character & operator=(Character &&) noexcept;
+
 public:
     u32 id = 1;
     u32 accessLevel = 1;
@@ -91,5 +100,11 @@ public:
         double pAtkSpeedMutliplier = 1;
     } baseStats, finalStats;
 
-    std::array<l2::Shortcut, 120> shortcuts{};
+public:
+    auto setShortcut(Shortcut shortcut) -> Shortcut &;
+    void delShortcut(size_t index);
+
+private:
+    struct CharacterImpl;
+    Pimpl<CharacterImpl> _impl;
 };

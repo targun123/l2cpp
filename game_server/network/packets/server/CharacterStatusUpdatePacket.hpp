@@ -6,12 +6,12 @@
 // Project includes
 #include <l2cpp/network/Packet.hpp>
 
-class Character;
+namespace l2 { class Character; }
 
 namespace Network::Packet::Server { class CharacterStatusUpdatePacket; }
 
 class Network::Packet::Server::CharacterStatusUpdatePacket final : public l2cpp::Network::Packet
 {
 public:
-    explicit CharacterStatusUpdatePacket(Character &);
+    explicit CharacterStatusUpdatePacket(l2::Character &);
 };

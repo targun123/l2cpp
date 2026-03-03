@@ -11,7 +11,7 @@
 
 using namespace Network::Packet::Server;
 
-CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
+CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
     : Packet(0x04)
 {
     *this

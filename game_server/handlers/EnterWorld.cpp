@@ -12,7 +12,7 @@ void assign(T & t, F f)
     t = static_cast<T>(f);
 }
 
-static void updateFinalStats(Character & c)
+static void updateFinalStats(l2::Character & c)
 {
     // First update race stats from gear & buffs
 

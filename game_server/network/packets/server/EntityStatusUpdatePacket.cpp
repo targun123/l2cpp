@@ -11,7 +11,7 @@
 
 using namespace Network::Packet::Server;
 
-EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character & c)
+EntityStatusUpdatePacket::EntityStatusUpdatePacket(l2::Character & c)
     : Packet(0x03)
 {
     *this
