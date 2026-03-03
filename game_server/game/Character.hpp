@@ -4,9 +4,12 @@
 #pragma once
 
 // Project includes
+#include "Shortcut.hpp"
+
 #include <l2cpp/Typedefs.hpp>
 
 // C++ includes
+#include <array>
 #include <optional>
 #include <string>
 #include <vector>
@@ -87,4 +90,6 @@ public:
         double moveSpeedMutliplier = 1;
         double pAtkSpeedMutliplier = 1;
     } baseStats, finalStats;
+
+    std::array<l2::Shortcut, 120> shortcuts{};
 };

@@ -23,6 +23,8 @@ target_sources(${PROJECT_NAME}
         Player.cpp
         Player.hpp
         game/Character.hpp
+        game/Shortcut.cpp
+        game/Shortcut.hpp
         handlers/_Common.hpp
         handlers/Authenticate.cpp
         handlers/CharacterCancelDeletion.cpp
@@ -41,6 +43,7 @@ target_sources(${PROJECT_NAME}
         handlers/PacketHandlers.hpp
         handlers/Protocol.cpp
         handlers/QuestList.cpp
+        handlers/ShortcutBarAdd.cpp
         handlers/SkillList.cpp
         handlers/SkillUse.cpp
         handlers/TargetClear.cpp

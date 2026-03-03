@@ -26,6 +26,9 @@ public:
     auto operator->()       -> T *      ;
     auto operator->() const -> T const *;
 
+    auto operator*()       -> T &      ;
+    auto operator*() const -> T const &;
+
 private:
     std::unique_ptr<T> _impl;
 };
