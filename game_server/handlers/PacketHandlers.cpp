@@ -22,6 +22,7 @@ namespace Handler
     HANDLER(MoveUpdate)
     HANDLER(QuestList)
     HANDLER(ShortcutBarAdd)
+    HANDLER(ShortcutBarRemove)
     HANDLER(SkillList)
     HANDLER(SkillUse)
     HANDLER(TargetClear)
@@ -43,6 +44,7 @@ std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gP
     HANDLER(0x0e, CharacterShowCreationScreen),
     HANDLER(0x2f, SkillUse),
     HANDLER(0x33, ShortcutBarAdd),
+    HANDLER(0x35, ShortcutBarRemove),
     HANDLER(0x37, TargetClear),
     HANDLER(0x3f, SkillList),
     HANDLER(0x46, LeaveWorld),

@@ -44,6 +44,7 @@ target_sources(${PROJECT_NAME}
         handlers/Protocol.cpp
         handlers/QuestList.cpp
         handlers/ShortcutBarAdd.cpp
+        handlers/ShortcutBarRemove.cpp
         handlers/SkillList.cpp
         handlers/SkillUse.cpp
         handlers/TargetClear.cpp
