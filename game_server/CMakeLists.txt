@@ -24,15 +24,16 @@ target_sources(${PROJECT_NAME}
         Player.hpp
         game/Character.cpp
         game/Character.hpp
+        game/ChatType.hpp
         game/Shortcut.cpp
         game/Shortcut.hpp
-        handlers/_Common.hpp
         handlers/Authenticate.cpp
         handlers/CharacterCancelDeletion.cpp
         handlers/CharacterCreate.cpp
         handlers/CharacterList.cpp
         handlers/CharacterSelect.cpp
         handlers/CharacterShowCreationScreen.cpp
+               handlers/ChatSay.cpp
         handlers/ConnectionClosing.cpp
         handlers/EnterWorld.cpp
         handlers/LeaveWorld.cpp
@@ -50,13 +51,16 @@ target_sources(${PROJECT_NAME}
         handlers/SkillUse.cpp
         handlers/TargetClear.cpp
         handlers/TargetSelect.cpp
+        handlers/_Common.hpp
         network/Connection.cpp
         network/Connection.hpp
         network/packets/client/OpCodes.hpp
-        network/packets/server/ProtocolHandshakePacket.cpp
-        network/packets/server/ProtocolHandshakePacket.hpp
         network/packets/server/CharacterStatusUpdatePacket.cpp
         network/packets/server/CharacterStatusUpdatePacket.hpp
+        network/packets/server/ChatSayPacket.cpp
+        network/packets/server/ChatSayPacket.hpp
         network/packets/server/EntityStatusUpdatePacket.cpp
         network/packets/server/EntityStatusUpdatePacket.hpp
+        network/packets/server/ProtocolHandshakePacket.cpp
+        network/packets/server/ProtocolHandshakePacket.hpp
 )

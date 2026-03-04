@@ -6,12 +6,12 @@
 // Project includes
 #include <l2cpp/Typedefs.hpp>
 
-namespace Network::OpCode { enum class Client : byte; }
-
-enum class Network::OpCode::Client : byte
+namespace Network
 {
-    Protocol                    = 0x00,
-    Authenticate                = 0x08,
+    enum class ClientOpCode : byte
+    {
+        Protocol                    = 0x00,
+        Authenticate                = 0x08,
     Move                        = 0x01,
     EnterWorld                  = 0x03,
     TargetSelect                = 0x04,
@@ -23,6 +23,7 @@ enum class Network::OpCode::Client : byte
     ShortcutBarAdd              = 0x33,
     ShortcutBarRemove           = 0x35,
     TargetClear                 = 0x37,
+        ChatSay                     = 0x38,
     SkillList                   = 0x3f,
     LeaveWorld                  = 0x46,
     MoveUpdate                  = 0x48,
@@ -31,3 +32,4 @@ enum class Network::OpCode::Client : byte
     MiniMapShow                 = 0xcd,
     ManorList                   = 0xd0,
 };
+}

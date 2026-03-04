@@ -14,6 +14,7 @@ namespace Handler
     HANDLER(CharacterCreate)
     HANDLER(CharacterSelect)
     HANDLER(CharacterShowCreationScreen)
+    HANDLER(ChatSay)
     HANDLER(ConnectionClosing)
     HANDLER(EnterWorld)
     HANDLER(LeaveWorld)
@@ -34,12 +35,13 @@ namespace Handler
 
 std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gPacketHandlers
 {
-#define HANDLER(name) { std::to_underlying(Network::OpCode::Client::name), {&Handler::handle ## name, #name} }
+#define HANDLER(name) { std::to_underlying(Network::ClientOpCode::name), {&Handler::handle ## name, #name} }
     HANDLER(Authenticate),
     HANDLER(CharacterCancelDeletion),
     HANDLER(CharacterCreate),
     HANDLER(CharacterSelect),
     HANDLER(CharacterShowCreationScreen),
+    HANDLER(ChatSay),
     HANDLER(ConnectionClosing),
     HANDLER(EnterWorld),
     HANDLER(LeaveWorld),

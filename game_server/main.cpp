@@ -58,6 +58,10 @@ catch (l2cpp::Exception const & e)
 
 int main() try
 {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+
 #ifdef NDEBUG
     spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
 #else
