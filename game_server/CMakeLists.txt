@@ -20,9 +20,12 @@ target_sources(${PROJECT_NAME}
         main.cpp
         Player.cpp
         Player.hpp
+        game/BodyPart.hpp
         game/Character.cpp
         game/Character.hpp
         game/ChatType.hpp
+        game/Item.hpp
+        game/ItemTemplate.hpp
         game/Shortcut.cpp
         game/Shortcut.hpp
         handlers/Authenticate.cpp

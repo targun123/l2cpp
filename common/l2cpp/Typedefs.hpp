@@ -23,3 +23,13 @@ using OptionalRef = std::optional<std::reference_wrapper<T>>;
 
 using PacketHeader = u16;
 using PacketOpCode = u16;
+
+constexpr u8  operator""_u8 (u64 const nbr) { return static_cast<u8> (nbr); }
+constexpr u16 operator""_u16(u64 const nbr) { return static_cast<u16>(nbr); }
+constexpr u32 operator""_u32(u64 const nbr) { return static_cast<u32>(nbr); }
+constexpr u64 operator""_u64(u64 const nbr) { return nbr; }
+
+constexpr s8  operator""_s8 (u64 const nbr) { return static_cast<s8> (nbr); }
+constexpr s16 operator""_s16(u64 const nbr) { return static_cast<s16>(nbr); }
+constexpr s32 operator""_s32(u64 const nbr) { return static_cast<s32>(nbr); }
+constexpr s64 operator""_s64(u64 const nbr) { return static_cast<s64>(nbr); }
