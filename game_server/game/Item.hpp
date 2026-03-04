@@ -6,6 +6,8 @@
 // Project includes
 #include "ItemTemplate.hpp"
 
+#include <l2cpp/network/Packet.hpp>
+
 namespace l2
 {
     struct Item
@@ -15,5 +17,9 @@ namespace l2
         u32  uid          = 0;
         u32  quantity     = 1;
         u16  enchantLevel = 0;
+
+        bool equipped = false;
     };
 }
+
+l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, l2::Item const & item);

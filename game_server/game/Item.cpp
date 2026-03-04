@@ -1,0 +1,47 @@
+/// @author    Chnossos
+/// @date      Created on 2026-03-04
+
+#include "Item.hpp"
+
+// Project includes
+#include <l2cpp/Exception.hpp>
+
+using namespace l2;
+
+static u16 typeFromCategory(ItemCategory const cat)
+{
+    using enum ItemCategory;
+    switch (cat)
+    {
+        case Weapon:
+        case Accessory:
+            return 0;
+
+        case Armor:
+            return 1;
+
+        case Quest:
+        case Adena:
+        case Misc:
+            return 4;
+
+        default:
+            L2CPP_THROW("Unknown item category '{}' for type conversion", std::to_underlying(cat));
+    }
+}
+
+l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, Item const & item)
+{
+    return p
+        << typeFromCategory(item.tmplate.category)
+        << item.uid
+        << item.tmplate.id
+        << item.quantity
+        << item.tmplate.category
+        << 0_u16 // ?
+        << (item.equipped ? 1_u16 : 0_u16)
+        << item.tmplate.bodyPart
+        << item.enchantLevel // or pet level shown in control item
+        << 0_u16 // pet name exists or not shown in control item
+    ;
+}

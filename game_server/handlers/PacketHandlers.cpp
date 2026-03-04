@@ -18,6 +18,7 @@ namespace Handler
     HANDLER(ConnectionClosing)
     HANDLER(EnterWorld)
     HANDLER(InventoryOpen)
+    HANDLER(ItemUse)
     HANDLER(LeaveWorld)
     HANDLER(ManorList)
     HANDLER(MiniMapShow)
@@ -36,7 +37,7 @@ namespace Handler
 
 std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHandlers
 {
-#define HANDLER(name) { std::to_underlying(Network::ClientOpCode::name), {&Handler::handle ## name, #name} }
+#define HANDLER(name) {std::to_underlying(Network::ClientOpCode::name), {&Handler::handle ## name, #name}}
     HANDLER(Authenticate),
     HANDLER(CharacterCancelDeletion),
     HANDLER(CharacterCreate),
@@ -46,6 +47,7 @@ std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHand
     HANDLER(ConnectionClosing),
     HANDLER(EnterWorld),
     HANDLER(InventoryOpen),
+    HANDLER(ItemUse),
     HANDLER(LeaveWorld),
     HANDLER(ManorList),
     HANDLER(MiniMapShow),

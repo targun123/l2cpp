@@ -20,6 +20,7 @@ namespace Network
         CharacterSelect             = 0x0d,
         CharacterShowCreationScreen = 0x0e,
         InventoryOpen               = 0x0f,
+        ItemUse                     = 0x14,
         SkillUse                    = 0x2f,
         ShortcutBarAdd              = 0x33,
         ShortcutBarRemove           = 0x35,

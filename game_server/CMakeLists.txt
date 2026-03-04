@@ -24,6 +24,7 @@ target_sources(${PROJECT_NAME}
         game/Character.cpp
         game/Character.hpp
         game/ChatType.hpp
+        game/Item.cpp
         game/Item.hpp
         game/ItemTemplate.hpp
         game/Shortcut.cpp
@@ -38,6 +39,7 @@ target_sources(${PROJECT_NAME}
         handlers/ConnectionClosing.cpp
         handlers/EnterWorld.cpp
         handlers/InventoryOpen.cpp
+        handlers/ItemUse.cpp
         handlers/LeaveWorld.cpp
         handlers/ManorList.cpp
         handlers/MiniMapShow.cpp
