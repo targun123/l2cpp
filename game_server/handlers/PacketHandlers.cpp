@@ -34,7 +34,7 @@ namespace Handler
 #undef HANDLER
 }
 
-std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gPacketHandlers
+std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHandlers
 {
 #define HANDLER(name) { std::to_underlying(Network::ClientOpCode::name), {&Handler::handle ## name, #name} }
     HANDLER(Authenticate),

@@ -34,8 +34,8 @@ static void onSocketAccepted(boost::asio::ip::tcp::socket && socket) try
         player.connection().read();
 
         auto const buffer = player.connection().readBuffer();
-        auto const opCode = buffer[2];
-        auto const size   = *reinterpret_cast<u16 const *>(buffer.data());
+        auto const size   = *reinterpret_cast<PacketHeader const *>(buffer.data());
+        auto const opCode = buffer[sizeof(size)]; // client opcode is always one byte
 
         if (auto const it = gPacketHandlers.find(opCode); it != gPacketHandlers.end())
         {

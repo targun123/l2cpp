@@ -6,5 +6,5 @@
 
 DEFINE_PACKET_HANDLER(ManorList)
 {
-    player.connection().send(Packet(0xfe).append<u16>(0x1b) << 0);
+    player.connection().send(Packet(0xfe1b) << 0);
 }

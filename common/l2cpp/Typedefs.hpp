@@ -20,3 +20,6 @@ using s64 = std::int64_t;
 
 template<typename T>
 using OptionalRef = std::optional<std::reference_wrapper<T>>;
+
+using PacketHeader = u16;
+using PacketOpCode = u16;

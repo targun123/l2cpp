@@ -15,59 +15,57 @@
 
 namespace l2cpp::Network { class Packet; }
 
+template<typename T, typename Arg1, typename... ArgN>
+constexpr bool isAnyOf = (std::is_same_v<T, Arg1> || ... || std::is_same_v<T, ArgN>);
+
 class l2cpp::Network::Packet
 {
 public:
-    explicit Packet(byte type);
-    /// Permits conversion from any Packet enumerations
-    template<typename E, typename = std::enable_if_t<std::is_enum_v<E>>>
+    explicit Packet(PacketOpCode opCode);
+
+    /// Permits conversion from any Packet enumerations that has the correct underlying type size
+    template<typename E> requires std::is_enum_v<E> && isAnyOf<std::underlying_type_t<E>, byte, PacketOpCode>
     explicit Packet(E e): Packet(std::to_underlying(e)) {}
+
     virtual ~Packet();
 
 public:
     /// Appends a span of bytes to the packet.
-    Packet & append(std::span<byte const> span);
+    Packet & operator<<(std::span<byte const> span);
+
+    template<typename T, size_t N>
+    Packet & operator<<(std::span<T, N> span) { return append(span.data(), span.size() * sizeof(T)); }
 
     /// Allows to append any "basic" type as bytes to the packet.
     template<typename T> requires std::integral<T> || std::floating_point<T> || std::is_enum_v<T>
-    Packet & append(T t)
+    Packet & operator<<(T t)
     {
         if constexpr (std::is_enum_v<T>)
-            return append(std::to_underlying(t));
+            return append(&t, sizeof(std::underlying_type_t<T>));
         else
-            return append({reinterpret_cast<byte const *>(&t), sizeof(T)});
+            return append(&t, sizeof(T));
     }
 
     /// Class/Struct instances must have an overloaded @c serialize(Packet&) function returning a @c Packet&.
     template<class T> requires std::is_base_of_v<Serializable, T>
-    Packet & append(T const & t) { return static_cast<Serializable const &>(t).serialize(*this); }
-
-    /// Appends a contiguous array of basic types as bytes to the packet.
-    template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
-    Packet & append(T const (&a)[N])
-    {
-        return append({reinterpret_cast<byte const *>(a), N * sizeof(T)});
-    }
+    Packet & operator<<(T const & t) { return static_cast<Serializable const &>(t).serialize(*this); }
 
     /// Appends a contiguous array of integrals to the packet.
     template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
-    Packet & append(std::array<T, N> const & a)
+    Packet & operator<<(std::array<T, N> const & a)
     {
-        return append({reinterpret_cast<byte const *>(a.data()), a.size() * sizeof(T)});
+        return append(a.data(), a.size() * sizeof(T));
     }
 
-    Packet & append(std::string_view const str)
+    Packet & operator<<(std::string_view const str)
     {
-        return append({reinterpret_cast<byte const *>(str.data()), str.size() * sizeof(char)}).append<char>(0);
+        return append(str.data(), str.size() * sizeof(char)) << '\0';
     }
 
-    Packet & append(std::wstring_view const str)
+    Packet & operator<<(std::wstring_view const str)
     {
-        return append({reinterpret_cast<byte const *>(str.data()), str.size() * sizeof(wchar_t)}).append<wchar_t>(0);
+        return append(str.data(), str.size() * sizeof(wchar_t)) << L'\0';
     }
-
-    /// Shortened way to append to the packet.
-    Packet & operator<<(auto && t) { return append(t); }
 
 public:
     /// Appends the checksum of the packet body.
@@ -85,7 +83,7 @@ public:
     auto size() const -> size_t;
 
     /// @returns Opcode of the packet, if available.
-    auto opCode() const -> std::optional<u8>;
+    auto opCode() const -> std::optional<PacketOpCode>;
 
     /// @returns A span of the buffer minus the initial size (thus including the opCode).
     auto body()       -> std::span<byte>;
@@ -93,6 +91,13 @@ public:
 
     /// @returns Size of the body (buffer size minus the initial size).
     auto bodySize() const -> size_t;
+
+private:
+    template<typename T>
+    Packet & append(T const * ptr, size_t const sz)
+    {
+        return operator<<({reinterpret_cast<byte const *>(ptr), sz});
+    }
 
 private:
     struct PacketImpl;

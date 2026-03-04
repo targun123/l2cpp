@@ -38,7 +38,7 @@ struct Connection::ConnectionImpl
 Connection::ConnectionImpl::ConnectionImpl(boost::asio::ip::tcp::socket && socket)
     : socket(std::move(socket))
 {
-    readBuffer.resize(sizeof(u16));
+    readBuffer.resize(sizeof(PacketHeader));
 }
 
 void Connection::ConnectionImpl::encrypt(std::span<byte> data)
@@ -106,14 +106,14 @@ void Connection::read()
 
     // Read packet size
     boost::system::error_code ec;
-    boost::asio::read(_impl->socket, boost::asio::buffer(_impl->readBuffer.data(), sizeof(u16)), ec);
+    boost::asio::read(_impl->socket, boost::asio::buffer(_impl->readBuffer.data(), sizeof(PacketHeader)), ec);
     if (ec.value() == boost::asio::error::eof)
         L2CPP_THROW("Client disconnected");
 
     L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
 
-    auto const size = *reinterpret_cast<u16 *>(_impl->readBuffer.data());
-    L2CPP_B_ASSERT(size > 2, "Packet announced without any opCode");
+    auto const size = *reinterpret_cast<PacketHeader *>(_impl->readBuffer.data());
+    L2CPP_B_ASSERT(size > sizeof(size), "Packet announced without any opCode");
 
     if (_impl->readBuffer.size() < size)
         _impl->readBuffer.resize(size);
@@ -138,8 +138,8 @@ void Connection::send(l2cpp::Network::Packet & p)
     p.writeSize();
 
 #ifndef NDEBUG
-    SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", opCode, p.size());
-    std::cout << l2cpp::hexdump(p.body().data() + sizeof(u8), p.bodySize() - sizeof(u8)) << std::endl;
+    SPDLOG_INFO("sent: 0x{:0{}x} ({} bytes)", opCode, opCode > 0xff ? 4 : 2, p.size());
+    std::cout << l2cpp::hexdump(p.body().data(), p.bodySize()) << std::endl;
 #endif
 
     if (std::ranges::any_of(_impl->encryptionKey, [] (auto const c) { return c != 0x00; })) [[likely]]
@@ -150,7 +150,7 @@ void Connection::send(l2cpp::Network::Packet & p)
     _impl->socket.send(boost::asio::buffer(p.buffer()));
 
 #ifdef NDEBUG
-    SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", opCode, p.size());
+    SPDLOG_INFO("sent: 0x{:0{}x} ({} bytes)", opCode, opCode > 0xff ? 4 : 2, p.size());
 #endif
 }
 

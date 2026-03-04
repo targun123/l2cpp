@@ -36,16 +36,23 @@ struct Packet::PacketImpl
     std::once_flag    checksumOnceFlag;
 };
 
-Packet::Packet(byte const type)
+Packet::Packet(PacketOpCode const opCode)
 {
+    constexpr PacketHeader sizePlaceholder = 0;
+
     impl->buffer.reserve(256);
-    append<u16>(0); // slot to write final size before sending
-    impl->buffer.emplace_back(type);
+    *this << sizePlaceholder; // slot to write final size before sending
+
+    if (opCode > 0xff)
+        *this << opCode;
+    else
+        *this << static_cast<byte>(opCode);
+        // impl->buffer.emplace_back(static_cast<byte>(opCode));
 }
 
 Packet::~Packet() = default;
 
-Packet & Packet::append(std::span<byte const> span)
+Packet & Packet::operator<<(std::span<byte const> span)
 {
     impl->buffer.append_range(span);
     return *this;
@@ -59,15 +66,15 @@ void Packet::writeChecksum()
         while (bodySize() % 8 != 0)
             impl->buffer.emplace_back(0);
 
-        append(calculateChecksum({body().data(), bodySize()}));
-        append<u32>(0); // Align to 8 bytes with zeroes, required by Blowfish
+        *this << calculateChecksum({body().data(), bodySize()});
+        *this << 0u; // Align to 8 bytes with zeroes, required by Blowfish
     });
 }
 
 void Packet::writeSize()
 {
     // Write total size on the first two bytes of the buffer
-    *reinterpret_cast<u16 *>(impl->buffer.data()) = static_cast<u16>(impl->buffer.size());
+    *reinterpret_cast<PacketHeader *>(impl->buffer.data()) = static_cast<PacketHeader>(impl->buffer.size());
 }
 
 auto Packet::buffer() const -> std::span<byte const>
@@ -80,27 +87,31 @@ auto Packet::size() const -> size_t
     return impl->buffer.size();
 }
 
-auto Packet::opCode() const -> std::optional<u8>
+auto Packet::opCode() const -> std::optional<PacketOpCode>
 {
-    std::optional<u8> type;
+    std::optional<PacketOpCode> type;
 
-    if (impl->buffer.size() > sizeof(u16))
-        type.emplace(impl->buffer[sizeof(u16)]);
+    if (impl->buffer.size() > sizeof(PacketHeader))
+    {
+        type = impl->buffer[sizeof(PacketHeader)];
+        if (type == 0xfe)
+            type = *reinterpret_cast<PacketOpCode const *>(impl->buffer.data() + sizeof(PacketHeader));
+    }
 
     return type;
 }
 
 auto Packet::body() -> std::span<byte>
 {
-    return {impl->buffer.data() + sizeof(u16), bodySize()};
+    return {impl->buffer.data() + sizeof(PacketHeader), bodySize()};
 }
 
 auto Packet::body() const -> std::span<byte const>
 {
-    return {impl->buffer.data() + sizeof(u16), bodySize()};
+    return {impl->buffer.data() + sizeof(PacketHeader), bodySize()};
 }
 
 auto Packet::bodySize() const -> size_t
 {
-    return impl->buffer.size() - sizeof(u16);
+    return impl->buffer.size() - sizeof(PacketHeader);
 }
