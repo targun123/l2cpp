@@ -31,9 +31,10 @@ target_sources(${PROJECT_NAME}
         handlers/CharacterList.cpp
         handlers/CharacterSelect.cpp
         handlers/CharacterShowCreationScreen.cpp
-               handlers/ChatSay.cpp
+        handlers/ChatSay.cpp
         handlers/ConnectionClosing.cpp
         handlers/EnterWorld.cpp
+        handlers/InventoryOpen.cpp
         handlers/LeaveWorld.cpp
         handlers/ManorList.cpp
         handlers/MiniMapShow.cpp

@@ -17,6 +17,7 @@ namespace Handler
     HANDLER(ChatSay)
     HANDLER(ConnectionClosing)
     HANDLER(EnterWorld)
+    HANDLER(InventoryOpen)
     HANDLER(LeaveWorld)
     HANDLER(ManorList)
     HANDLER(MiniMapShow)
@@ -44,6 +45,7 @@ std::unordered_map<unsigned char, std::pair<PacketHandler, std::string_view>> gP
     HANDLER(ChatSay),
     HANDLER(ConnectionClosing),
     HANDLER(EnterWorld),
+    HANDLER(InventoryOpen),
     HANDLER(LeaveWorld),
     HANDLER(ManorList),
     HANDLER(MiniMapShow),
