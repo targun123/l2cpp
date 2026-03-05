@@ -14,6 +14,7 @@ using l2::Character;
 
 struct Character::CharacterImpl
 {
+    std::array<Item, 16> gear;
     std::array<Shortcut, 120> shortcuts{};
 };
 
@@ -24,6 +25,11 @@ Character::~Character() = default;
 
 Character::Character(Character &&) noexcept = default;
 Character & Character::operator=(Character &&) noexcept = default;
+
+auto Character::equippedItem(InventoryGearSlot const slot) const -> Item const &
+{
+    return _impl->gear[std::to_underlying(slot)];
+}
 
 auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
 {

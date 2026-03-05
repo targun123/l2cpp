@@ -4,6 +4,8 @@
 #pragma once
 
 // Project includes
+#include "Item.hpp"
+#include "InventoryGearSlot.hpp"
 #include "Shortcut.hpp"
 
 #include <l2cpp/Pimpl.hpp>
@@ -99,6 +101,9 @@ public:
         double moveSpeedMutliplier = 1;
         double pAtkSpeedMutliplier = 1;
     } baseStats, finalStats;
+
+public:
+    auto equippedItem(InventoryGearSlot slot) const -> Item const &;
 
 public:
     auto setShortcut(Shortcut shortcut) -> Shortcut &;
