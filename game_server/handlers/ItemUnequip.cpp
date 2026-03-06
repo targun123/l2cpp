@@ -7,6 +7,7 @@
 #include "_Common.hpp"
 #include "../game/Character.hpp"
 #include "../network/packets/server/CharacterStatusUpdatePacket.hpp"
+#include "../network/packets/server/inventory/InventoryUpdatePacket.hpp"
 
 DEFINE_PACKET_HANDLER(ItemUnequip)
 {
@@ -20,13 +21,10 @@ DEFINE_PACKET_HANDLER(ItemUnequip)
     auto & c = player.currentCharacter()->get();
     if (auto const item = c.unequipItem(bodyPart); item)
     {
-        Packet p(0x27); // Inventory update
-        p
-            << 1_u16 // count?
-            << 2_u16 // mode: 2=update
-            << item->get()
-        ;
+        InventoryUpdatePacket p;
+        p.appendModifiedItem(item->get());
+
         player.connection().send(p);
-        player.connection().send(Network::Packet::Server::CharacterStatusUpdatePacket(c));
+        player.connection().send(CharacterStatusUpdatePacket(c));
     }
 }

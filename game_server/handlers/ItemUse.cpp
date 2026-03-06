@@ -8,6 +8,7 @@
 #include "../game/Character.hpp"
 #include "../game/Item.hpp"
 #include "../network/packets/server/CharacterStatusUpdatePacket.hpp"
+#include "../network/packets/server/inventory/InventoryUpdatePacket.hpp"
 
 DEFINE_PACKET_HANDLER(ItemUse)
 {
@@ -33,12 +34,12 @@ DEFINE_PACKET_HANDLER(ItemUse)
                 if (!oldItem && !newItem) // nothing changed
                     return;
 
-                Packet p(0x27);
-                p << static_cast<u16>(!!oldItem + !!newItem);
-                if (oldItem) p << 2_u16 << oldItem->get();
-                if (newItem) p << 2_u16 << newItem->get();
+                InventoryUpdatePacket p;
+                if (oldItem) p.appendModifiedItem(*oldItem);
+                if (newItem) p.appendModifiedItem(*newItem);
+
                 player.connection().send(p);
-                player.connection().send(Network::Packet::Server::CharacterStatusUpdatePacket(c));
+                player.connection().send(CharacterStatusUpdatePacket(c));
                 break;
             }
             case l2::ItemCategory::Quest:

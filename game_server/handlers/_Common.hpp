@@ -15,6 +15,10 @@
 
 using namespace l2cpp::Network;
 
+// Forward-declare
+namespace Network::Packet::Server {}
+using namespace Network::Packet::Server;
+
 #define DECLARE_PACKET_HANDLER(name) namespace Handler { void handle ## name(Player & player); }
 
 #define DEFINE_PACKET_HANDLER(name) \
