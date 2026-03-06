@@ -23,7 +23,7 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
     Packet p(0x15);
     p
         << c.name
-        << c.id
+        << c.id()
         << c.title
         << player.playOk1()
         << c.clanId

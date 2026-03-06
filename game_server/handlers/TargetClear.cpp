@@ -11,5 +11,5 @@ DEFINE_PACKET_HANDLER(TargetClear)
 
     auto & c = player.currentCharacter()->get();
     c.targetId.reset();
-    player.connection().send(Packet(0x2a) << c.id << c.pos.x << c.pos.y << c.pos.z);
+    player.connection().send(Packet(0x2a) << c.id() << c.pos.x << c.pos.y << c.pos.z);
 }

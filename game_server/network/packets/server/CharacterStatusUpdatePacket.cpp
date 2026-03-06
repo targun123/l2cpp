@@ -19,7 +19,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
         << c.pos.y
         << c.pos.z
         << c.headAngle
-        << c.id
+        << c.id()
         << c.name
         << c.raceId
         << c.sex
@@ -39,8 +39,58 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
         << c.sp
         << c.weight.current
         << c.weight.max
-        << 20 // 20 no weapon, 40 weapon equipped
-        << std::array<u32, 32>{} // gear
+        << (c.equippedItem(l2::InventoryGearSlot::RightWeapon) ? 20 : 40)
+    ;
+
+        auto const equippedItemIdIfValid = [&c] (l2::InventoryGearSlot const s)
+        {
+            auto const item = c.equippedItem(s);
+            return item ? item->get().id() : 0;
+        };
+
+        auto const equippedItemTemplateIdIfValid = [&c] (l2::InventoryGearSlot const s)
+        {
+            auto const item = c.equippedItem(s);
+            return item ? item->get().tmplate.id : 0;
+        };
+
+        using enum l2::InventoryGearSlot;
+        *this
+            << equippedItemIdIfValid(Underwear   )
+            << equippedItemIdIfValid(LeftEarring )
+            << equippedItemIdIfValid(RightEarring)
+            << equippedItemIdIfValid(Necklace    )
+            << equippedItemIdIfValid(LeftRing    )
+            << equippedItemIdIfValid(RightRing   )
+            << equippedItemIdIfValid(Helmet      )
+            << equippedItemIdIfValid(RightWeapon )
+            << equippedItemIdIfValid(Shield      )
+            << equippedItemIdIfValid(Gloves      )
+            << equippedItemIdIfValid(UpperArmor  )
+            << equippedItemIdIfValid(LowerArmor  )
+            << equippedItemIdIfValid(Feet        )
+            << equippedItemIdIfValid(Cloack      )
+            << equippedItemIdIfValid(RightWeapon ) // Dual weapons duplicate right hand into left hand
+            << equippedItemIdIfValid(Hair        )
+            << equippedItemTemplateIdIfValid(Underwear   )
+            << equippedItemTemplateIdIfValid(LeftEarring )
+            << equippedItemTemplateIdIfValid(RightEarring)
+            << equippedItemTemplateIdIfValid(Necklace    )
+            << equippedItemTemplateIdIfValid(LeftRing    )
+            << equippedItemTemplateIdIfValid(RightRing   )
+            << equippedItemTemplateIdIfValid(Helmet      )
+            << equippedItemTemplateIdIfValid(RightWeapon )
+            << equippedItemTemplateIdIfValid(Shield      )
+            << equippedItemTemplateIdIfValid(Gloves      )
+            << equippedItemTemplateIdIfValid(UpperArmor  )
+            << equippedItemTemplateIdIfValid(LowerArmor  )
+            << equippedItemTemplateIdIfValid(Feet        )
+            << equippedItemTemplateIdIfValid(Cloack      )
+            << equippedItemTemplateIdIfValid(RightWeapon ) // Dual weapons duplicate right hand into left hand
+            << equippedItemTemplateIdIfValid(Hair        )
+        ;
+
+    *this
         << c.finalStats.pAtk
         << c.finalStats.pAtkSpeed
         << c.finalStats.pDef
@@ -106,7 +156,14 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
         << 0 // special effects? circles around player...
         << static_cast<u32>(c.cp.max)
         << static_cast<u32>(c.cp.current)
-        << c.enchantEffect
+    ;
+
+    if (auto const item = c.equippedItem(RightWeapon); item)
+        *this << item->get().enchantLevel;
+    else
+        *this << 0_u8;
+
+    *this
         << c.team
         << 0 // clan crest large id
         << c.isNoble // noble symbol in status window

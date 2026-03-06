@@ -24,6 +24,8 @@ target_sources(${PROJECT_NAME}
         game/Character.cpp
         game/Character.hpp
         game/ChatType.hpp
+        game/GameObject.cpp
+        game/GameObject.hpp
         game/Item.cpp
         game/Item.hpp
         game/ItemTemplate.hpp

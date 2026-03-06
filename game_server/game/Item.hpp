@@ -4,21 +4,20 @@
 #pragma once
 
 // Project includes
+#include "GameObject.hpp"
 #include "ItemTemplate.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 
 namespace l2
 {
-    struct Item
+    struct Item : public GameObject
     {
         ItemTemplate tmplate;
 
-        u32  uid          = 0;
-        u32  quantity     = 1;
-        u16  enchantLevel = 0;
-
-        bool equipped = false;
+        u32  quantity    = 1;
+        s8  enchantLevel = 0;
+        bool equipped    = false;
     };
 }
 

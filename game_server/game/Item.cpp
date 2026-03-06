@@ -34,7 +34,7 @@ l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, Item const & ite
 {
     return p
         << typeFromCategory(item.tmplate.category)
-        << item.uid
+        << item.id()
         << item.tmplate.id
         << item.quantity
         << item.tmplate.category

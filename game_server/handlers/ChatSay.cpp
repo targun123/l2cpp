@@ -24,7 +24,7 @@ DEFINE_PACKET_HANDLER(ChatSay)
 
     auto const & c = player.currentCharacter()->get();
     if (recipient.empty())
-        player.connection().send(ChatSayPacket(c.id, c.name, type, msg));
+        player.connection().send(ChatSayPacket(c.id(), c.name, type, msg));
     else
-        player.connection().send(ChatSayPacket(c.id, L"->" + recipient, type, msg));
+        player.connection().send(ChatSayPacket(c.id(), L"->" + recipient, type, msg));
 }

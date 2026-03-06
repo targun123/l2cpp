@@ -37,7 +37,7 @@ DEFINE_PACKET_HANDLER(MoveUpdate)
     // if ((move.currentDistance/* += distanceCovered*/) >= move.totalDistance) // Reached destination
     // {
     //     Packet p(0x61);
-    //     p << c.id << x << y << c.pos.z << c.headAngle;
+    //     p << c.id() << x << y << c.pos.z << c.headAngle;
     //     player.connection().send(p);
     // }
 }

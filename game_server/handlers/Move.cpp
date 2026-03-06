@@ -59,7 +59,7 @@ DEFINE_PACKET_HANDLER(Move)
     // player.setNextAction<MoveAction>(action);
 
     Packet p(0x01); // Make character start moving, position will be validated in MoveUpdate handler
-    p << c.id
+    p << c.id()
       << action.targetX << action.targetY << action.targetZ
       << c.pos.x        << c.pos.y        << c.pos.z
     ;

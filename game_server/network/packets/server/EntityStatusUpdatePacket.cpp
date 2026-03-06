@@ -19,13 +19,20 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(l2::Character & c)
         << c.pos.y
         << c.pos.z
         << 0 // vehicleId
-        << c.id
+        << c.id()
         << c.name
         << c.raceId
         << c.sex
         << c.classId
         << 0 // separator?
-        << std::array<u32, 10>{} // gear
+    ;
+
+    if (auto const item = c.equippedItem(l2::InventoryGearSlot::Helmet); item)
+        *this << item->get().tmplate.id;
+    else
+        *this << 0;
+
+    *this
         << (c.isPvpFlagged ? 1 : 0)
         << c.karma
         << c.finalStats.mAtkSpeed

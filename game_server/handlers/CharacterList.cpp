@@ -14,7 +14,7 @@ DEFINE_PACKET_HANDLER(CharacterList)
     {
         p
             << c.name
-            << c.id
+            << c.id()
             << player.accountName()
             << player.playOk1()
             << c.clanId
@@ -35,40 +35,52 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << std::array<u32, 9>{} // unknown
         ;
 
+        auto const equippedItemIdIfValid = [&c] (l2::InventoryGearSlot const s)
+        {
+            auto const item = c.equippedItem(s);
+            return item ? item->get().id() : 0;
+        };
+
+        auto const equippedItemTemplateIdIfValid = [&c] (l2::InventoryGearSlot const s)
+        {
+            auto const item = c.equippedItem(s);
+            return item ? item->get().tmplate.id : 0;
+        };
+
         using enum l2::InventoryGearSlot;
         p
-            << c.equippedItem(Underwear   ).uid
-            << c.equippedItem(LeftEarring ).uid
-            << c.equippedItem(RightEarring).uid
-            << c.equippedItem(Necklace    ).uid
-            << c.equippedItem(LeftRing    ).uid
-            << c.equippedItem(RightRing   ).uid
-            << c.equippedItem(Helmet      ).uid
-            << c.equippedItem(RightWeapon ).uid
-            << c.equippedItem(Shield      ).uid
-            << c.equippedItem(Gloves      ).uid
-            << c.equippedItem(UpperArmor  ).uid
-            << c.equippedItem(LowerArmor  ).uid
-            << c.equippedItem(Feet        ).uid
-            << c.equippedItem(Cloack      ).uid
-            << c.equippedItem(RightWeapon ).uid // Dual weapons duplicate right hand into left hand
-            << c.equippedItem(Hair        ).uid
-            << c.equippedItem(Underwear   ).tmplate.id
-            << c.equippedItem(LeftEarring ).tmplate.id
-            << c.equippedItem(RightEarring).tmplate.id
-            << c.equippedItem(Necklace    ).tmplate.id
-            << c.equippedItem(LeftRing    ).tmplate.id
-            << c.equippedItem(RightRing   ).tmplate.id
-            << c.equippedItem(Helmet      ).tmplate.id
-            << c.equippedItem(RightWeapon ).tmplate.id
-            << c.equippedItem(Shield      ).tmplate.id
-            << c.equippedItem(Gloves      ).tmplate.id
-            << c.equippedItem(UpperArmor  ).tmplate.id
-            << c.equippedItem(LowerArmor  ).tmplate.id
-            << c.equippedItem(Feet        ).tmplate.id
-            << c.equippedItem(Cloack      ).tmplate.id
-            << c.equippedItem(RightWeapon ).tmplate.id // Dual weapons duplicate right hand into left hand
-            << c.equippedItem(Hair        ).tmplate.id
+            << equippedItemIdIfValid(Underwear   )
+            << equippedItemIdIfValid(LeftEarring )
+            << equippedItemIdIfValid(RightEarring)
+            << equippedItemIdIfValid(Necklace    )
+            << equippedItemIdIfValid(LeftRing    )
+            << equippedItemIdIfValid(RightRing   )
+            << equippedItemIdIfValid(Helmet      )
+            << equippedItemIdIfValid(RightWeapon )
+            << equippedItemIdIfValid(Shield      )
+            << equippedItemIdIfValid(Gloves      )
+            << equippedItemIdIfValid(UpperArmor  )
+            << equippedItemIdIfValid(LowerArmor  )
+            << equippedItemIdIfValid(Feet        )
+            << equippedItemIdIfValid(Cloack      )
+            << equippedItemIdIfValid(RightWeapon ) // Dual weapons duplicate right hand into left hand
+            << equippedItemIdIfValid(Hair        )
+            << equippedItemTemplateIdIfValid(Underwear   )
+            << equippedItemTemplateIdIfValid(LeftEarring )
+            << equippedItemTemplateIdIfValid(RightEarring)
+            << equippedItemTemplateIdIfValid(Necklace    )
+            << equippedItemTemplateIdIfValid(LeftRing    )
+            << equippedItemTemplateIdIfValid(RightRing   )
+            << equippedItemTemplateIdIfValid(Helmet      )
+            << equippedItemTemplateIdIfValid(RightWeapon )
+            << equippedItemTemplateIdIfValid(Shield      )
+            << equippedItemTemplateIdIfValid(Gloves      )
+            << equippedItemTemplateIdIfValid(UpperArmor  )
+            << equippedItemTemplateIdIfValid(LowerArmor  )
+            << equippedItemTemplateIdIfValid(Feet        )
+            << equippedItemTemplateIdIfValid(Cloack      )
+            << equippedItemTemplateIdIfValid(RightWeapon ) // Dual weapons duplicate right hand into left hand
+            << equippedItemTemplateIdIfValid(Hair        )
         ;
 
         p
@@ -80,8 +92,12 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.deleteTime
             << c.classId
             << c.selected
-            << static_cast<u8>(std::min<u16>(c.equippedItem(RightWeapon).enchantLevel, 127)) // Visually enable max glow
         ;
+
+        if (auto const item = c.equippedItem(RightWeapon); item)
+            p << item->get().enchantLevel;
+        else
+            p << 0_u8;
     }
 
     player.connection().send(p);

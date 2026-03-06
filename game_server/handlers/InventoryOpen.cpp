@@ -6,21 +6,21 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/BodyPart.hpp"
+#include "../game/Character.hpp"
 #include "../game/Item.hpp"
 
 DEFINE_PACKET_HANDLER(InventoryOpen)
 {
-    l2::Item item;
-    item.uid              = 2;
-    item.tmplate.id       = 6611; // Infinity Sword
-    item.tmplate.bodyPart = l2::BodyPart::RightHand;
-    item.tmplate.category = l2::ItemCategory::Weapon;
+    auto const inventory = player.currentCharacter()->get().inventory();
 
     Packet p(0x1b);
     p
         << 1_u16 // open
-        << 1_u16 // count
-        << item
+        << static_cast<u16>(inventory.size())
     ;
+
+    for (auto const & item : inventory)
+        p << item.get();
+
     player.connection().send(p);
 }

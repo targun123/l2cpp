@@ -4,6 +4,7 @@
 #pragma once
 
 // Project includes
+#include "GameObject.hpp"
 #include "Item.hpp"
 #include "InventoryGearSlot.hpp"
 #include "Shortcut.hpp"
@@ -25,17 +26,16 @@ struct Gauge
 
 namespace l2 { class Character; }
 
-class l2::Character
+class l2::Character : public GameObject
 {
 public:
     Character();
-    ~Character();
+    ~Character() override;
 
     Character(Character &&) noexcept;
     Character & operator=(Character &&) noexcept;
 
 public:
-    u32 id = 1;
     u32 accessLevel = 1;
     std::wstring name = L"test", title = L"{l2cpp}";
     u32 raceId = 0;
@@ -103,7 +103,8 @@ public:
     } baseStats, finalStats;
 
 public:
-    auto equippedItem(InventoryGearSlot slot) const -> Item const &;
+    auto inventory() const -> std::vector<std::reference_wrapper<Item const>>;
+    auto equippedItem(InventoryGearSlot slot) const -> OptionalRef<Item const>;
 
 public:
     auto setShortcut(Shortcut shortcut) -> Shortcut &;

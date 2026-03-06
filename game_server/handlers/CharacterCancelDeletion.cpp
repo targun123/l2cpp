@@ -15,7 +15,7 @@ DEFINE_PACKET_HANDLER(CharacterCancelDeletion)
     reader >> characterId;
 
     // ReSharper disable once CppTooWideScopeInitStatement
-    auto const it = std::ranges::find_if(player.characters(), [=] (auto const & c) { return c.id == characterId; });
+    auto const it = std::ranges::find_if(player.characters(), [=] (auto const & c) { return c.id() == characterId; });
     if (it != player.characters().cend())
         it->deleteTime = 0;
 
