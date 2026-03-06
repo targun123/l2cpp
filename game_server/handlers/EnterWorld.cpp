@@ -5,6 +5,7 @@
 #include "_Common.hpp"
 #include "../game/Character.hpp"
 #include "../network/packets/server/CharacterStatusUpdatePacket.hpp"
+#include "../network/packets/server/inventory/InventoryListPacket.hpp"
 
 template<typename T, typename F>
 void assign(T & t, F f)
@@ -32,6 +33,8 @@ static void updateFinalStats(l2::Character & c)
 DEFINE_PACKET_HANDLER(EnterWorld)
 {
     auto & c = player.currentCharacter()->get();
+    player.connection().send(InventoryListPacket(false, c.inventory()));
+
     updateFinalStats(c);
-    player.connection().send(Network::Packet::Server::CharacterStatusUpdatePacket(c));
+    player.connection().send(CharacterStatusUpdatePacket(c));
 }

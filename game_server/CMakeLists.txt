@@ -70,6 +70,8 @@ target_sources(${PROJECT_NAME}
         network/packets/server/EntityStatusUpdatePacket.hpp
         network/packets/server/ProtocolHandshakePacket.cpp
         network/packets/server/ProtocolHandshakePacket.hpp
+        network/packets/server/inventory/InventoryListPacket.cpp
+        network/packets/server/inventory/InventoryListPacket.hpp
         network/packets/server/inventory/InventoryUpdatePacket.cpp
         network/packets/server/inventory/InventoryUpdatePacket.hpp
 )
