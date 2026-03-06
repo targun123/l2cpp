@@ -18,6 +18,7 @@ namespace Handler
     HANDLER(ConnectionClosing)
     HANDLER(EnterWorld)
     HANDLER(InventoryOpen)
+    HANDLER(ItemUnequip)
     HANDLER(ItemUse)
     HANDLER(LeaveWorld)
     HANDLER(ManorList)
@@ -47,6 +48,7 @@ std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHand
     HANDLER(ConnectionClosing),
     HANDLER(EnterWorld),
     HANDLER(InventoryOpen),
+    HANDLER(ItemUnequip),
     HANDLER(ItemUse),
     HANDLER(LeaveWorld),
     HANDLER(ManorList),

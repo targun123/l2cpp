@@ -107,6 +107,11 @@ public:
     auto equippedItem(InventoryGearSlot slot) const -> OptionalRef<Item const>;
 
 public:
+    auto equipItem(GameObjectId uid) -> PairOf<OptionalRef<Item const>>;
+    auto equipItem(Item const & item) -> OptionalRef<Item const>;
+    auto unequipItem(BodyPart bodyPart) -> OptionalRef<Item const>;
+
+public:
     auto setShortcut(Shortcut shortcut) -> Shortcut &;
     void delShortcut(size_t index);
 
