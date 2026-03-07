@@ -19,14 +19,19 @@ namespace Network { class Connection; }
 class Network::Connection
 {
 public:
+    using PacketReceivedHandler = std::function<void(std::span<byte const>)>;
+
+public:
     explicit Connection(boost::asio::ip::tcp::socket && socket);
     ~Connection();
 
 public:
-    void read();
+    void asyncReadNextPacket();
     void send(l2cpp::Network::Packet & p);
     void send(l2cpp::Network::Packet && p);
     void close();
+
+    void setOnPacketReceivedHandler(PacketReceivedHandler handler);
 
 public:
     bool isAlive()       const;

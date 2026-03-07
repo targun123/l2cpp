@@ -13,7 +13,7 @@
 #include <span>
 #include <string>
 
-namespace l2cpp::Network { class Packet; }
+namespace l2cpp::Network { class Packet; template<u16> struct HeaderOnlyPacket; }
 
 template<typename T, typename Arg1, typename... ArgN>
 constexpr bool isAnyOf = (std::is_same_v<T, Arg1> || ... || std::is_same_v<T, ArgN>);
@@ -102,4 +102,12 @@ private:
 private:
     struct PacketImpl;
     Pimpl<PacketImpl> impl;
+};
+
+template<u16 OpCode>
+struct l2cpp::Network::HeaderOnlyPacket : public Packet
+{
+    HeaderOnlyPacket()
+        : Packet(OpCode)
+    {}
 };

@@ -81,8 +81,6 @@ bool SL::SocketListenerImpl::listen(ip::address addr, u16 const port, AcceptCall
 
     acceptors.emplace(port, std::move(acceptor));
     callbacks.emplace(port, std::move(cb));
-
-    SPDLOG_INFO("[SocketListener] Listening on {}:{}", addr.to_string(), port);
     return true;
 }
 

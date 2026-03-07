@@ -28,12 +28,20 @@ struct Connection::ConnectionImpl
     boost::asio::ip::tcp::socket socket;
     std::vector<byte> readBuffer;
     EncryptionKey encryptionKey{}, decryptionKey{};
+    PacketReceivedHandler packetHandler;
 
     explicit ConnectionImpl(boost::asio::ip::tcp::socket && socket);
 
     void encrypt(std::span<byte> data);
     void decrypt(std::span<byte> data);
+    void close();
+
+    void onSizeRead(boost::system::error_code const & ec, std::size_t bytes_transferred);
+    void onBodyRead(boost::system::error_code const & ec, std::size_t bytes_transferred);
+    bool handleReadError(boost::system::error_code const & ec, std::string_view source);
 };
+
+template class Pimpl<Connection::ConnectionImpl>;
 
 Connection::ConnectionImpl::ConnectionImpl(boost::asio::ip::tcp::socket && socket)
     : socket(std::move(socket))
@@ -91,47 +99,93 @@ void Connection::ConnectionImpl::decrypt(std::span<byte> data)
     decryptionKey[3] = static_cast<byte>(tmp1 >> 0x18 & 0xFF);
 }
 
+void Connection::ConnectionImpl::close()
+{
+    if (socket.is_open())
+    {
+        boost::system::error_code ec;
+        if (socket.shutdown(socket.shutdown_both, ec))
+            SPDLOG_ERROR("shutdown error {}: {}", ec.default_error_condition().message(), ec.message());
+
+        ec.clear();
+        if (socket.close(ec))
+            SPDLOG_ERROR("close error {}: {}", ec.default_error_condition().value(), ec.message());
+    }
+}
+
+void Connection::ConnectionImpl::onSizeRead(boost::system::error_code const & ec, std::size_t)
+{
+    if (ec.value() == boost::asio::error::operation_aborted || !handleReadError(ec, "size"))
+        return;
+
+    auto const size = *reinterpret_cast<PacketHeader const *>(readBuffer.data());
+    readBuffer.resize(size);
+
+    boost::asio::async_read(socket, boost::asio::buffer(readBuffer.data() + sizeof(size), size - sizeof(size)),
+                            [this] (auto const & ec, auto sz) { onBodyRead(ec, sz); });
+}
+
+void Connection::ConnectionImpl::onBodyRead(boost::system::error_code const & ec, std::size_t packetBodySize)
+{
+    if (ec.value() == boost::asio::error::operation_aborted || !handleReadError(ec, "body"))
+        return;
+
+    if (std::ranges::any_of(decryptionKey, [] (auto const c) { return c != 0x00; })) [[likely]]
+        decrypt({readBuffer.data() + sizeof(PacketHeader), packetBodySize});
+    else
+        decryptionKey = gEncryptionKey;
+
+    if (packetHandler)
+        packetHandler(readBuffer);
+}
+
+bool Connection::ConnectionImpl::handleReadError(boost::system::error_code const & ec, std::string_view source)
+{
+    switch (auto const code = ec.value(); code)
+    {
+        using enum boost::system::errc::errc_t;
+
+        case success:
+            return true;
+
+        case no_such_file_or_directory: // EOF
+            SPDLOG_INFO("Client disconnected");
+            return false;
+
+        default:
+        {
+            SPDLOG_ERROR("Failed to read next packet {} (code {}): {}", source, code, ec.message());
+            close();
+            return false;
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 Connection::Connection(boost::asio::ip::tcp::socket && socket)
     : _impl(std::move(socket))
 {}
 
-Connection::~Connection() = default;
-
-void Connection::read()
+Connection::~Connection()
 {
-    // Reset buffer
-    std::ranges::fill(_impl->readBuffer, 0);
+    _impl->close();
+}
 
-    // Read packet size
-    boost::system::error_code ec;
-    boost::asio::read(_impl->socket, boost::asio::buffer(_impl->readBuffer.data(), sizeof(PacketHeader)), ec);
-    if (ec.value() == boost::asio::error::eof)
-        L2CPP_THROW("Client disconnected");
+void Connection::asyncReadNextPacket()
+{
+    if (!isAlive())
+        return;
 
-    L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
-
-    auto const size = *reinterpret_cast<PacketHeader *>(_impl->readBuffer.data());
-    L2CPP_B_ASSERT(size > sizeof(size), "Packet announced without any opCode");
-
-    if (_impl->readBuffer.size() < size)
-        _impl->readBuffer.resize(size);
-
-    auto request  = _impl->readBuffer.data() + sizeof(size);
-    auto bodySize = size - sizeof(size);
-
-    boost::asio::read(_impl->socket, boost::asio::buffer(request, bodySize), ec);
-    L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
-
-    if (std::ranges::any_of(_impl->decryptionKey, [] (auto const c) { return c != 0x00; })) [[likely]]
-        _impl->decrypt({request, bodySize});
-    else
-        _impl->decryptionKey = gEncryptionKey;
+    boost::asio::async_read(_impl->socket, boost::asio::buffer(_impl->readBuffer.data(), sizeof(PacketHeader)),
+                            [this] (auto const & ec, auto sz) { _impl->onSizeRead(ec, sz); });
 }
 
 void Connection::send(l2cpp::Network::Packet & p)
 {
+    if (!isAlive())
+        return;
+
     L2CPP_B_ASSERT(p.opCode().has_value(), "Trying to send a packet without any opCode");
     auto const opCode = p.opCode().value();
 
@@ -161,7 +215,12 @@ void Connection::send(l2cpp::Network::Packet && p)
 
 void Connection::close()
 {
-    _impl->socket.close();
+    _impl->close();
+}
+
+void Connection::setOnPacketReceivedHandler(PacketReceivedHandler handler)
+{
+    _impl->packetHandler = std::move(handler);
 }
 
 bool Connection::isAlive() const
