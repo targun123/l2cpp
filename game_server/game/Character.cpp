@@ -14,12 +14,10 @@ using l2::Character;
 
 struct Character::CharacterImpl
 {
-// private:
     std::array<Item *, std::to_underlying(InventoryGearSlot::Count)> gear{};
     std::list<Item> inventory;
     std::array<Shortcut, 120> shortcuts{};
 
-// public:
     auto addItemToInventory() -> Item &;
     void setWeapon(Item * item);
 
@@ -121,9 +119,9 @@ auto Character::equipItem(GameObjectId const uid) -> PairOf<OptionalRef<Item con
     return result;
 }
 
-auto Character::equipItem(Item const & item) -> OptionalRef<Item const>
+auto Character::equipItem(Item const &) -> OptionalRef<Item const>
 {
-    return std::nullopt;
+    return std::nullopt; // TODO
 }
 
 auto Character::unequipItem(BodyPart bodyPart) -> OptionalRef<Item const>
@@ -175,6 +173,6 @@ auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
 
 void Character::delShortcut(size_t const index)
 {
-    L2CPP_B_ASSERT(index < 120, "Cannot remove a shortcut whose index ({}) is invalid", index);
+    L2CPP_B_ASSERT(index < _impl->shortcuts.size(), "Cannot remove a shortcut whose index ({}) is invalid", index);
     _impl->shortcuts[index] = Shortcut();
 }

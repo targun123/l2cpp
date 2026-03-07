@@ -13,89 +13,78 @@
 
 using l2cpp::Network::Packet;
 
-namespace
-{
-    u32 calculateChecksum(std::span<byte const> data)
-    {
-        L2CPP_B_ASSERT(data.size() >= sizeof(u32), "Cannot calculate checksum: size < sizeof(u32)");
-
-        u32 checksum = 0;
-
-        for (size_t i = 0; i < data.size(); i += sizeof(u32))
-            checksum ^= *reinterpret_cast<u32 const *>(data.data() + i);
-
-        return checksum;
-    }
-
-    // TODO: verifyChecksum
-}
-
 struct Packet::PacketImpl
 {
     std::vector<byte> buffer;
-    std::once_flag    checksumOnceFlag;
+
+    PacketImpl(PacketOpCode const opCode);
+
+    template<typename T> requires(std::integral<T> || std::floating_point<T>)
+    PacketImpl & append(T t)
+    {
+        buffer.append_range(std::span{reinterpret_cast<byte const *>(&t), sizeof(T)});
+        return *this;
+    }
+
+    template<typename T, typename U = T> requires(std::integral<U> || std::floating_point<U>)
+    PacketImpl & append(U u)
+    {
+        return append(static_cast<T>(u));
+    }
 };
 
-Packet::Packet(PacketOpCode const opCode)
-{
-    constexpr PacketHeader sizePlaceholder = 0;
+template class Pimpl<Packet::PacketImpl>;
 
-    impl->buffer.reserve(256);
-    *this << sizePlaceholder; // slot to write final size before sending
+Packet::PacketImpl::PacketImpl(PacketOpCode const opCode)
+{
+    buffer.reserve(256);
+    append<u16>(0); // placeholder for final packet size
 
     if (opCode > 0xff)
-        *this << opCode;
+        append(opCode);
     else
-        *this << static_cast<byte>(opCode);
-        // impl->buffer.emplace_back(static_cast<byte>(opCode));
+        append<u8>(opCode);
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+Packet::Packet(PacketOpCode const opCode)
+    : _impl(opCode)
+{}
 
 Packet::~Packet() = default;
 
 Packet & Packet::operator<<(std::span<byte const> span)
 {
-    impl->buffer.append_range(span);
+    _impl->buffer.append_range(span);
     return *this;
-}
-
-void Packet::writeChecksum()
-{
-    std::call_once(impl->checksumOnceFlag, [&, this]
-    {
-        // Align to 8 bytes then append checksum
-        while (bodySize() % 8 != 0)
-            impl->buffer.emplace_back(0);
-
-        *this << calculateChecksum({body().data(), bodySize()});
-        *this << 0u; // Align to 8 bytes with zeroes, required by Blowfish
-    });
 }
 
 void Packet::writeSize()
 {
     // Write total size on the first two bytes of the buffer
-    *reinterpret_cast<PacketHeader *>(impl->buffer.data()) = static_cast<PacketHeader>(impl->buffer.size());
+    *reinterpret_cast<PacketHeader *>(_impl->buffer.data()) = static_cast<PacketHeader>(_impl->buffer.size());
 }
 
 auto Packet::buffer() const -> std::span<byte const>
 {
-    return impl->buffer;
+    return _impl->buffer;
 }
 
 auto Packet::size() const -> size_t
 {
-    return impl->buffer.size();
+    return _impl->buffer.size();
 }
 
 auto Packet::opCode() const -> std::optional<PacketOpCode>
 {
     std::optional<PacketOpCode> type;
 
-    if (impl->buffer.size() > sizeof(PacketHeader))
+    if (_impl->buffer.size() > sizeof(PacketHeader))
     {
-        type = impl->buffer[sizeof(PacketHeader)];
+        type = _impl->buffer[sizeof(PacketHeader)];
         if (type == 0xfe)
-            type = *reinterpret_cast<PacketOpCode const *>(impl->buffer.data() + sizeof(PacketHeader));
+            type = *reinterpret_cast<PacketOpCode const *>(_impl->buffer.data() + sizeof(PacketHeader));
     }
 
     return type;
@@ -103,15 +92,15 @@ auto Packet::opCode() const -> std::optional<PacketOpCode>
 
 auto Packet::body() -> std::span<byte>
 {
-    return {impl->buffer.data() + sizeof(PacketHeader), bodySize()};
+    return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()};
 }
 
 auto Packet::body() const -> std::span<byte const>
 {
-    return {impl->buffer.data() + sizeof(PacketHeader), bodySize()};
+    return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()};
 }
 
 auto Packet::bodySize() const -> size_t
 {
-    return impl->buffer.size() - sizeof(PacketHeader);
+    return _impl->buffer.size() - sizeof(PacketHeader);
 }

@@ -23,14 +23,6 @@
 // C++ includes
 #include <iostream>
 
-static void hexdump(std::span<byte const> const buffer)
-{
-#ifndef NDEBUG
-    if (!buffer.empty())
-        std::cout << l2cpp::hexdump(buffer.data(), buffer.size()) << std::endl;
-#endif
-}
-
 struct Application::ApplicationImpl
 {
     std::vector<std::string_view>  args;
@@ -45,60 +37,38 @@ struct Application::ApplicationImpl
         , socketListener(ioContext)
     {}
 
+    bool load();
+    bool run();
+    void shutdown();
+
+private:
     void onSignal(boost::system::error_code const & ec, int signal);
     void onSocketAccepted(boost::asio::ip::tcp::socket socket);
-    void shutdown();
 };
 
 template class Pimpl<Application::ApplicationImpl>;
 
-void Application::ApplicationImpl::onSignal(boost::system::error_code const & ec, int)
+bool Application::ApplicationImpl::load()
 {
-    switch (ec.default_error_condition().value())
-    {
-        case boost::system::errc::success:
-            shutdown();
-            break;
-
-        default:
-            SPDLOG_WARN("onSignal error {}: {}", ec.default_error_condition().value(), ec.message());
-            break;
-    }
+    return true;
 }
 
-void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket socket) try
+bool Application::ApplicationImpl::run()
 {
-    auto & player = players.emplace_back(std::move(socket));
-    auto onPacketReceived = [&player] (std::span<byte const> const buffer)
-    {
-        auto const size   = *reinterpret_cast<PacketHeader const *>(buffer.data());
-        auto const opCode = buffer[sizeof(size)]; // client opcode is always one byte
+    signalSet.async_wait([this] (auto const & ec, int s) { onSignal(ec, s); });
 
-        if (auto const it = gPacketHandlers.find(opCode); it != gPacketHandlers.end())
-        {
-            auto const & [handler, handlerName] = it->second;
-            SPDLOG_INFO("recv: {} (0x{:02x}) ({} bytes)", handlerName, opCode, size);
-            ::hexdump(buffer.subspan(3, size - 3));
-            (*handler)(player);
-        }
-        else
-        {
-            SPDLOG_WARN("Unsupported packet 0x{:02x} ({} bytes)", opCode, size);
-            ::hexdump(buffer.subspan(3, size - 3));
-        }
+    constexpr auto ip   = "127.0.0.1";
+    constexpr auto port = 7777;
 
-        if (player.connection().isAlive())
-            player.connection().asyncReadNextPacket();
-    };
+    auto socketAcceptedCb = [this] (auto socket) { onSocketAccepted(std::move(socket)); };
+    L2CPP_B_ASSERT(socketListener.listen(ip, port, socketAcceptedCb), "Failed to listen on {}:{}", ip, port);
+    SPDLOG_INFO("Listening for clients on {}:{}", ip, port);
 
-    player.connection().setOnPacketReceivedHandler([this, onPacketReceived] (std::span<byte const> buffer) {
-        boost::asio::post(ioContext, std::bind(onPacketReceived, buffer));
-    });
-    player.connection().asyncReadNextPacket();
-}
-catch (l2cpp::Exception const & e)
-{
-    SPDLOG_ERROR("Packet reading failed, disconnecting client:\n{}", l2cpp::formatExceptionStack(e));
+    SPDLOG_INFO("Server running. Input CTRL+C to initiate shutdown…");
+    ioContext.run();
+
+    SPDLOG_INFO("Goodbye.");
+    return EXIT_SUCCESS;
 }
 
 void Application::ApplicationImpl::shutdown()
@@ -122,31 +92,69 @@ void Application::ApplicationImpl::shutdown()
     boost::asio::post(ioContext, [] { SPDLOG_INFO("Shutting down sequence done."); });
 }
 
-Application::Application(std::vector<std::string_view> args)
-    : _impl(std::move(args))
-{}
+void Application::ApplicationImpl::onSignal(boost::system::error_code const & ec, int)
+{
+    switch (ec.default_error_condition().value())
+    {
+        case boost::system::errc::success:
+            SPDLOG_INFO("SIGINT received");
+            shutdown();
+            break;
 
+        default:
+            SPDLOG_WARN("onSignal error {}: {}", ec.default_error_condition().value(), ec.message());
+            break;
+    }
+}
+
+void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket socket) try
+{
+    static auto hexdump = [] (std::span<byte const> const buffer)
+    {
+#ifndef NDEBUG
+        if (!buffer.empty())
+            std::cout << l2cpp::hexdump(buffer.data(), buffer.size()) << std::endl;
+#endif
+    };
+
+    auto & player = players.emplace_back(std::move(socket));
+    auto onPacketReceived = [&player] (std::span<byte const> const buffer)
+    {
+        auto const size   = *reinterpret_cast<PacketHeader const *>(buffer.data());
+        auto const opCode = buffer[sizeof(size)]; // client opcode is always one byte
+        auto const body   = buffer.subspan(sizeof(size) + sizeof(opCode));
+
+        if (auto const it = gPacketHandlers.find(opCode); it != gPacketHandlers.end())
+        {
+            auto const & [handler, handlerName] = it->second;
+            SPDLOG_INFO("recv: {} (0x{:02x}) ({} bytes)", handlerName, opCode, size);
+            hexdump(body);
+            (*handler)(player);
+        }
+        else
+        {
+            SPDLOG_WARN("Unsupported packet 0x{:02x} ({} bytes)", opCode, size);
+            hexdump(body);
+        }
+
+        if (player.connection().isAlive())
+            player.connection().asyncReadNextPacket();
+    };
+
+    player.connection().setOnPacketReceivedHandler([this, onPacketReceived] (std::span<byte const> buffer) {
+        boost::asio::post(ioContext, std::bind(onPacketReceived, buffer));
+    });
+    player.connection().asyncReadNextPacket();
+}
+catch (l2cpp::Exception const & e)
+{
+    SPDLOG_ERROR("Packet reading failed, disconnecting client:\n{}", l2cpp::formatExceptionStack(e));
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+Application::Application(std::vector<std::string_view> args): _impl(std::move(args)) {}
 Application::~Application() = default;
 
-bool Application::load()
-{
-    return true;
-}
-
-bool Application::run()
-{
-    _impl->signalSet.async_wait([this] (auto const & ec, int s) { _impl->onSignal(ec, s); });
-
-    constexpr auto ip   = "127.0.0.1";
-    constexpr auto port = 7777;
-
-    auto socketAcceptedCb = [this] (auto socket) { _impl->onSocketAccepted(std::move(socket)); };
-    L2CPP_B_ASSERT(_impl->socketListener.listen(ip, port, socketAcceptedCb), "Failed to listen on {}:{}", ip, port);
-    SPDLOG_INFO("Listening for clients on {}:{}", ip, port);
-
-    SPDLOG_INFO("Server running. Input CTRL+C to initiate shutdown…");
-    _impl->ioContext.run();
-
-    SPDLOG_INFO("Goodbye.");
-    return EXIT_SUCCESS;
-}
+bool Application::load() { return _impl->load(); }
+bool Application::run()  { return _impl->run();  }

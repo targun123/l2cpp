@@ -23,6 +23,8 @@ struct Blowfish::BlowfishImpl
     void apply(std::span<byte>, bool) const;
 };
 
+template class Pimpl<Blowfish::BlowfishImpl>;
+
 Blowfish::Blowfish(std::span<byte const> const key)
 {
     BF_set_key(&_pimpl->key, static_cast<int>(key.size()), key.data());

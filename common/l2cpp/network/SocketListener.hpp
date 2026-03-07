@@ -14,7 +14,7 @@ namespace l2cpp::Network { class SocketListener; }
 
 class l2cpp::Network::SocketListener
 {
-    using AcceptCallback = std::function<void(boost::asio::ip::tcp::socket &&)>;
+    using AcceptCallback = std::function<void(boost::asio::ip::tcp::socket)>;
 
 public:
     explicit SocketListener(boost::asio::io_context &);
@@ -26,5 +26,5 @@ public:
 
 private:
     struct SocketListenerImpl;
-    Pimpl<SocketListenerImpl> impl;
+    Pimpl<SocketListenerImpl> _impl;
 };

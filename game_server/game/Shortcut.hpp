@@ -24,7 +24,7 @@ public:
     Shortcut();
     Shortcut(Shortcut &&) noexcept;
     Shortcut & operator=(Shortcut &&) noexcept;
-    ~Shortcut();
+    ~Shortcut() override;
 
 public:
     auto index() const -> std::optional<size_t>;

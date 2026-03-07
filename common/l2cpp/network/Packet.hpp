@@ -68,10 +68,6 @@ public:
     }
 
 public:
-    /// Appends the checksum of the packet body.
-    /// @note Does nothing if called more than once.
-    void writeChecksum();
-
     /// Writes the total size at the beginning.
     void writeSize();
 
@@ -101,7 +97,7 @@ private:
 
 private:
     struct PacketImpl;
-    Pimpl<PacketImpl> impl;
+    Pimpl<PacketImpl> _impl;
 };
 
 template<u16 OpCode>

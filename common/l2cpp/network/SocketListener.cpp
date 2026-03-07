@@ -36,29 +36,7 @@ struct SL::SocketListenerImpl
     bool handleError(u16 port, error_code const & ec);
 };
 
-SL::SocketListener(boost::asio::io_context & ioc)
-    : impl(ioc)
-{}
-
-SL::~SocketListener() = default;
-
-bool SL::listen(std::string_view const host, u16 const port, AcceptCallback cb)
-{
-    error_code ec;
-    auto addr = ip::make_address(host.data(), ec);
-    return ec ? impl->handleError(port, ec) : impl->listen(std::move(addr), port, std::move(cb));
-}
-
-void SL::shutdown()
-{
-    SPDLOG_INFO("[SocketListener] Shutting down all ports");
-
-    error_code ec;
-    for (auto & [port, acceptor] : impl->acceptors)
-        impl->handleError(port, acceptor.cancel(ec));
-
-    impl->acceptors.clear();
-}
+template class Pimpl<l2cpp::Network::SocketListener::SocketListenerImpl>;
 
 bool SL::SocketListenerImpl::listen(ip::address addr, u16 const port, AcceptCallback cb)
 {
@@ -69,7 +47,7 @@ bool SL::SocketListenerImpl::listen(ip::address addr, u16 const port, AcceptCall
         acceptor.open(endpoint.protocol());
         acceptor.set_option(ip::tcp::acceptor::reuse_address{true});
         acceptor.bind(endpoint);
-        acceptor.listen(boost::asio::socket_base::max_listen_connections);
+        acceptor.listen();
     }
     catch (error_code const & ec)
     {
@@ -111,4 +89,32 @@ bool SL::SocketListenerImpl::handleError(u16 port, error_code const & ec)
             break;
     }
     return false;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+SL::SocketListener(boost::asio::io_context & ioc)
+    : _impl(ioc)
+{}
+
+SL::~SocketListener() = default;
+
+bool SL::listen(std::string_view const host, u16 const port, AcceptCallback cb)
+{
+    error_code ec;
+    auto addr = ip::make_address(host.data(), ec);
+    return ec ? _impl->handleError(port, ec) : _impl->listen(std::move(addr), port, std::move(cb));
+}
+
+void SL::shutdown()
+{
+    SPDLOG_INFO("[SocketListener] Shutting down all ports");
+
+    for (auto & [port, acceptor] : _impl->acceptors)
+    {
+        error_code ec;
+        _impl->handleError(port, acceptor.cancel(ec));
+    }
+
+    _impl->acceptors.clear();
 }

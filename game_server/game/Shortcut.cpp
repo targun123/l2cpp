@@ -32,10 +32,9 @@ struct l2::Shortcut::ShortcutImpl
 template class Pimpl<l2::Shortcut::ShortcutImpl>;
 
 l2::Shortcut::Shortcut() = default;
-l2::Shortcut::~Shortcut() = default;
-
 l2::Shortcut::Shortcut(Shortcut &&) noexcept = default;
 l2::Shortcut & l2::Shortcut::operator=(Shortcut &&) noexcept = default;
+l2::Shortcut::~Shortcut() = default;
 
 auto l2::Shortcut::index() const -> std::optional<size_t>
 {

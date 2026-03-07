@@ -25,6 +25,23 @@ using PacketHandler = void (*)(Connection &);
 
 constexpr byte gBlowfishToken[] = "_;5.]94-31==-%xT!^[$"; // trailing zero is included by sizeof()
 
+namespace
+{
+    u32 calculateChecksum(std::span<byte const> data)
+    {
+        L2CPP_B_ASSERT(data.size() >= sizeof(u32), "Cannot calculate checksum: size < sizeof(u32)");
+
+        u32 checksum = 0;
+
+        for (size_t i = 0; i < data.size(); i += sizeof(u32))
+            checksum ^= *reinterpret_cast<u32 const *>(data.data() + i);
+
+        return checksum;
+    }
+
+    // TODO: verifyChecksum
+}
+
 struct Connection
 {
     tcp::socket     socket;
@@ -54,18 +71,37 @@ struct Connection
 
     void send(Packet & p, bool const encryptPacket = true)
     {
+        // Align to 8 bytes then append checksum
+        while (p.bodySize() % 8 != 0)
+            p << 0_u8;
+
+        p << calculateChecksum({p.body().data(), p.bodySize()});
+        p << 0_u32; // Align to 8 bytes with zeroes, required by Blowfish
+
+        p.writeSize();
+
         // Save the value before it gets blowfished
         auto const type = p.opCode().has_value() ? fmt::format("0x{:02x}", p.opCode().value())
                                                  : "<unknown>";
-
-        p.writeChecksum();
-        p.writeSize();
 
         if (encryptPacket)
             blowfish.encrypt(p.body());
 
         socket.send(boost::asio::buffer(p.buffer()));
         SPDLOG_INFO("sent: {} ({} bytes)", type, p.size());
+    }
+
+private:
+    static void finalize(Packet & p)
+    {
+        // Align to 8 bytes then append checksum
+        while (p.bodySize() % 8 != 0)
+            p << 0_u8;
+
+        p << calculateChecksum({p.body().data(), p.bodySize()});
+        p << 0_u32; // Align to 8 bytes with zeroes, required by Blowfish
+
+        p.writeSize();
     }
 };
 
