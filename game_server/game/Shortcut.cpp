@@ -8,18 +8,7 @@
 #include <l2cpp/details/Pimpl.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/PacketReader.hpp>
-
-#include <fmt/ostream.h>
-
-namespace
-{
-    template<typename E> requires std::is_enum_v<E>
-    constexpr bool isInRange(E index, E start, E end)
-    {
-        return std::to_underlying(index) >= std::to_underlying(start)
-            && std::to_underlying(index)  < std::to_underlying(end);
-    }
-}
+#include <l2cpp/utils/Enum.hpp>
 
 struct Shortcut::ShortcutImpl
 {
@@ -53,7 +42,7 @@ l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader & r, Shor
     Shortcut::ShortcutImpl tmp;
     r >> tmp.type >> tmp.index >> tmp.id;
 
-    L2CPP_B_ASSERT(isInRange(tmp.type, Shortcut::Type::None, Shortcut::Type::Count),
+    L2CPP_B_ASSERT(l2cpp::utils::isInContiguousRange(tmp.type, Shortcut::Type::None, Shortcut::Type::Count),
                    "Attempt to add a shortcut with invalid type {}", std::to_underlying(tmp.type));
     L2CPP_B_ASSERT(tmp.index < 120,
                    "Attempt to add a shortcut at invalid index {}", tmp.index);
