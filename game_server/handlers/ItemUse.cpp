@@ -6,9 +6,12 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/Character.hpp"
-#include "../game/Item.hpp"
+#include "../game/inventory/Item.hpp"
 #include "../network/packets/server/CharacterStatusUpdatePacket.hpp"
 #include "../network/packets/server/inventory/InventoryUpdatePacket.hpp"
+
+// C++ includes
+#include <ranges>
 
 DEFINE_PACKET_HANDLER(ItemUse)
 {
@@ -21,35 +24,42 @@ DEFINE_PACKET_HANDLER(ItemUse)
     auto & c = player.currentCharacter()->get();
     auto const inventory = c.inventory();
     auto const it = std::ranges::find_if(inventory, [uid] (auto const & item) { return item.get().id() == uid; });
-    if (it != inventory.cend())
-    {
-        switch (it->get().tmplate.category)
-        {
-            case l2::ItemCategory::Unknown: return;
-            case l2::ItemCategory::Weapon:
-            case l2::ItemCategory::Armor:
-            case l2::ItemCategory::Accessory:
-            {
-                auto const [oldItem, newItem] = c.equipItem(uid);
-                if (!oldItem && !newItem) // nothing changed
-                    return;
+    if (it == inventory.cend())
+        return;
 
+    switch (it->get().tmplate.category)
+    {
+        case l2::ItemCategory::Unknown:
+            break;
+
+        case l2::ItemCategory::Weapon:
+        case l2::ItemCategory::Armor:
+        case l2::ItemCategory::Accessory:
+        {
+            if (auto const transaction = c.equipItem(it->get()); transaction.succeeded)
+            {
                 InventoryUpdatePacket p;
-                if (oldItem) p.appendModifiedItem(*oldItem);
-                if (newItem) p.appendModifiedItem(*newItem);
+                if (!transaction.oldItems.empty())
+                {
+                    for (auto const & item : transaction.oldItems | std::views::values)
+                        p.appendModifiedItem(item.get());
+                }
+
+                if (transaction.curItem)
+                    p.appendModifiedItem(*transaction.curItem);
 
                 player.connection().send(p);
                 player.connection().send(CharacterStatusUpdatePacket(c));
-                break;
             }
-            case l2::ItemCategory::Quest:
-                break;
-            case l2::ItemCategory::Adena:
-                break;
-            case l2::ItemCategory::Misc:
-                break;
-            case l2::ItemCategory::Count:
-                break;
+            break;
         }
+        case l2::ItemCategory::Quest:
+            break;
+        case l2::ItemCategory::Adena:
+            break;
+        case l2::ItemCategory::Misc:
+            break;
+        case l2::ItemCategory::Count:
+            break;
     }
 }

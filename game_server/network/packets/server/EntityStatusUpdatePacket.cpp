@@ -6,12 +6,9 @@
 // Project includes
 #include "../../../game/Character.hpp"
 
-// C++ includes
-#include <array>
-
 using namespace Network::Packet::Server;
 
-EntityStatusUpdatePacket::EntityStatusUpdatePacket(l2::Character & c)
+EntityStatusUpdatePacket::EntityStatusUpdatePacket(l2::Character const & c)
     : Packet(0x03)
 {
     *this
@@ -27,10 +24,8 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(l2::Character & c)
         << 0 // separator?
     ;
 
-    if (auto const item = c.equippedItem(l2::InventoryGearSlot::Helmet); item)
-        *this << item->get().tmplate.id;
-    else
-        *this << 0;
+    auto const headItem = c.gearItem(l2::GearSlot::Head);
+    *this << (headItem ? headItem->get().tmplate.id : 0_u32);
 
     *this
         << (c.isPvpFlagged ? 1 : 0)
@@ -65,12 +60,12 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(l2::Character & c)
         << false // in combat
         << false // not in Oly, not (fake) dead
         << false // not invisible
-        << static_cast<u8>(0)  // mount type (0=none 1=Strider 2=Wyvern)
-        << static_cast<u8>(0)  // private store type
+        << static_cast<u8>(0) // mount type (0=none 1=Strider 2=Wyvern)
+        << static_cast<u8>(0) // private store type
     ;
 
     *this << static_cast<u16>(c.cubics.size());
-    for (auto id : c.cubics)
+    for (auto const id : c.cubics)
         *this << id;
 
     *this

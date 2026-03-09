@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include "GameObject.hpp"
+#include "../GameObject.hpp"
 #include "ItemTemplate.hpp"
 
 #include <l2cpp/network/Packet.hpp>

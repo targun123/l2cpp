@@ -15,16 +15,19 @@ DEFINE_PACKET_HANDLER(ItemUnequip)
 
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    l2::BodyPart bodyPart;
-    reader >> bodyPart;
+    l2::GearSlot slot;
+    reader >> slot;
 
     auto & c = player.currentCharacter()->get();
-    if (auto const item = c.unequipItem(bodyPart); item)
+    if (auto const item = c.gearItem(slot); item)
     {
-        InventoryUpdatePacket p;
-        p.appendModifiedItem(item->get());
+        if (auto const transaction = c.unequipItem(item->get()); transaction.succeeded)
+        {
+            InventoryUpdatePacket p;
+            p.appendModifiedItem(item->get());
 
-        player.connection().send(p);
-        player.connection().send(CharacterStatusUpdatePacket(c));
+            player.connection().send(p);
+            player.connection().send(CharacterStatusUpdatePacket(c));
+        }
     }
 }

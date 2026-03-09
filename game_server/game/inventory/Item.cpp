@@ -41,7 +41,7 @@ l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, Item const & ite
         << 0_u16 // ?
         << (item.equipped ? 1_u16 : 0_u16)
         << item.tmplate.bodyPart
-        << item.enchantLevel // or pet level shown in control item
+        << static_cast<u16>(item.enchantLevel) // or pet level shown in control item
         << 0_u16 // pet name exists or not shown in control item
     ;
 }

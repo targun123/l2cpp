@@ -13,5 +13,5 @@ namespace Network::Packet::Server { class EntityStatusUpdatePacket; }
 class Network::Packet::Server::EntityStatusUpdatePacket final : public l2cpp::Network::Packet
 {
 public:
-    explicit EntityStatusUpdatePacket(l2::Character &);
+    explicit EntityStatusUpdatePacket(l2::Character const &);
 };

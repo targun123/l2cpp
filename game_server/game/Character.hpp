@@ -5,8 +5,7 @@
 
 // Project includes
 #include "GameObject.hpp"
-#include "Item.hpp"
-#include "InventoryGearSlot.hpp"
+#include "inventory/Item.hpp"
 #include "Shortcut.hpp"
 
 #include <l2cpp/Pimpl.hpp>
@@ -15,6 +14,8 @@
 // C++ includes
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 template<typename T>
@@ -22,6 +23,16 @@ struct Gauge
 {
     T current{};
     T max{current};
+};
+
+struct GearTransaction
+{
+    bool succeeded = true;               ///< Whether equip/unequip action has worked
+    OptionalRef<l2::Item const> target;  ///< Item that the user wants to equip/unequip
+    OptionalRef<l2::Item const> curItem; ///< Item that has been successfully equipped or nullopt if unequip successful
+
+    /// Items that were in the slots prior to the transaction
+    std::unordered_map<GameObjectId, std::reference_wrapper<l2::Item const>> oldItems;
 };
 
 namespace l2 { class Character; }
@@ -104,12 +115,15 @@ public:
 
 public:
     auto inventory() const -> std::vector<std::reference_wrapper<Item const>>;
-    auto equippedItem(InventoryGearSlot slot) const -> OptionalRef<Item const>;
+    auto gearItem(GearSlot slot) const -> OptionalRef<Item const>;
+    bool isEquipped(Item const &) const;
+
+    bool hasActiveWeapon() const;
+    auto weapon() const -> OptionalRef<Item const>;
 
 public:
-    auto equipItem(GameObjectId uid) -> PairOf<OptionalRef<Item const>>;
-    auto equipItem(Item const & item) -> OptionalRef<Item const>;
-    auto unequipItem(BodyPart bodyPart) -> OptionalRef<Item const>;
+    auto equipItem  (Item const & item) -> GearTransaction;
+    auto unequipItem(Item const & item) -> GearTransaction;
 
 public:
     auto setShortcut(Shortcut shortcut) -> Shortcut &;

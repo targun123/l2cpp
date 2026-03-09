@@ -6,14 +6,28 @@
 // Project includes
 #include "../../../game/Character.hpp"
 
-// C++ includes
-#include <array>
-
 using namespace Network::Packet::Server;
+
+namespace
+{
+    u32 gearItemIdIfValid(l2::Character const & c, l2::GearSlot const s)
+    {
+        auto const item = c.gearItem(s);
+        return item ? item->get().id() : 0;
+    };
+
+    u32 gearItemTemplateIdIfValid(l2::Character const & c, l2::GearSlot const s)
+    {
+        auto const item = c.gearItem(s);
+        return item ? item->get().tmplate.id : 0;
+    };
+}
 
 CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
     : Packet(0x04)
 {
+    using enum l2::GearSlot;
+
     *this
         << c.pos.x
         << c.pos.y
@@ -39,58 +53,39 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
         << c.sp
         << c.weight.current
         << c.weight.max
-        << (c.equippedItem(l2::InventoryGearSlot::RightWeapon) ? 20 : 40)
-    ;
-
-        auto const equippedItemIdIfValid = [&c] (l2::InventoryGearSlot const s)
-        {
-            auto const item = c.equippedItem(s);
-            return item ? item->get().id() : 0;
-        };
-
-        auto const equippedItemTemplateIdIfValid = [&c] (l2::InventoryGearSlot const s)
-        {
-            auto const item = c.equippedItem(s);
-            return item ? item->get().tmplate.id : 0;
-        };
-
-        using enum l2::InventoryGearSlot;
-        *this
-            << equippedItemIdIfValid(Underwear   )
-            << equippedItemIdIfValid(LeftEarring )
-            << equippedItemIdIfValid(RightEarring)
-            << equippedItemIdIfValid(Necklace    )
-            << equippedItemIdIfValid(LeftRing    )
-            << equippedItemIdIfValid(RightRing   )
-            << equippedItemIdIfValid(Helmet      )
-            << equippedItemIdIfValid(RightWeapon )
-            << equippedItemIdIfValid(Shield      )
-            << equippedItemIdIfValid(Gloves      )
-            << equippedItemIdIfValid(UpperArmor  )
-            << equippedItemIdIfValid(LowerArmor  )
-            << equippedItemIdIfValid(Feet        )
-            << equippedItemIdIfValid(Cloack      )
-            << equippedItemIdIfValid(RightWeapon ) // Dual weapons duplicate right hand into left hand
-            << equippedItemIdIfValid(Hair        )
-            << equippedItemTemplateIdIfValid(Underwear   )
-            << equippedItemTemplateIdIfValid(LeftEarring )
-            << equippedItemTemplateIdIfValid(RightEarring)
-            << equippedItemTemplateIdIfValid(Necklace    )
-            << equippedItemTemplateIdIfValid(LeftRing    )
-            << equippedItemTemplateIdIfValid(RightRing   )
-            << equippedItemTemplateIdIfValid(Helmet      )
-            << equippedItemTemplateIdIfValid(RightWeapon )
-            << equippedItemTemplateIdIfValid(Shield      )
-            << equippedItemTemplateIdIfValid(Gloves      )
-            << equippedItemTemplateIdIfValid(UpperArmor  )
-            << equippedItemTemplateIdIfValid(LowerArmor  )
-            << equippedItemTemplateIdIfValid(Feet        )
-            << equippedItemTemplateIdIfValid(Cloack      )
-            << equippedItemTemplateIdIfValid(RightWeapon ) // Dual weapons duplicate right hand into left hand
-            << equippedItemTemplateIdIfValid(Hair        )
-        ;
-
-    *this
+        << (c.hasActiveWeapon() ? 20 : 40)
+        << gearItemIdIfValid(c, Underwear)
+        << gearItemIdIfValid(c, RightEar)
+        << gearItemIdIfValid(c, LeftEar)
+        << gearItemIdIfValid(c, Neck)
+        << gearItemIdIfValid(c, RightFinger)
+        << gearItemIdIfValid(c, LeftFinger)
+        << gearItemIdIfValid(c, Head)
+        << gearItemIdIfValid(c, RightHand)
+        << gearItemIdIfValid(c, LeftHand)
+        << gearItemIdIfValid(c, Gloves)
+        << gearItemIdIfValid(c, Chest)
+        << gearItemIdIfValid(c, Legs)
+        << gearItemIdIfValid(c, Feet)
+        << gearItemIdIfValid(c, Back)
+        << 0 // gearItemIdIfValid(c, LeftHand)
+        << gearItemIdIfValid(c, Hair)
+        << gearItemTemplateIdIfValid(c, Underwear)
+        << gearItemTemplateIdIfValid(c, RightEar)
+        << gearItemTemplateIdIfValid(c, LeftEar)
+        << gearItemTemplateIdIfValid(c, Neck)
+        << gearItemTemplateIdIfValid(c, LeftFinger)
+        << gearItemTemplateIdIfValid(c, RightFinger)
+        << gearItemTemplateIdIfValid(c, Head)
+        << gearItemTemplateIdIfValid(c, RightHand)
+        << gearItemTemplateIdIfValid(c, LeftHand)
+        << gearItemTemplateIdIfValid(c, Gloves)
+        << gearItemTemplateIdIfValid(c, Chest)
+        << gearItemTemplateIdIfValid(c, Legs)
+        << gearItemTemplateIdIfValid(c, Feet)
+        << gearItemTemplateIdIfValid(c, Back)
+        << 0 // gearItemTemplateIdIfValid(c, LeftHand)
+        << gearItemTemplateIdIfValid(c, Hair)
         << c.finalStats.pAtk
         << c.finalStats.pAtkSpeed
         << c.finalStats.pDef
@@ -158,10 +153,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
         << static_cast<u32>(c.cp.current)
     ;
 
-    if (auto const item = c.equippedItem(RightWeapon); item)
-        *this << item->get().enchantLevel;
-    else
-        *this << 0_u8;
+    auto const weapon = c.weapon();
+    *this << (weapon ? weapon->get().enchantLevel : 0_u8);
 
     *this
         << c.team

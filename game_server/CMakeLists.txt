@@ -22,17 +22,17 @@ target_sources(${PROJECT_NAME}
         Application.hpp
         Player.cpp
         Player.hpp
-        game/BodyPart.hpp
         game/Character.cpp
         game/Character.hpp
         game/ChatType.hpp
         game/GameObject.cpp
         game/GameObject.hpp
-        game/Item.cpp
-        game/Item.hpp
-        game/ItemTemplate.hpp
         game/Shortcut.cpp
         game/Shortcut.hpp
+        game/inventory/GearSlot.hpp
+        game/inventory/Item.cpp
+        game/inventory/Item.hpp
+        game/inventory/ItemTemplate.hpp
         handlers/Authenticate.cpp
         handlers/CharacterCancelDeletion.cpp
         handlers/CharacterCreate.cpp
