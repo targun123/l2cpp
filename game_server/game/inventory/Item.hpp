@@ -9,16 +9,13 @@
 
 #include <l2cpp/network/Serialization.hpp>
 
-namespace l2
+struct Item : public GameObject
 {
-    struct Item : public GameObject
-    {
-        DECLARE_PACKET_SERIALIZATION_OPERATOR(Item);
+    DECLARE_PACKET_SERIALIZATION_OPERATOR(Item);
 
-        ItemTemplate tmplate;
+    ItemTemplate tmplate;
 
-        u32  quantity     = 1;
-        u8   enchantLevel = 0;
-        bool equipped     = false;
-    };
-}
+    u32  quantity     = 1;
+    u8   enchantLevel = 0;
+    bool equipped     = false;
+};

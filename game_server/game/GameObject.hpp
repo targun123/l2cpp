@@ -7,9 +7,7 @@
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
 
-namespace l2 { class GameObject; }
-
-class l2::GameObject
+class GameObject
 {
 public:
     GameObject();

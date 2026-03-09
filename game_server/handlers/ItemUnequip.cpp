@@ -15,7 +15,7 @@ DEFINE_PACKET_HANDLER(ItemUnequip)
 
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    l2::GearSlot slot;
+    GearSlot slot;
     reader >> slot;
 
     auto & c = player.currentCharacter()->get();

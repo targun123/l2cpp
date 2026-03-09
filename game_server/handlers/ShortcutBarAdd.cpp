@@ -10,7 +10,7 @@ DEFINE_PACKET_HANDLER(ShortcutBarAdd)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    l2::Shortcut s;
+    Shortcut s;
     reader >> s;
 
     auto const & slot = player.currentCharacter()->get().setShortcut(std::move(s));

@@ -18,15 +18,15 @@ public:
     ~Gear();
 
 public:
-    auto item(l2::GearSlot slot)       -> OptionalRef<l2::Item>;
-    auto item(l2::GearSlot slot) const -> OptionalRef<l2::Item const>;
+    auto item(GearSlot slot)       -> OptionalRef<Item>;
+    auto item(GearSlot slot) const -> OptionalRef<Item const>;
 
     bool hasActiveWeapon() const;
-    auto weapon() const -> OptionalRef<l2::Item const>;
+    auto weapon() const -> OptionalRef<Item const>;
 
 public:
-    auto equipItem  (l2::Item & item) -> GearTransaction;
-    auto unequipItem(l2::Item & item) -> GearTransaction;
+    auto equipItem  (Item & item) -> GearTransaction;
+    auto unequipItem(Item & item) -> GearTransaction;
 
 private:
     struct GearImpl;

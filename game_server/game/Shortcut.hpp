@@ -11,9 +11,7 @@
 // C++ includes
 #include <optional>
 
-namespace l2 { class Shortcut; }
-
-class l2::Shortcut
+class Shortcut
 {
     DECLARE_PACKET_SERIALIZATION_OPERATORS(Shortcut);
 

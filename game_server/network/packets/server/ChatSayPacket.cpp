@@ -5,7 +5,7 @@
 
 using Network::Packet::Server::ChatSayPacket;
 
-ChatSayPacket::ChatSayPacket(u32 senderId, std::wstring_view sender, l2::ChatType type, std::wstring_view message)
+ChatSayPacket::ChatSayPacket(u32 senderId, std::wstring_view sender, ChatType type, std::wstring_view message)
     : Packet(0x4a)
 {
     *this

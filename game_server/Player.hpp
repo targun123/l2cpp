@@ -14,7 +14,7 @@
 #include <deque>
 #include <span>
 
-namespace l2      { class Character;  }
+class Character;
 namespace Network { class Connection; }
 
 class Action
@@ -65,9 +65,9 @@ public:
     auto connection()       -> Network::Connection &;
     auto connection() const -> Network::Connection const &;
 
-    auto characters()       -> std::span<l2::Character>;
-    auto characters() const -> std::span<l2::Character const>;
-    auto currentCharacter() -> OptionalRef<l2::Character>;
+    auto characters()       -> std::span<Character>;
+    auto characters() const -> std::span<Character const>;
+    auto currentCharacter() -> OptionalRef<Character>;
 
     auto actions() -> std::deque<std::unique_ptr<Action>> &;
 
@@ -77,7 +77,7 @@ public:
 public:
     void setAccountName(std::wstring userName);
     void setPlayOk1(u32 playOk1);
-    auto addCharacter() -> l2::Character &;
+    auto addCharacter() -> Character &;
     void setCurrentCharacter(size_t index);
 
     template<typename A, typename... Args, typename = std::enable_if_t<std::is_base_of_v<Action, A>>>

@@ -13,5 +13,5 @@ namespace Network::Packet::Server { struct ChatSayPacket; }
 
 struct Network::Packet::Server::ChatSayPacket final : public l2cpp::Network::Packet
 {
-    ChatSayPacket(u32 senderId, std::wstring_view sender, l2::ChatType type, std::wstring_view message);
+    ChatSayPacket(u32 senderId, std::wstring_view sender, ChatType type, std::wstring_view message);
 };

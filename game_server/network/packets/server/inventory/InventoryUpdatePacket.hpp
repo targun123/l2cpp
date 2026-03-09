@@ -14,7 +14,7 @@ struct Network::Packet::Server::InventoryUpdatePacket final : public l2cpp::Netw
 {
     InventoryUpdatePacket();
 
-    void appendAddedItem   (l2::Item const &);
-    void appendModifiedItem(l2::Item const &);
-    void appendRemovedItem (l2::Item const &);
+    void appendAddedItem   (Item const &);
+    void appendModifiedItem(Item const &);
+    void appendRemovedItem (Item const &);
 };

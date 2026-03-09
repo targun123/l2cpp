@@ -6,19 +6,16 @@
 // Project includes
 #include <l2cpp/Typedefs.hpp>
 
-namespace l2
+enum class ItemCategory : s16
 {
-    enum class ItemCategory : s16
-    {
-        Unknown = -1,
+    Unknown = -1,
 
-        Weapon,
-        Armor,
-        Accessory,
-        Quest,
-        Adena,
-        Misc,
+    Weapon,
+    Armor,
+    Accessory,
+    Quest,
+    Adena,
+    Misc,
 
-        Count,
-    };
-}
+    Count,
+};

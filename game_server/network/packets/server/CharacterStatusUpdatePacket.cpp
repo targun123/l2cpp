@@ -10,23 +10,23 @@ using namespace Network::Packet::Server;
 
 namespace
 {
-    u32 gearItemIdIfValid(l2::Character const & c, l2::GearSlot const s)
+    u32 gearItemIdIfValid(Character const & c, GearSlot const s)
     {
         auto const item = c.gear().item(s);
         return item ? item->get().id() : 0;
     };
 
-    u32 gearItemTemplateIdIfValid(l2::Character const & c, l2::GearSlot const s)
+    u32 gearItemTemplateIdIfValid(Character const & c, GearSlot const s)
     {
         auto const item = c.gear().item(s);
         return item ? item->get().tmplate.id : 0;
     };
 }
 
-CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
+CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     : Packet(0x04)
 {
-    using enum l2::GearSlot;
+    using enum GearSlot;
 
     *this
         << c.pos.x

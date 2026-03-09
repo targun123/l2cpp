@@ -15,7 +15,7 @@
 
 struct ItemStorage::ItemStorageImpl
 {
-    std::unordered_map<GameObjectId, l2::Item> items;
+    std::unordered_map<GameObjectId, Item> items;
 };
 
 template class Pimpl<ItemStorage::ItemStorageImpl>;
@@ -25,9 +25,9 @@ ItemStorage::ItemStorage(ItemStorage &&) noexcept = default;
 ItemStorage & ItemStorage::operator=(ItemStorage &&) noexcept = default;
 ItemStorage::~ItemStorage() = default;
 
-auto ItemStorage::item(GameObjectId uid) -> OptionalRef<l2::Item>
+auto ItemStorage::item(GameObjectId uid) -> OptionalRef<Item>
 {
-    OptionalRef<l2::Item> result;
+    OptionalRef<Item> result;
 
     if (_impl->items.contains(uid))
         result.emplace(_impl->items.at(uid));
@@ -35,9 +35,9 @@ auto ItemStorage::item(GameObjectId uid) -> OptionalRef<l2::Item>
     return result;
 }
 
-auto ItemStorage::item(GameObjectId const uid) const -> OptionalRef<l2::Item const>
+auto ItemStorage::item(GameObjectId const uid) const -> OptionalRef<Item const>
 {
-    OptionalRef<l2::Item const> result;
+    OptionalRef<Item const> result;
 
     if (_impl->items.contains(uid))
         result.emplace(_impl->items.at(uid));
@@ -45,14 +45,14 @@ auto ItemStorage::item(GameObjectId const uid) const -> OptionalRef<l2::Item con
     return result;
 }
 
-auto ItemStorage::items() const -> std::vector<Ref<l2::Item const>>
+auto ItemStorage::items() const -> std::vector<Ref<Item const>>
 {
-    std::vector<Ref<l2::Item const>> result;
+    std::vector<Ref<Item const>> result;
     result.append_range(_impl->items | std::views::values);
     return result;
 }
 
-auto ItemStorage::add(l2::Item && item) -> l2::Item &
+auto ItemStorage::add(Item && item) -> Item &
 {
     auto const uid      = item.id();
     auto const [it, ok] = _impl->items.try_emplace(uid, std::move(item));
@@ -60,7 +60,7 @@ auto ItemStorage::add(l2::Item && item) -> l2::Item &
     return it->second;
 }
 
-auto ItemStorage::remove(l2::Item const & item) -> l2::Item
+auto ItemStorage::remove(Item const & item) -> Item
 {
     auto const uid = item.id();
     L2CPP_B_ASSERT(_impl->items.contains(uid), "Cannot remove item '{}' from storage: not found", uid);

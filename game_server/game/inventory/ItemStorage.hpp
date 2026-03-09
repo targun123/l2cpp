@@ -21,15 +21,15 @@ public:
     virtual ~ItemStorage();
 
 public:
-    auto item(GameObjectId uid)       -> OptionalRef<l2::Item>;
-    auto item(GameObjectId uid) const -> OptionalRef<l2::Item const>;
-    auto items() const -> std::vector<Ref<l2::Item const>>;
+    auto item(GameObjectId uid)       -> OptionalRef<Item>;
+    auto item(GameObjectId uid) const -> OptionalRef<Item const>;
+    auto items() const -> std::vector<Ref<Item const>>;
 
 public:
-    auto add(l2::Item && item) -> l2::Item &;
+    auto add(Item && item) -> Item &;
 
     /// @return Gives a chance to take back ownership the item instance, else it gets deleted.
-    auto remove(l2::Item const &) -> l2::Item;
+    auto remove(Item const &) -> Item;
 
 private:
     struct ItemStorageImpl;

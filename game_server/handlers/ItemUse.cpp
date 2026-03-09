@@ -28,9 +28,9 @@ DEFINE_PACKET_HANDLER(ItemUse)
 
     switch (item->get().tmplate.category)
     {
-        case l2::ItemCategory::Weapon:
-        case l2::ItemCategory::Armor:
-        case l2::ItemCategory::Accessory:
+        case ItemCategory::Weapon:
+        case ItemCategory::Armor:
+        case ItemCategory::Accessory:
         {
             if (auto const transaction = character.gear().equipItem(item->get()); transaction.succeeded)
             {
@@ -49,11 +49,11 @@ DEFINE_PACKET_HANDLER(ItemUse)
             }
             break;
         }
-        case l2::ItemCategory::Quest:
+        case ItemCategory::Quest:
             break;
-        case l2::ItemCategory::Adena:
+        case ItemCategory::Adena:
             break;
-        case l2::ItemCategory::Misc:
+        case ItemCategory::Misc:
             break;
 
         default:

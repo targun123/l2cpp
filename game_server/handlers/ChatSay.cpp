@@ -13,10 +13,10 @@ DEFINE_PACKET_HANDLER(ChatSay)
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
     std::wstring msg, recipient;
-    l2::ChatType type;
+    ChatType type;
     reader >> msg >> type;
 
-    if (type == l2::ChatType::Whisper)
+    if (type == ChatType::Whisper)
         reader >> recipient;
 
     SPDLOG_DEBUG(L"Player said ('{}'){}: “{}”",

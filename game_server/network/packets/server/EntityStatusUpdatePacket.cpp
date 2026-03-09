@@ -8,7 +8,7 @@
 
 using namespace Network::Packet::Server;
 
-EntityStatusUpdatePacket::EntityStatusUpdatePacket(l2::Character const & c)
+EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
     : Packet(0x03)
 {
     *this
@@ -24,7 +24,7 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(l2::Character const & c)
         << 0 // separator?
     ;
 
-    auto const headItem = c.gear().item(l2::GearSlot::Head);
+    auto const headItem = c.gear().item(GearSlot::Head);
     *this << (headItem ? headItem->get().tmplate.id : 0_u32);
 
     *this

@@ -27,9 +27,7 @@ struct Gauge
     T max{current};
 };
 
-namespace l2 { class Character; }
-
-class l2::Character : public GameObject
+class Character : public GameObject
 {
 public:
     Character();

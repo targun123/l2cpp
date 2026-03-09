@@ -13,8 +13,6 @@
 #include <ranges>
 #include <unordered_map>
 
-using namespace l2;
-
 struct Gear::GearImpl
 {
 public:

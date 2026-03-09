@@ -14,8 +14,6 @@
 #include <array>
 #include <ranges>
 
-using l2::Character;
-
 struct Character::CharacterImpl
 {
     ItemStorage inventory;

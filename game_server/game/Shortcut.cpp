@@ -21,7 +21,7 @@ namespace
     }
 }
 
-struct l2::Shortcut::ShortcutImpl
+struct Shortcut::ShortcutImpl
 {
     Type type = Type::None;
     u32 index = static_cast<u32>(-1);
@@ -29,16 +29,16 @@ struct l2::Shortcut::ShortcutImpl
     u32 level = 4;
 };
 
-template class Pimpl<l2::Shortcut::ShortcutImpl>;
+template class Pimpl<Shortcut::ShortcutImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-l2::Shortcut::Shortcut() = default;
-l2::Shortcut::Shortcut(Shortcut &&) noexcept = default;
-l2::Shortcut & l2::Shortcut::operator=(Shortcut &&) noexcept = default;
-l2::Shortcut::~Shortcut() = default;
+Shortcut::Shortcut() = default;
+Shortcut::Shortcut(Shortcut &&) noexcept = default;
+Shortcut & Shortcut::operator=(Shortcut &&) noexcept = default;
+Shortcut::~Shortcut() = default;
 
-auto l2::Shortcut::index() const -> std::optional<size_t>
+auto Shortcut::index() const -> std::optional<size_t>
 {
     std::optional<size_t> idx;
 
@@ -48,7 +48,7 @@ auto l2::Shortcut::index() const -> std::optional<size_t>
     return idx;
 }
 
-l2cpp::Network::PacketReader & l2::operator>>(l2cpp::Network::PacketReader & r, Shortcut & s)
+l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader & r, Shortcut & s)
 {
     Shortcut::ShortcutImpl tmp;
     r >> tmp.type >> tmp.index >> tmp.id;
@@ -62,7 +62,7 @@ l2cpp::Network::PacketReader & l2::operator>>(l2cpp::Network::PacketReader & r, 
     return r;
 }
 
-l2cpp::Network::Packet & l2::operator<<(l2cpp::Network::Packet & p, Shortcut const & s)
+l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, Shortcut const & s)
 {
     p << s._impl->type << s._impl->index << s._impl->id;
 
