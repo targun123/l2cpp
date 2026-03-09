@@ -4,6 +4,8 @@
 #pragma once
 
 // Project includes
+#include <string>
+
 #include "GearSlot.hpp"
 #include "ItemCategory.hpp"
 
@@ -11,7 +13,8 @@ namespace l2
 {
     struct ItemTemplate
     {
-        u32          id       = 0;
+        u32          id = 0;
+        std::string  name;
         ItemCategory category = ItemCategory::Unknown;
         GearSlot     bodyPart = GearSlot::None;
     };

@@ -6,8 +6,7 @@
 // Project includes
 #include "GameObject.hpp"
 #include "Shortcut.hpp"
-#include "inventory/GearTransaction.hpp"
-#include "inventory/Item.hpp"
+#include "inventory/ItemStorage.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
@@ -18,6 +17,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include "inventory/Gear.hpp"
 
 template<typename T>
 struct Gauge
@@ -105,16 +106,11 @@ public:
     } baseStats, finalStats;
 
 public:
-    auto inventory() const -> std::vector<std::reference_wrapper<Item const>>;
-    auto gearItem(GearSlot slot) const -> OptionalRef<Item const>;
-    bool isEquipped(Item const &) const;
+    auto inventory()       -> ItemStorage       &;
+    auto inventory() const -> ItemStorage const &;
 
-    bool hasActiveWeapon() const;
-    auto weapon() const -> OptionalRef<Item const>;
-
-public:
-    auto equipItem  (Item const & item) -> GearTransaction;
-    auto unequipItem(Item const & item) -> GearTransaction;
+    auto gear()       -> Gear       &;
+    auto gear() const -> Gear const &;
 
 public:
     auto setShortcut(Shortcut shortcut) -> Shortcut &;

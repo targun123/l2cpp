@@ -21,35 +21,31 @@ DEFINE_PACKET_HANDLER(ItemUse)
     bool ctrlPressed;
     reader >> uid >> ctrlPressed;
 
-    auto & c = player.currentCharacter()->get();
-    auto const inventory = c.inventory();
-    auto const it = std::ranges::find_if(inventory, [uid] (auto const & item) { return item.get().id() == uid; });
-    if (it == inventory.cend())
+    auto & character = player.currentCharacter()->get();
+    auto const item  = character.inventory().item(uid);
+    if (!item)
         return;
 
-    switch (it->get().tmplate.category)
+    switch (item->get().tmplate.category)
     {
-        case l2::ItemCategory::Unknown:
-            break;
-
         case l2::ItemCategory::Weapon:
         case l2::ItemCategory::Armor:
         case l2::ItemCategory::Accessory:
         {
-            if (auto const transaction = c.equipItem(it->get()); transaction.succeeded)
+            if (auto const transaction = character.gear().equipItem(item->get()); transaction.succeeded)
             {
                 InventoryUpdatePacket p;
                 if (!transaction.oldItems.empty())
                 {
-                    for (auto const & item : transaction.oldItems | std::views::values)
-                        p.appendModifiedItem(item.get());
+                    for (auto const & oldItem : transaction.oldItems | std::views::values)
+                        p.appendModifiedItem(oldItem.get());
                 }
 
                 if (transaction.curItem)
                     p.appendModifiedItem(*transaction.curItem);
 
                 player.connection().send(p);
-                player.connection().send(CharacterStatusUpdatePacket(c));
+                player.connection().send(CharacterStatusUpdatePacket(character));
             }
             break;
         }
@@ -59,7 +55,8 @@ DEFINE_PACKET_HANDLER(ItemUse)
             break;
         case l2::ItemCategory::Misc:
             break;
-        case l2::ItemCategory::Count:
+
+        default:
             break;
     }
 }

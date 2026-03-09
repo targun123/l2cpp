@@ -19,6 +19,9 @@ using s32 = std::int32_t;
 using s64 = std::int64_t;
 
 template<typename T>
+using Ref = std::reference_wrapper<T>;
+
+template<typename T>
 using OptionalRef = std::optional<std::reference_wrapper<T>>;
 
 template<typename T>

@@ -29,10 +29,14 @@ target_sources(${PROJECT_NAME}
         game/GameObject.hpp
         game/Shortcut.cpp
         game/Shortcut.hpp
+        game/inventory/Gear.cpp
+        game/inventory/Gear.hpp
         game/inventory/GearSlot.hpp
         game/inventory/GearTransaction.hpp
         game/inventory/Item.cpp
         game/inventory/Item.hpp
+        game/inventory/ItemStorage.cpp
+        game/inventory/ItemStorage.hpp
         game/inventory/ItemTemplate.hpp
         handlers/Authenticate.cpp
         handlers/CharacterCancelDeletion.cpp

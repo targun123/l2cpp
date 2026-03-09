@@ -19,9 +19,9 @@ DEFINE_PACKET_HANDLER(ItemUnequip)
     reader >> slot;
 
     auto & c = player.currentCharacter()->get();
-    if (auto const item = c.gearItem(slot); item)
+    if (auto item = c.gear().item(slot); item)
     {
-        if (auto const transaction = c.unequipItem(item->get()); transaction.succeeded)
+        if (auto const transaction = c.gear().unequipItem(item->get()); transaction.succeeded)
         {
             InventoryUpdatePacket p;
             p.appendModifiedItem(item->get());

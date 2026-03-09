@@ -9,13 +9,13 @@ namespace
 {
     u32 gearItemIdIfValid(l2::Character const & c, l2::GearSlot const s)
     {
-        auto const item = c.gearItem(s);
+        auto const item = c.gear().item(s);
         return item ? item->get().id() : 0;
     };
 
     u32 gearItemTemplateIdIfValid(l2::Character const & c, l2::GearSlot const s)
     {
-        auto const item = c.gearItem(s);
+        auto const item = c.gear().item(s);
         return item ? item->get().tmplate.id : 0;
     };
 }
@@ -91,7 +91,7 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.selected
         ;
 
-        auto const weapon = c.weapon();
+        auto const weapon = c.gear().weapon();
         p << (weapon ? weapon->get().enchantLevel : 0_u8);
     }
 

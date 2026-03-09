@@ -12,13 +12,13 @@ namespace
 {
     u32 gearItemIdIfValid(l2::Character const & c, l2::GearSlot const s)
     {
-        auto const item = c.gearItem(s);
+        auto const item = c.gear().item(s);
         return item ? item->get().id() : 0;
     };
 
     u32 gearItemTemplateIdIfValid(l2::Character const & c, l2::GearSlot const s)
     {
-        auto const item = c.gearItem(s);
+        auto const item = c.gear().item(s);
         return item ? item->get().tmplate.id : 0;
     };
 }
@@ -53,7 +53,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
         << c.sp
         << c.weight.current
         << c.weight.max
-        << (c.hasActiveWeapon() ? 20 : 40)
+        << (c.gear().hasActiveWeapon() ? 20 : 40)
         << gearItemIdIfValid(c, Underwear)
         << gearItemIdIfValid(c, RightEar)
         << gearItemIdIfValid(c, LeftEar)
@@ -153,7 +153,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(l2::Character & c)
         << static_cast<u32>(c.cp.current)
     ;
 
-    auto const weapon = c.weapon();
+    auto const weapon = c.gear().weapon();
     *this << (weapon ? weapon->get().enchantLevel : 0_u8);
 
     *this

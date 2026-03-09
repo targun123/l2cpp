@@ -344,6 +344,7 @@ int main() try
     if (!listener.listen("127.0.0.1", 2106, std::move(onSocketAccepted)))
         return EXIT_FAILURE;
 
+    SPDLOG_INFO("Listening for clients on 127.0.0.1:2106");
     io.run();
 
     return EXIT_SUCCESS;

@@ -4,8 +4,8 @@
 #pragma once
 
 // Project includes
-#include "../GameObject.hpp"
 #include "ItemTemplate.hpp"
+#include "../GameObject.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 
@@ -15,9 +15,9 @@ namespace l2
     {
         ItemTemplate tmplate;
 
-        u32  quantity    = 1;
-        s8  enchantLevel = 0;
-        bool equipped    = false;
+        u32  quantity     = 1;
+        u8   enchantLevel = 0;
+        bool equipped     = false;
     };
 }
 

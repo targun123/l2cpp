@@ -5,15 +5,16 @@
 
 using Network::Packet::Server::InventoryListPacket;
 
-InventoryListPacket::InventoryListPacket(bool const openInventory,
-                                         std::span<std::reference_wrapper<l2::Item const> const> const inventory)
+InventoryListPacket::InventoryListPacket(bool const openInventory, ItemStorage const & inventory)
     : Packet(0x1b)
 {
+    auto const & items = inventory.items();
+
     *this
         << static_cast<u16>(openInventory)
-        << static_cast<u16>(inventory.size())
+        << static_cast<u16>(items.size())
     ;
 
-    for (auto const & itemRef : inventory)
-        *this << itemRef.get();
+    for (auto const & item : items)
+        *this << item.get();
 }
