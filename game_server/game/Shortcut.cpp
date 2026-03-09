@@ -31,6 +31,8 @@ struct l2::Shortcut::ShortcutImpl
 
 template class Pimpl<l2::Shortcut::ShortcutImpl>;
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 l2::Shortcut::Shortcut() = default;
 l2::Shortcut::Shortcut(Shortcut &&) noexcept = default;
 l2::Shortcut & l2::Shortcut::operator=(Shortcut &&) noexcept = default;
@@ -50,8 +52,8 @@ auto l2::Shortcut::serialize(l2cpp::Network::Packet & p) const -> l2cpp::Network
 {
     p << _impl->type << _impl->index << _impl->id;
 
-    if (_impl->type == Type::Skil)
-        p << _impl->level;
+    /**/ if (_impl->type == Type::Skill) p << _impl->level;
+    else if (_impl->type == Type::Item) p << 1; // quantity?
 
     return p;
 }

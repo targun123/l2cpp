@@ -13,9 +13,6 @@ DEFINE_PACKET_HANDLER(ShortcutBarAdd)
     l2::Shortcut s;
     reader >> s;
 
-    auto const index = *s.index();
-    SPDLOG_TRACE("Adding shortcut to page {} slot {}", index / 12 + 1, index % 12 + 1);
-
-    auto & slot = player.currentCharacter()->get().setShortcut(std::move(s));
+    auto const & slot = player.currentCharacter()->get().setShortcut(std::move(s));
     player.connection().send(Packet(0x44) << slot);
 }

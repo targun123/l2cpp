@@ -18,7 +18,7 @@ class l2::Shortcut : public l2cpp::Network::Serializable
     ENABLE_STREAM_SERIALIZATION(Shortcut);
 
 public:
-    enum class Type : u32 { None, Item, Skil, Action, Macro, Recipe, Count };
+    enum class Type : u32 { None, Item, Skill, Action, Macro, Recipe, Count };
 
 public:
     Shortcut();
