@@ -7,12 +7,14 @@
 #include "ItemTemplate.hpp"
 #include "../GameObject.hpp"
 
-#include <l2cpp/network/Packet.hpp>
+#include <l2cpp/network/Serialization.hpp>
 
 namespace l2
 {
     struct Item : public GameObject
     {
+        DECLARE_PACKET_SERIALIZATION_OPERATOR(Item);
+
         ItemTemplate tmplate;
 
         u32  quantity     = 1;
@@ -20,5 +22,3 @@ namespace l2
         bool equipped     = false;
     };
 }
-
-l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, l2::Item const & item);

@@ -48,26 +48,26 @@ auto l2::Shortcut::index() const -> std::optional<size_t>
     return idx;
 }
 
-auto l2::Shortcut::serialize(l2cpp::Network::Packet & p) const -> l2cpp::Network::Packet &
+l2cpp::Network::PacketReader & l2::operator>>(l2cpp::Network::PacketReader & r, Shortcut & s)
 {
-    p << _impl->type << _impl->index << _impl->id;
-
-    /**/ if (_impl->type == Type::Skill) p << _impl->level;
-    else if (_impl->type == Type::Item) p << 1; // quantity?
-
-    return p;
-}
-
-auto l2::Shortcut::deserialize(l2cpp::Network::PacketReader & r) -> l2cpp::Network::PacketReader &
-{
-    ShortcutImpl tmp;
+    Shortcut::ShortcutImpl tmp;
     r >> tmp.type >> tmp.index >> tmp.id;
 
-    L2CPP_B_ASSERT(isInRange(tmp.type, Type::None, Type::Count),
+    L2CPP_B_ASSERT(isInRange(tmp.type, Shortcut::Type::None, Shortcut::Type::Count),
                    "Attempt to add a shortcut with invalid type {}", std::to_underlying(tmp.type));
     L2CPP_B_ASSERT(tmp.index < 120,
                    "Attempt to add a shortcut at invalid index {}", tmp.index);
 
-    *_impl = std::move(tmp);
+    *s._impl = std::move(tmp);
     return r;
+}
+
+l2cpp::Network::Packet & l2::operator<<(l2cpp::Network::Packet & p, Shortcut const & s)
+{
+    p << s._impl->type << s._impl->index << s._impl->id;
+
+    /**/ if (s._impl->type == Shortcut::Type::Skill) p << s._impl->level;
+    else if (s._impl->type == Shortcut::Type::Item)  p << 1; // quantity?
+
+    return p;
 }

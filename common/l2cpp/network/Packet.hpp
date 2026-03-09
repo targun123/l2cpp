@@ -4,7 +4,6 @@
 #pragma once
 
 // Project includes
-#include "Serialization.hpp"
 #include "../Pimpl.hpp"
 #include "../Typedefs.hpp"
 
@@ -45,10 +44,6 @@ public:
         else
             return append(&t, sizeof(T));
     }
-
-    /// Class/Struct instances must have an overloaded @c serialize(Packet&) function returning a @c Packet&.
-    template<class T> requires std::is_base_of_v<Serializable, T>
-    Packet & operator<<(T const & t) { return static_cast<Serializable const &>(t).serialize(*this); }
 
     /// Appends a contiguous array of integrals to the packet.
     template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
@@ -107,3 +102,9 @@ struct l2cpp::Network::HeaderOnlyPacket : public Packet
         : Packet(OpCode)
     {}
 };
+
+template<typename T>
+l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet && p, T && t)
+{
+    return static_cast<l2cpp::Network::Packet &>(p) << static_cast<T const &>(t);
+}

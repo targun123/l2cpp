@@ -5,6 +5,7 @@
 
 // Project includes
 #include <l2cpp/Exception.hpp>
+#include <l2cpp/network/Packet.hpp>
 
 using namespace l2;
 
@@ -30,7 +31,7 @@ static u16 typeFromCategory(ItemCategory const cat)
     }
 }
 
-l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, Item const & item)
+l2cpp::Network::Packet & l2::operator<<(l2cpp::Network::Packet & p, Item const & item)
 {
     return p
         << typeFromCategory(item.tmplate.category)

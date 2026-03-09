@@ -13,9 +13,9 @@
 
 namespace l2 { class Shortcut; }
 
-class l2::Shortcut : public l2cpp::Network::Serializable
+class l2::Shortcut
 {
-    ENABLE_STREAM_SERIALIZATION(Shortcut);
+    DECLARE_PACKET_SERIALIZATION_OPERATORS(Shortcut);
 
 public:
     enum class Type : u32 { None, Item, Skill, Action, Macro, Recipe, Count };
@@ -24,14 +24,10 @@ public:
     Shortcut();
     Shortcut(Shortcut &&) noexcept;
     Shortcut & operator=(Shortcut &&) noexcept;
-    ~Shortcut() override;
+    ~Shortcut();
 
 public:
     auto index() const -> std::optional<size_t>;
-
-private:
-    auto serialize  (l2cpp::Network::Packet &) const -> l2cpp::Network::Packet &       override;
-    auto deserialize(l2cpp::Network::PacketReader &) -> l2cpp::Network::PacketReader & override;
 
 private:
     struct ShortcutImpl;

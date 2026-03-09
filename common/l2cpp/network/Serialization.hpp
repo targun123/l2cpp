@@ -4,21 +4,14 @@
 #pragma once
 
 // Forward-declare for the macro to work
-namespace l2cpp::Network { class Packet; class PacketReader; struct Serializable; }
+namespace l2cpp::Network { class Packet; class PacketReader; }
 
-struct l2cpp::Network::Serializable
-{
-    Serializable()                                 noexcept = default;
-    Serializable(Serializable const & )            noexcept = default;
-    Serializable & operator=(Serializable const &) noexcept = default;
-    Serializable(Serializable &&)                  noexcept = default;
-    Serializable & operator=(Serializable &&)      noexcept = default;
-    virtual ~Serializable()                        noexcept = default;
+#define DECLARE_PACKET_SERIALIZATION_OPERATOR(T) \
+    friend l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet &, T const &)
 
-    virtual auto serialize  (Packet       &) const -> Packet       & = 0;
-    virtual auto deserialize(PacketReader &)       -> PacketReader & = 0;
-};
+#define DECLARE_PACKET_DESERIALIZATION_OPERATOR(T) \
+    friend l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader &, T &)
 
-#define ENABLE_STREAM_SERIALIZATION(T)                                                                                 \
-    friend l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader & r, T & c){return c.deserialize(r);}\
-    friend l2cpp::Network::Packet       & operator<<(l2cpp::Network::Packet & p, T const & c){return c.serialize(p);  }
+#define DECLARE_PACKET_SERIALIZATION_OPERATORS(T) \
+    DECLARE_PACKET_SERIALIZATION_OPERATOR(T);     \
+    DECLARE_PACKET_DESERIALIZATION_OPERATOR(T)
