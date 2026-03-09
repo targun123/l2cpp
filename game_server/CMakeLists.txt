@@ -30,6 +30,7 @@ target_sources(${PROJECT_NAME}
         game/Shortcut.cpp
         game/Shortcut.hpp
         game/inventory/GearSlot.hpp
+        game/inventory/GearTransaction.hpp
         game/inventory/Item.cpp
         game/inventory/Item.hpp
         game/inventory/ItemTemplate.hpp

@@ -5,8 +5,9 @@
 
 // Project includes
 #include "GameObject.hpp"
-#include "inventory/Item.hpp"
 #include "Shortcut.hpp"
+#include "inventory/GearTransaction.hpp"
+#include "inventory/Item.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
@@ -23,16 +24,6 @@ struct Gauge
 {
     T current{};
     T max{current};
-};
-
-struct GearTransaction
-{
-    bool succeeded = true;               ///< Whether equip/unequip action has worked
-    OptionalRef<l2::Item const> target;  ///< Item that the user wants to equip/unequip
-    OptionalRef<l2::Item const> curItem; ///< Item that has been successfully equipped or nullopt if unequip successful
-
-    /// Items that were in the slots prior to the transaction
-    std::unordered_map<GameObjectId, std::reference_wrapper<l2::Item const>> oldItems;
 };
 
 namespace l2 { class Character; }
