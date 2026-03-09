@@ -10,6 +10,11 @@
 #include <l2cpp/network/PacketReader.hpp>
 #include <l2cpp/utils/Enum.hpp>
 
+namespace Constants
+{
+    constexpr size_t maxShortcuts = 120;
+}
+
 struct Shortcut::ShortcutImpl
 {
     Type type = Type::None;
@@ -31,7 +36,7 @@ auto Shortcut::index() const -> std::optional<size_t>
 {
     std::optional<size_t> idx;
 
-    if (_impl->index < 120)
+    if (_impl->index < Constants::maxShortcuts)
         idx = _impl->index;
 
     return idx;
@@ -44,7 +49,7 @@ l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader & r, Shor
 
     L2CPP_B_ASSERT(l2cpp::utils::isInContiguousRange(tmp.type, Shortcut::Type::None, Shortcut::Type::Count),
                    "Attempt to add a shortcut with invalid type {}", std::to_underlying(tmp.type));
-    L2CPP_B_ASSERT(tmp.index < 120,
+    L2CPP_B_ASSERT(tmp.index < Constants::maxShortcuts,
                    "Attempt to add a shortcut at invalid index {}", tmp.index);
 
     *s._impl = std::move(tmp);
