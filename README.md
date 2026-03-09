@@ -43,7 +43,7 @@ Unless explicitely specified, don't assume anything to be available. Here's what
 ## What's coming next
 
  - There's much internal work I want to do around the structure of the code itself: game loop, ECS, serialization…
- - Equip/Unequip any wearable item;
+ - ~~Equip/Unequip any wearable item~~;
  - Load all skills from disk and look them up through GM UI;
  - Implement some basic skill logic (buff, physical/magical offensive on non-self target).
 
