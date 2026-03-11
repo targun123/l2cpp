@@ -144,9 +144,15 @@ bool Connection::ConnectionImpl::handleReadError(boost::system::error_code const
     switch (auto const code = ec.value(); code)
     {
         using enum boost::system::errc::errc_t;
+        using namespace boost::asio::error;
 
         case success:
             return true;
+
+        case boost::asio::error::connection_reset: // Client closed the connection
+            SPDLOG_WARN("connection reset during packet {} reading: {} ({}:{})",
+                        source, ec.message(), ec.category().name(), code);
+            [[fallthrough]];
 
         case no_such_file_or_directory: // EOF
             SPDLOG_INFO("Client disconnected");
