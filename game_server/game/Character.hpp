@@ -71,7 +71,7 @@ public:
     bool isNoble = false;
 
     double collisionRadius = 9;
-    double collisionHeight = 23;
+    double collisionHeight = 23.5;
 
     std::vector<u16> cubics;
 
