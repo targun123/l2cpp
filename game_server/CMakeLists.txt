@@ -44,6 +44,7 @@ target_sources(${PROJECT_NAME}
         handlers/CharacterList.cpp
         handlers/CharacterSelect.cpp
         handlers/CharacterShowCreationScreen.cpp
+        handlers/ChatAdminCommand.cpp
         handlers/ChatSay.cpp
         handlers/ConnectionClosing.cpp
         handlers/EnterWorld.cpp

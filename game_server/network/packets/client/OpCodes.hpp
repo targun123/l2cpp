@@ -30,7 +30,7 @@ namespace Network
         SkillList                   = 0x3f,
         LeaveWorld                  = 0x46,
         MoveUpdate                  = 0x48,
-        ChatAdminCommand            = 0x5b, // TODO
+        ChatAdminCommand            = 0x5b,
         CharacterCancelDeletion     = 0x62,
         QuestList                   = 0x63,
         MiniMapShow                 = 0xcd,

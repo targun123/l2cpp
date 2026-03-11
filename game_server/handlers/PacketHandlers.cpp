@@ -14,6 +14,7 @@ namespace Handler
     HANDLER(CharacterCreate)
     HANDLER(CharacterSelect)
     HANDLER(CharacterShowCreationScreen)
+    HANDLER(ChatAdminCommand)
     HANDLER(ChatSay)
     HANDLER(ConnectionClosing)
     HANDLER(EnterWorld)
@@ -44,6 +45,7 @@ std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHand
     HANDLER(CharacterCreate),
     HANDLER(CharacterSelect),
     HANDLER(CharacterShowCreationScreen),
+    HANDLER(ChatAdminCommand),
     HANDLER(ChatSay),
     HANDLER(ConnectionClosing),
     HANDLER(EnterWorld),
