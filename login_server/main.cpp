@@ -81,7 +81,7 @@ struct Connection
         p.writeSize();
 
         // Save the value before it gets blowfished
-        auto const type = p.opCode().has_value() ? fmt::format("0x{:02x}", p.opCode().value())
+        auto const type = p.opCode().has_value() ? std::format("0x{:02x}", p.opCode().value())
                                                  : "<unknown>";
 
         if (encryptPacket)

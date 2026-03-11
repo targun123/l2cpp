@@ -20,7 +20,7 @@ DEFINE_PACKET_HANDLER(ChatSay)
         reader >> recipient;
 
     SPDLOG_DEBUG(L"Player said ('{}'){}: “{}”",
-                 std::to_underlying(type), recipient.empty() ? L"" : fmt::format(L" (to '{}')", recipient), msg);
+                 std::to_underlying(type), recipient.empty() ? L"" : std::format(L" (to '{}')", recipient), msg);
 
     auto const & c = player.currentCharacter()->get();
     if (recipient.empty())

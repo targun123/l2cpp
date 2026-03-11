@@ -46,15 +46,15 @@ namespace
             if (!src.empty())
                 src += ':';
 
-            src += fmt::format("{}", e.line());
+            src += std::format("{}", e.line());
         }
 
         if (!src.empty())
-            src = fmt::format(" [{}]", src);
+            src = std::format(" [{}]", src);
 
 #ifndef NDEBUG
         if (!e.functionName().empty())
-            src += fmt::format(" [{}]", e.functionName());
+            src += std::format(" [{}]", e.functionName());
 #endif
         return src;
     }
@@ -151,9 +151,9 @@ auto l2cpp::formatExceptionStack(ExceptionStack const & s, int level, int increm
     std::string str;
     for (auto const & e : s)
     {
-        auto const code = e.code() ? fmt::format(" (code: {})", e.code()) : "";
+        auto const code = e.code() ? std::format(" (code: {})", e.code()) : "";
         auto const src  = formatSourceLocation(e);
-        str += fmt::format("{:>{}}{}{}{}{}",
+        str += std::format("{:>{}}{}{}{}{}",
                            prefix, static_cast<int>(prefix.size()) + level, e.what(), code, src, suffix);
         level += increment;
     }

@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <fmt/core.h>
-
 #include <exception>
+#include <format>
 #include <functional>
+#include <print>
+#include <source_location>
 #include <string_view>
 #include <vector>
-#include <source_location>
 
 namespace l2cpp
 {
@@ -28,27 +28,27 @@ namespace l2cpp
         Exception(std::source_location src, int code) noexcept;
 
         template<typename... Args>
-        explicit Exception(fmt::format_string<Args...> fmt, Args &&... args)
+        explicit Exception(std::format_string<Args...> fmt, Args &&... args)
         {
-            init(std::source_location(), fmt::format(std::move(fmt), std::forward<Args>(args)...));
+            init(std::source_location(), std::format(std::move(fmt), std::forward<Args>(args)...));
         }
 
         template<typename... Args>
-        Exception(std::source_location src, fmt::format_string<Args...> fmt, Args &&... args)
+        Exception(std::source_location src, std::format_string<Args...> fmt, Args &&... args)
         {
-            init(std::move(src), fmt::format(std::move(fmt), std::forward<Args>(args)...));
+            init(std::move(src), std::format(std::move(fmt), std::forward<Args>(args)...));
         }
 
         template<typename... Args>
-        Exception(int const code, fmt::format_string<Args...> fmt, Args &&...args)
+        Exception(int const code, std::format_string<Args...> fmt, Args &&...args)
         {
-            init(std::source_location(), code, fmt::format(std::move(fmt), std::forward<Args>(args)...));
+            init(std::source_location(), code, std::format(std::move(fmt), std::forward<Args>(args)...));
         }
 
         template<typename... Args>
-        Exception(std::source_location src, int const code, fmt::format_string<Args...> fmt, Args &&...args)
+        Exception(std::source_location src, int const code, std::format_string<Args...> fmt, Args &&...args)
         {
-            init(std::move(src), code, fmt::format(std::move(fmt), std::forward<Args>(args)...));
+            init(std::move(src), code, std::format(std::move(fmt), std::forward<Args>(args)...));
         }
 
     public:
@@ -112,7 +112,7 @@ namespace l2cpp
     template<typename E, typename... Args>
     void printExceptionStack(E const & e, Args &&... args)
     {
-        fmt::print("{}", formatExceptionStack(e, std::forward<Args>(args)...));
+        std::print("{}", formatExceptionStack(e, std::forward<Args>(args)...));
     }
 }
 

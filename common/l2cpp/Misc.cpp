@@ -3,7 +3,8 @@
 
 #include "Misc.hpp"
 
-#include <fmt/core.h>
+// C++ includes
+#include <format>
 
 std::string l2cpp::hexdump(void const * const ptr, size_t const size)
 {
@@ -18,10 +19,10 @@ std::string l2cpp::hexdump(void const * const ptr, size_t const size)
         auto const buf = static_cast<unsigned char const * const>(ptr);
         for (size_t i = 0; i < size; i += 16)
         {
-            result += fmt::format("{:06X}: ", i);
+            result += std::format("{:06X}: ", i);
 
             for (size_t j = 0; j < 16; ++j)
-                result += i + j < size ? fmt::format("{:02X} ", buf[i + j]) : "__ ";
+                result += i + j < size ? std::format("{:02X} ", buf[i + j]) : "__ ";
 
             for (size_t j = 0; j < 16; ++j)
             {

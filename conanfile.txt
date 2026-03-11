@@ -5,8 +5,8 @@ spdlog/1.17.0
 
 [options]
 boost/*:header_only=True
-fmt/*:header_only=True
 spdlog/*:header_only=True
+spdlog/*:use_std_fmt=True
 
 [layout]
 cmake_layout
