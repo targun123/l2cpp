@@ -3,14 +3,11 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/Character.hpp"
+#include "../network/packets/server/SkillListPacket.hpp"
 
 DEFINE_PACKET_HANDLER(SkillList)
 {
-    Packet p(0x58);
-    p << 1 // count
-      << 0 // isPassive
-      << 4 // level
-      << 7029 // id (Super Haste)
-    ;
-    player.connection().send(p);
+    L2CPP_B_ASSERT(player.currentCharacter(), "No character, can't send skill list");
+    player.connection().send(SkillListPacket(player.currentCharacter()->get().skills()));
 }

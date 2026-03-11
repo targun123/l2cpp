@@ -7,6 +7,7 @@
 #include "GameObject.hpp"
 #include "Shortcut.hpp"
 #include "inventory/ItemStorage.hpp"
+#include "skill/Skill.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
@@ -109,6 +110,8 @@ public:
 
     auto gear()       -> Gear       &;
     auto gear() const -> Gear const &;
+
+    auto skills() const -> SkillRegistry const &;
 
 public:
     auto setShortcut(Shortcut shortcut) -> Shortcut &;

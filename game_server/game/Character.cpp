@@ -16,12 +16,26 @@
 
 struct Character::CharacterImpl
 {
-    ItemStorage inventory;
-    Gear gear;
+    Gear                      gear;
+    ItemStorage               inventory;
+    SkillRegistry             skills;
     std::array<Shortcut, 120> shortcuts{};
+
+    auto skill(SkillId id) const -> OptionalRef<Skill const>;
 };
 
 template class Pimpl<Character::CharacterImpl>;
+
+auto Character::CharacterImpl::skill(SkillId id) const -> OptionalRef<Skill const>
+{
+    OptionalRef<Skill const> skill;
+
+    auto const it = std::ranges::find_if(skills, [id] (auto const & p) { return p.first.id() == id; });
+    if (it != skills.end())
+        skill.emplace(it->second);
+
+    return skill;
+}
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -58,6 +72,12 @@ Character::Character()
     imperialCrusaderShield.tmplate.bodyPart = GearSlot::LeftHand;
     item = _impl->inventory.add(std::move(imperialCrusaderShield));
     _impl->gear.equipItem(item.get());
+
+    if (accessLevel > 0)
+    {
+        Skill superHaste(7029, "Super Haste", 4, SkillType::Active, SkillTargetType::Self);
+        _impl->skills.try_emplace(superHaste.uid(), std::move(superHaste));
+    }
 }
 
 Character::~Character() = default;
@@ -71,10 +91,22 @@ auto Character::inventory() const -> ItemStorage const & { return _impl->invento
 auto Character::gear()       -> Gear       & { return _impl->gear; }
 auto Character::gear() const -> Gear const & { return _impl->gear; }
 
+auto Character::skills() const -> SkillRegistry const &
+{
+    return _impl->skills;
+}
+
 auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
 {
     L2CPP_B_ASSERT(shortcut.index(), "Cannot set a shortcut whose index ({}) is invalid", *shortcut.index());
     auto const index = *shortcut.index();
+
+    if (shortcut.type() == Shortcut::Type::Skill)
+    {
+        if (auto const skill = _impl->skill(static_cast<SkillId>(shortcut.targetId())); skill)
+            shortcut.setSkillLevel(skill->get().level());
+    }
+
     _impl->shortcuts[index] = std::move(shortcut);
     return _impl->shortcuts[index];
 }

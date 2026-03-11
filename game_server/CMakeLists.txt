@@ -38,6 +38,11 @@ target_sources(${PROJECT_NAME}
         game/inventory/ItemStorage.cpp
         game/inventory/ItemStorage.hpp
         game/inventory/ItemTemplate.hpp
+        game/skill/Skill.cpp
+        game/skill/Skill.hpp
+        game/skill/SkillTargetType.hpp
+        game/skill/SkillType.hpp
+        game/skill/SkillUid.hpp
         handlers/Authenticate.cpp
         handlers/CharacterCancelDeletion.cpp
         handlers/CharacterCreate.cpp
@@ -78,6 +83,8 @@ target_sources(${PROJECT_NAME}
         network/packets/server/EntityStatusUpdatePacket.hpp
         network/packets/server/ProtocolHandshakePacket.cpp
         network/packets/server/ProtocolHandshakePacket.hpp
+        network/packets/server/SkillListPacket.cpp
+        network/packets/server/SkillListPacket.hpp
         network/packets/server/inventory/InventoryListPacket.cpp
         network/packets/server/inventory/InventoryListPacket.hpp
         network/packets/server/inventory/InventoryUpdatePacket.cpp

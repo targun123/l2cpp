@@ -31,6 +31,9 @@ using GameObjectId = u32;
 using PacketHeader = u16;
 using PacketOpCode = u16;
 
+using SkillId    = u16;
+using SkillLevel = u16;
+
 constexpr u8  operator""_u8 (u64 const nbr) { return static_cast<u8> (nbr); }
 constexpr u16 operator""_u16(u64 const nbr) { return static_cast<u16>(nbr); }
 constexpr u32 operator""_u32(u64 const nbr) { return static_cast<u32>(nbr); }

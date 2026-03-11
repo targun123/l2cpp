@@ -17,22 +17,39 @@ DEFINE_PACKET_HANDLER(SkillUse)
     auto & c      = player.currentCharacter()->get();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::hours(2)).count();
 
-    // Packet p(0x48);
-    // p
-    //     << c.id     // caster
-    //     << c.id     // target
-    //     << skillId
-    //     << 4        // level
-    //     << 1000 // duration
-    //     << 10       // reuse delay (in ms?)
-    //     << c.pos.x
-    //     << c.pos.y
-    //     << c.pos.z
-    //     << 0        // critical
-    //     << c.pos.x
-    //     << c.pos.y
-    //     << c.pos.z
-    // ;
+    // Start spell animation
+    {
+        Packet p(0x48);
+        p
+            << c.id()  // caster
+            << c.id()  // target
+            << 78
+            << 2       // level
+            << 1500    // duration
+            << 180000  // reuse delay (in ms?)
+            << c.pos.x
+            << c.pos.y
+            << c.pos.z
+            << 0       // critical
+            << c.pos.x
+            << c.pos.y
+            << c.pos.z
+        ;
+        player.connection().send(p);
+    }
+
+    // Display the cast bar?
+    {
+        Packet p(0x76);
+        p
+            << c.id()
+            << 78
+            << 2
+            << 1
+            << c.id()
+        ;
+        player.connection().send(p);
+    }
 
     static bool toggle = true;
 

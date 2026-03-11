@@ -13,6 +13,8 @@
 
 class Shortcut
 {
+    friend class Character;
+
     DECLARE_PACKET_SERIALIZATION_OPERATORS(Shortcut);
 
 public:
@@ -25,7 +27,13 @@ public:
     ~Shortcut();
 
 public:
-    auto index() const -> std::optional<size_t>;
+    auto index()      const -> std::optional<size_t>;
+    auto type()       const -> Type;
+    auto targetId()   const -> u32;
+    auto skillLevel() const -> SkillLevel;
+
+private:
+    void setSkillLevel(SkillLevel level);
 
 private:
     struct ShortcutImpl;
