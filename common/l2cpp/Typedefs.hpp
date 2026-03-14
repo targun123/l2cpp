@@ -5,6 +5,7 @@
 
 // C++ includes
 #include <cstdint>
+#include <chrono>
 #include <optional>
 
 using byte = std::uint8_t;
@@ -17,6 +18,10 @@ using s8  = std::int8_t;
 using s16 = std::int16_t;
 using s32 = std::int32_t;
 using s64 = std::int64_t;
+
+using Sec  = std::chrono::seconds;
+using MSec = std::chrono::milliseconds;
+using namespace std::chrono_literals;
 
 template<typename T>
 using Ref = std::reference_wrapper<T>;

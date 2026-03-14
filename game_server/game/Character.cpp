@@ -75,8 +75,9 @@ Character::Character()
 
     if (accessLevel > 0)
     {
-        Skill superHaste(7029, "Super Haste", 4, SkillType::Active, SkillTargetType::Self);
-        _impl->skills.try_emplace(superHaste.uid(), std::move(superHaste));
+        SkillInfo superHasteInfo(7029, "Super Haste", 4, SkillType::Active, SkillTargetType::Self, 1500ms, 180000ms);
+        Skill superHaste(std::move(superHasteInfo));
+        _impl->skills.try_emplace(superHaste.info().uid(), std::move(superHaste));
     }
 }
 
@@ -104,7 +105,7 @@ auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
     if (shortcut.type() == Shortcut::Type::Skill)
     {
         if (auto const skill = _impl->skill(static_cast<SkillId>(shortcut.targetId())); skill)
-            shortcut.setSkillLevel(skill->get().level());
+            shortcut.setSkillLevel(skill->get().info().level());
     }
 
     _impl->shortcuts[index] = std::move(shortcut);

@@ -106,7 +106,7 @@ namespace l2cpp
     auto formatExceptionStack(Exception const & e, int level = 0, int increment = 1,
                              std::string_view prefix = " * ", std::string_view suffix = "\n") -> std::string;
 
-    auto formatExceptionStack(ExceptionStack const & e, int level = 0, int increment = 1,
+    auto formatExceptionStack(ExceptionStack const & s, int level = 0, int increment = 1,
                              std::string_view prefix = " * ", std::string_view suffix = "\n") -> std::string;
 
     template<typename E, typename... Args>

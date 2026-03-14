@@ -9,8 +9,9 @@ set(CMAKE_CXX_EXTENSIONS        OFF)
 add_compile_definitions(SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
 if(WIN32)
     add_compile_definitions(
-        _WIN32_WINNT=0x0601
         WIN32_LEAN_AND_MEAN
+        _CRT_SECURE_NO_WARNINGS
+        _WIN32_WINNT=0x0601
     )
     add_compile_options(/EHsc /W4 /utf-8)
 endif()

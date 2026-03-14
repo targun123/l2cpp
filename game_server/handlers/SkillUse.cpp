@@ -76,5 +76,5 @@ DEFINE_PACKET_HANDLER(SkillUse)
     toggle = !toggle;
 
     // Update status info
-    player.connection().send(Network::Packet::Server::CharacterStatusUpdatePacket(c));
+    player.connection().send(CharacterStatusUpdatePacket(c));
 }

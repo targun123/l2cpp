@@ -3,8 +3,6 @@
 
 #include "SkillListPacket.hpp"
 
-// Project includes
-
 // C++ includes
 #include <ranges>
 
@@ -16,5 +14,5 @@ SkillListPacket::SkillListPacket(SkillRegistry const & skills)
     *this << static_cast<u32>(skills.size());
 
     for (auto const & skill : skills | std::views::values)
-        *this << skill.type() << static_cast<u32>(skill.level()) << static_cast<u32>(skill.id());
+        *this << skill.info().type() << static_cast<u32>(skill.info().level()) << static_cast<u32>(skill.info().id());
 }
