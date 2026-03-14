@@ -5,6 +5,7 @@
 
 // Project includes
 #include "Player.hpp"
+#include "game/skill/SkillInfoRegister.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
 #include "network/packets/server/ClientDisconnect.hpp"
@@ -48,9 +49,17 @@ private:
 
 template class Pimpl<Application::ApplicationImpl>;
 
-bool Application::ApplicationImpl::load()
+bool Application::ApplicationImpl::load() try
 {
+    SkillInfoRegister::load("data/skillname-e.txt", "data/skillgrp.txt");
+    SPDLOG_INFO("Registered {} unique skill variants", SkillInfoRegister::size());
+
     return true;
+}
+catch (l2cpp::Exception const & e)
+{
+    SPDLOG_ERROR("Failed to load application:\n{}", l2cpp::formatExceptionStack(e));
+    return false;
 }
 
 bool Application::ApplicationImpl::run()

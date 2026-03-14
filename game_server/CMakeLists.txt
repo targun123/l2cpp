@@ -42,6 +42,8 @@ target_sources(${PROJECT_NAME}
         game/skill/Skill.hpp
         game/skill/SkillInfo.cpp
         game/skill/SkillInfo.hpp
+        game/skill/SkillInfoRegister.cpp
+        game/skill/SkillInfoRegister.hpp
         game/skill/SkillTargetType.hpp
         game/skill/SkillType.hpp
         game/skill/SkillUid.hpp
