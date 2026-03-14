@@ -1,7 +1,7 @@
 /// @author    Chnossos
 /// @date      Created on 2026-03-13
 
-#include "SkillInfoRegister.hpp"
+#include "SkillTemplateDirectory.hpp"
 
 // Project includes
 #include <l2cpp/Exception.hpp>
@@ -14,7 +14,7 @@
 // C++ includes
 #include <fstream>
 
-std::unordered_map<SkillUid, SkillInfo> SkillInfoRegister::_infos;
+std::unordered_map<SkillUid, SkillTemplate> SkillTemplateDirectory::_templates;
 
 namespace
 {
@@ -27,7 +27,7 @@ namespace
         return value;
     }
 
-    void loadSkillNames(std::unordered_map<SkillUid, SkillInfo> & infos, std::filesystem::path const & path)
+    void loadSkillNames(std::unordered_map<SkillUid, SkillTemplate> & infos, std::filesystem::path const & path)
     {
         std::ifstream file(path);
         L2CPP_B_ASSERT(file, "Failed to open file '{}': {}", path.string(), std::strerror(errno));
@@ -42,7 +42,7 @@ namespace
             if (parts.size() < 5 || parts.size() > 6)
                 L2CPP_THROW("Found {} parts instead of minimum of 5:\nParts found: {::?}", parts.size(), parts);
 
-            SkillInfo info(stringViewTo<u16>(parts[0]), std::string(parts[2].substr(2, parts[2].size() - 4)),
+            SkillTemplate info(stringViewTo<u16>(parts[0]), std::string(parts[2].substr(2, parts[2].size() - 4)),
                            stringViewTo<u16>(parts[1]));
             auto const & [it, ok] = infos.try_emplace(info.uid(), std::move(info));
             L2CPP_B_ASSERT(ok, "Skill '{}' ({}) has already been loaded", it->second.fullName(), it->second.id());
@@ -53,7 +53,7 @@ namespace
         }
     }
 
-    void loadSkillGroups(std::unordered_map<SkillUid, SkillInfo> & infos, std::filesystem::path const & path)
+    void loadSkillGroups(std::unordered_map<SkillUid, SkillTemplate> & infos, std::filesystem::path const & path)
     {
         std::ifstream file(path);
         L2CPP_B_ASSERT(file, "Failed to open file '{}': {}", path.string(), std::strerror(errno));
@@ -94,24 +94,24 @@ namespace
     }
 }
 
-void SkillInfoRegister::load(std::filesystem::path const & skillNamesFile,
+void SkillTemplateDirectory::load(std::filesystem::path const & skillNamesFile,
                              std::filesystem::path const & skillGroupsFile)
 {
 
-    loadSkillNames(_infos, skillNamesFile);
-    loadSkillGroups(_infos, skillGroupsFile);
+    loadSkillNames(_templates, skillNamesFile);
+    loadSkillGroups(_templates, skillGroupsFile);
 }
 
-auto SkillInfoRegister::size() -> size_t
+auto SkillTemplateDirectory::size() -> size_t
 {
-    return _infos.size();
+    return _templates.size();
 }
 
-auto SkillInfoRegister::skill(SkillUid const uid) -> OptionalRef<SkillInfo>
+auto SkillTemplateDirectory::skill(SkillUid const uid) -> OptionalRef<SkillTemplate>
 {
-    OptionalRef<SkillInfo> skill;
+    OptionalRef<SkillTemplate> skill;
 
-    if (auto const it = _infos.find(uid); it != _infos.end())
+    if (auto const it = _templates.find(uid); it != _templates.end())
         skill = it->second;
 
     return skill;

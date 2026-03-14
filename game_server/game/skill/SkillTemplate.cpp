@@ -1,9 +1,9 @@
 /// @author    Chnossos
 /// @date      Created on 2026-03-11
 
-#include "SkillInfo.hpp"
+#include "SkillTemplate.hpp"
 
-SkillInfo::SkillInfo(SkillId const id, std::string name, SkillLevel const lvl)
+SkillTemplate::SkillTemplate(SkillId const id, std::string name, SkillLevel const lvl)
     : _id(id)
     , _level(lvl)
     , _name(std::move(name))
@@ -11,7 +11,7 @@ SkillInfo::SkillInfo(SkillId const id, std::string name, SkillLevel const lvl)
     , _icon(std::format("icon.skill{:04}", _id))
 {}
 
-SkillInfo::SkillInfo(
+SkillTemplate::SkillTemplate(
     SkillId         const id
   , std::string           name
   , SkillLevel      const lvl
@@ -31,37 +31,42 @@ SkillInfo::SkillInfo(
     , _cooldownDuration(cdDuration)
 {}
 
-auto SkillInfo::uid() const -> SkillUid
+auto SkillTemplate::uid() const -> SkillUid
 {
     return {_id, _level};
 }
 
-auto SkillInfo::id() const -> SkillId
+auto SkillTemplate::id() const -> SkillId
 {
     return _id;
 }
 
-auto SkillInfo::name() const -> std::string_view
+auto SkillTemplate::name() const -> std::string_view
 {
     return _name;
 }
 
-auto SkillInfo::fullName() const -> std::string_view
+auto SkillTemplate::fullName() const -> std::string_view
 {
     return _fullName;
 }
 
-auto SkillInfo::level() const -> SkillLevel
+auto SkillTemplate::level() const -> SkillLevel
 {
     return _level;
 }
 
-auto SkillInfo::type() const -> SkillType
+auto SkillTemplate::type() const -> SkillType
 {
     return _type;
 }
 
-void SkillInfo::setCastDuration(MSec const castDuration)
+auto SkillTemplate::castDuration() const -> MSec
+{
+    return _castDuration;
+}
+
+void SkillTemplate::setCastDuration(MSec const castDuration)
 {
     _castDuration = castDuration;
 }

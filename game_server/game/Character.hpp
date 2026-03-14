@@ -92,7 +92,7 @@ public:
 
         u32 pAtk         = 10,  pDef          = 80;
         u32 mAtk         = 6,   mDef          = 40;
-        u32 pAtkSpeed    = 300, mAtkSpeed     = 10;
+        u32 pAtkSpeed    = 300, mAtkSpeed     = 333;
         u32 pAtkRange    = 20,  pAtkRandom    = 10;
         u32 accuracy     = 10,  evasion       = 10;
         u32 pCritRate    = 10,  mCritRate     = 10;

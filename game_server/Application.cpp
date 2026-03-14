@@ -5,7 +5,7 @@
 
 // Project includes
 #include "Player.hpp"
-#include "game/skill/SkillInfoRegister.hpp"
+#include "game/skill/SkillTemplateDirectory.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
 #include "network/packets/server/ClientDisconnect.hpp"
@@ -51,8 +51,10 @@ template class Pimpl<Application::ApplicationImpl>;
 
 bool Application::ApplicationImpl::load() try
 {
-    SkillInfoRegister::load("data/skillname-e.txt", "data/skillgrp.txt");
-    SPDLOG_INFO("Registered {} unique skill variants", SkillInfoRegister::size());
+    SPDLOG_INFO("Loading static data…");
+
+    SkillTemplateDirectory::load("data/skillname-e.txt", "data/skillgrp.txt");
+    SPDLOG_INFO("Registered {} unique skill variants", SkillTemplateDirectory::size());
 
     return true;
 }
@@ -138,7 +140,10 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
             auto const & [handler, handlerName] = it->second;
             SPDLOG_INFO("recv: {} (0x{:02x}) ({} bytes)", handlerName, opCode, size);
             hexdump(body);
-            (*handler)(player);
+            try { (*handler)(player); } catch (l2cpp::Exception const & e)
+            {
+                SPDLOG_ERROR("Handler failed:\n{}", l2cpp::formatExceptionStack(e));
+            }
         }
         else
         {

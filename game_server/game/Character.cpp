@@ -6,6 +6,7 @@
 // Project includes
 #include "inventory/Gear.hpp"
 #include "inventory/ItemStorage.hpp"
+#include "skill/SkillTemplateDirectory.hpp"
 
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/details/Pimpl.hpp>
@@ -75,10 +76,12 @@ Character::Character()
 
     if (accessLevel > 0)
     {
-        SkillInfo superHasteInfo(7029, "Super Haste", 4, SkillType::Active, SkillTargetType::Self, 1500ms, 180000ms);
-        Skill superHaste(std::move(superHasteInfo));
-        _impl->skills.try_emplace(superHaste.info().uid(), std::move(superHaste));
+        auto const superHaste = SkillTemplateDirectory::skill(7029, 4);
+        _impl->skills.try_emplace(superHaste->get().uid(), superHaste->get());
     }
+
+    auto const hurricane = SkillTemplateDirectory::skill(1239, 1);
+    _impl->skills.try_emplace(hurricane->get().uid(), hurricane->get());
 }
 
 Character::~Character() = default;
@@ -105,7 +108,7 @@ auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
     if (shortcut.type() == Shortcut::Type::Skill)
     {
         if (auto const skill = _impl->skill(static_cast<SkillId>(shortcut.targetId())); skill)
-            shortcut.setSkillLevel(skill->get().info().level());
+            shortcut.setSkillLevel(skill->get().tmplate().level());
     }
 
     _impl->shortcuts[index] = std::move(shortcut);

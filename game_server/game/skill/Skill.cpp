@@ -13,7 +13,7 @@ using namespace std::chrono;
 
 struct Skill::SkillImpl
 {
-    SkillInfo info;
+    SkillTemplate const & tmplate;
     system_clock::time_point lastUse{};
 };
 
@@ -21,15 +21,15 @@ template class Pimpl<Skill::SkillImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Skill::Skill(SkillInfo info)
-    : _impl(std::move(info))
+Skill::Skill(SkillTemplate const & skillTemplate)
+    : _impl(skillTemplate)
 {}
 
 Skill::Skill(Skill &&) noexcept = default;
 Skill & Skill::operator=(Skill &&) noexcept = default;
 Skill::~Skill() = default;
 
-auto Skill::info() const -> SkillInfo const &
+auto Skill::tmplate() const -> SkillTemplate const &
 {
-    return _impl->info;
+    return _impl->tmplate;
 }

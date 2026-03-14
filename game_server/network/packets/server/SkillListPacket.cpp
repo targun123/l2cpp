@@ -14,5 +14,5 @@ SkillListPacket::SkillListPacket(SkillRegistry const & skills)
     *this << static_cast<u32>(skills.size());
 
     for (auto const & skill : skills | std::views::values)
-        *this << skill.info().type() << static_cast<u32>(skill.info().level()) << static_cast<u32>(skill.info().id());
+        *this << skill.tmplate().type() << static_cast<u32>(skill.tmplate().level()) << static_cast<u32>(skill.tmplate().id());
 }

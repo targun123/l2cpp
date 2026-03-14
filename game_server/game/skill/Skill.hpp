@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include "SkillInfo.hpp"
+#include "SkillTemplate.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 
@@ -14,13 +14,13 @@
 class Skill
 {
 public:
-    explicit Skill(SkillInfo info);
+    explicit Skill(SkillTemplate const & skillTemplate);
     Skill(Skill &&) noexcept;
     Skill & operator=(Skill &&) noexcept;
     ~Skill();
 
 public:
-    auto info() const -> SkillInfo const &;
+    auto tmplate() const -> SkillTemplate const &;
 
 private:
     struct SkillImpl;
