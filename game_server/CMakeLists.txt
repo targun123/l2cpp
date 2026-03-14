@@ -95,4 +95,5 @@ target_sources(${PROJECT_NAME}
         network/packets/server/inventory/InventoryListPacket.hpp
         network/packets/server/inventory/InventoryUpdatePacket.cpp
         network/packets/server/inventory/InventoryUpdatePacket.hpp
+        utils/Conversion.hpp
 )

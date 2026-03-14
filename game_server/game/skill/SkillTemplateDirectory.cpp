@@ -4,6 +4,8 @@
 #include "SkillTemplateDirectory.hpp"
 
 // Project includes
+#include "../../utils/Conversion.hpp"
+
 #include <l2cpp/Exception.hpp>
 
 // Third-pary includes
@@ -18,15 +20,6 @@ std::unordered_map<SkillUid, SkillTemplate> SkillTemplateDirectory::_templates;
 
 namespace
 {
-    template<typename T> requires std::integral<T> || std::floating_point<T>
-    auto stringViewTo(std::string_view str) -> T
-    {
-        T value;
-        auto const result = std::from_chars(str.data(), str.data() + str.size(), value);
-        L2CPP_B_ASSERT(result.ec == std::errc(), "Failed to convert '{}' into a number", str);
-        return value;
-    }
-
     void loadSkillNames(std::unordered_map<SkillUid, SkillTemplate> & infos, std::filesystem::path const & path)
     {
         std::ifstream file(path);
@@ -42,9 +35,9 @@ namespace
             if (parts.size() < 5 || parts.size() > 6)
                 L2CPP_THROW("Found {} parts instead of minimum of 5:\nParts found: {::?}", parts.size(), parts);
 
-            SkillTemplate info(stringViewTo<u16>(parts[0]), std::string(parts[2].substr(2, parts[2].size() - 4)),
-                           stringViewTo<u16>(parts[1]));
-            auto const & [it, ok] = infos.try_emplace(info.uid(), std::move(info));
+            SkillTemplate tmpl(Utils::stringViewTo<u16>(parts[0]), std::string(parts[2].substr(2, parts[2].size() - 4)),
+                               Utils::stringViewTo<u16>(parts[1]));
+            auto const & [it, ok] = infos.try_emplace(tmpl.uid(), std::move(tmpl));
             L2CPP_B_ASSERT(ok, "Skill '{}' ({}) has already been loaded", it->second.fullName(), it->second.id());
         }
         catch (l2cpp::Exception const & e)
@@ -71,8 +64,8 @@ namespace
                 L2CPP_THROW("Found {} parts instead of 17:\nParts found: {::?}", parts.size(), parts);
             }
 
-            auto const id  = stringViewTo<u16>(parts[0]);
-            auto const lvl = stringViewTo<u16>(parts[1]);
+            auto const id  = Utils::stringViewTo<u16>(parts[0]);
+            auto const lvl = Utils::stringViewTo<u16>(parts[1]);
 
             auto const it = infos.find({id, lvl});
             if (it == infos.end())
@@ -81,7 +74,7 @@ namespace
                 continue;
             }
 
-            it->second.setCastDuration(MSec(static_cast<u16>(stringViewTo<double>(parts[6]) * 1000)));
+            it->second.setCastDuration(MSec(static_cast<u16>(Utils::stringViewTo<double>(parts[6]) * 1000)));
         }
         catch  (l2cpp::Exception const & e)
         {

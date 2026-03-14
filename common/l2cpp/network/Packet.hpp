@@ -4,18 +4,15 @@
 #pragma once
 
 // Project includes
+#include "../utils/Traits.hpp"
 #include "../Pimpl.hpp"
 #include "../Typedefs.hpp"
 
 // C++ includes
 #include <optional>
 #include <span>
-#include <string>
 
 namespace l2cpp::Network { class Packet; template<u16> struct HeaderOnlyPacket; }
-
-template<typename T, typename Arg1, typename... ArgN>
-constexpr bool isAnyOf = (std::is_same_v<T, Arg1> || ... || std::is_same_v<T, ArgN>);
 
 class l2cpp::Network::Packet
 {
@@ -23,7 +20,8 @@ public:
     explicit Packet(PacketOpCode opCode);
 
     /// Permits conversion from any Packet enumerations that has the correct underlying type size
-    template<typename E> requires std::is_enum_v<E> && isAnyOf<std::underlying_type_t<E>, byte, PacketOpCode>
+    template<typename E>
+    requires std::is_enum_v<E> && Utils::Traits::isAnyOf<std::underlying_type_t<E>, byte, PacketOpCode>
     explicit Packet(E e): Packet(std::to_underlying(e)) {}
 
     virtual ~Packet();
