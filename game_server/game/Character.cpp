@@ -4,8 +4,10 @@
 #include "Character.hpp"
 
 // Project includes
+#include "Shortcut.hpp"
 #include "inventory/Gear.hpp"
 #include "inventory/ItemStorage.hpp"
+#include "skill/SkillDirectory.hpp"
 #include "skill/SkillTemplateDirectory.hpp"
 
 #include <l2cpp/Exception.hpp>
@@ -19,24 +21,11 @@ struct Character::CharacterImpl
 {
     Gear                      gear;
     ItemStorage               inventory;
-    SkillRegistry             skills;
+    SkillDirectory            skills;
     std::array<Shortcut, 120> shortcuts{};
-
-    auto skill(SkillId id) const -> OptionalRef<Skill const>;
 };
 
 template class Pimpl<Character::CharacterImpl>;
-
-auto Character::CharacterImpl::skill(SkillId id) const -> OptionalRef<Skill const>
-{
-    OptionalRef<Skill const> skill;
-
-    auto const it = std::ranges::find_if(skills, [id] (auto const & p) { return p.first.id() == id; });
-    if (it != skills.end())
-        skill.emplace(it->second);
-
-    return skill;
-}
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -75,13 +64,9 @@ Character::Character()
     _impl->gear.equipItem(item.get());
 
     if (accessLevel > 0)
-    {
-        auto const superHaste = SkillTemplateDirectory::skill(7029, 4);
-        _impl->skills.try_emplace(superHaste->get().uid(), superHaste->get());
-    }
+        _impl->skills.learn(7029, 4); // Super Haste
 
-    auto const hurricane = SkillTemplateDirectory::skill(1239, 1);
-    _impl->skills.try_emplace(hurricane->get().uid(), hurricane->get());
+    _impl->skills.learn(1239, 1); // Hurricane
 }
 
 Character::~Character() = default;
@@ -95,7 +80,12 @@ auto Character::inventory() const -> ItemStorage const & { return _impl->invento
 auto Character::gear()       -> Gear       & { return _impl->gear; }
 auto Character::gear() const -> Gear const & { return _impl->gear; }
 
-auto Character::skills() const -> SkillRegistry const &
+auto Character::skills() -> SkillDirectory &
+{
+    return _impl->skills;
+}
+
+auto Character::skills() const -> SkillDirectory const &
 {
     return _impl->skills;
 }
@@ -107,7 +97,7 @@ auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
 
     if (shortcut.type() == Shortcut::Type::Skill)
     {
-        if (auto const skill = _impl->skill(static_cast<SkillId>(shortcut.targetId())); skill)
+        if (auto const skill = _impl->skills.skill(static_cast<SkillId>(shortcut.targetId())); skill)
             shortcut.setSkillLevel(skill->get().tmplate().level());
     }
 

@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include "../../../game/skill/Skill.hpp"
+#include "../../../game/skill/SkillDirectory.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 
@@ -12,5 +12,5 @@ namespace Network::Packet::Server { struct SkillListPacket; }
 
 struct Network::Packet::Server::SkillListPacket final : public l2cpp::Network::Packet
 {
-    explicit SkillListPacket(SkillRegistry const &);
+    explicit SkillListPacket(SkillDirectory const &);
 };

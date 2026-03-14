@@ -5,9 +5,6 @@
 
 // Project includes
 #include "GameObject.hpp"
-#include "Shortcut.hpp"
-#include "inventory/ItemStorage.hpp"
-#include "skill/Skill.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
@@ -15,11 +12,7 @@
 // C++ includes
 #include <optional>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
-
-#include "inventory/Gear.hpp"
 
 template<typename T>
 struct Gauge
@@ -27,6 +20,11 @@ struct Gauge
     T current{};
     T max{current};
 };
+
+class Gear;
+class ItemStorage;
+class Shortcut;
+class SkillDirectory;
 
 class Character : public GameObject
 {
@@ -111,7 +109,8 @@ public:
     auto gear()       -> Gear       &;
     auto gear() const -> Gear const &;
 
-    auto skills() const -> SkillRegistry const &;
+    auto skills()       -> SkillDirectory &;
+    auto skills() const -> SkillDirectory const &;
 
 public:
     auto setShortcut(Shortcut shortcut) -> Shortcut &;

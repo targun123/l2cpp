@@ -4,6 +4,9 @@
 #include "Skill.hpp"
 
 // Project includes
+#include "SkillTemplateDirectory.hpp"
+
+#include <l2cpp/Exception.hpp>
 #include <l2cpp/details/Pimpl.hpp>
 
 // C++ includes
@@ -13,7 +16,7 @@ using namespace std::chrono;
 
 struct Skill::SkillImpl
 {
-    SkillTemplate const & tmplate;
+    std::reference_wrapper<SkillTemplate const> tmplate;
     system_clock::time_point lastUse{};
 };
 
@@ -32,4 +35,12 @@ Skill::~Skill() = default;
 auto Skill::tmplate() const -> SkillTemplate const &
 {
     return _impl->tmplate;
+}
+
+void Skill::setLevel(SkillLevel const level)
+{
+    auto const & tmpl = _impl->tmplate.get();
+    auto const skill  = SkillTemplateDirectory::skill(tmpl.id(), level);
+    L2CPP_B_ASSERT(skill, "Failed to change skill '{}' level from '{}' to '{}'", tmpl.id(), tmpl.level(), level);
+    _impl->tmplate = *skill;
 }

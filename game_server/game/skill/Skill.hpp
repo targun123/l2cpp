@@ -22,6 +22,9 @@ public:
 public:
     auto tmplate() const -> SkillTemplate const &;
 
+public:
+    void setLevel(SkillLevel level);
+
 private:
     struct SkillImpl;
     Pimpl<SkillImpl> _impl;

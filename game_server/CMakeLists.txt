@@ -40,6 +40,8 @@ target_sources(${PROJECT_NAME}
         game/inventory/ItemTemplate.hpp
         game/skill/Skill.cpp
         game/skill/Skill.hpp
+        game/skill/SkillDirectory.cpp
+        game/skill/SkillDirectory.hpp
         game/skill/SkillTemplate.cpp
         game/skill/SkillTemplate.hpp
         game/skill/SkillTemplateDirectory.cpp

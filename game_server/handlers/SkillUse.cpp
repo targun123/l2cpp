@@ -4,7 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/Character.hpp"
-#include "../game/skill/SkillTemplateDirectory.hpp"
+#include "../game/skill/SkillDirectory.hpp"
 
 DEFINE_PACKET_HANDLER(SkillUse)
 {
@@ -16,18 +16,17 @@ DEFINE_PACKET_HANDLER(SkillUse)
 
     auto & c = player.currentCharacter()->get();
 
-    auto const & skills = c.skills();
-    auto const skill    = skills.find({static_cast<SkillId>(skillId), 1});
-    L2CPP_B_ASSERT(skill != skills.end(), "Character does not possess skill id '{}'", skillId);
+    auto const skill    = c.skills().skill(skillId);
+    L2CPP_B_ASSERT(skill, "Character does not possess skill id '{}'", skillId);
 
     Packet p(0x48);
     p
         << c.id()  // caster
         << (c.targetId ? *c.targetId : c.id())  // target
-        << static_cast<u32>(skill->second.tmplate().id())
-        << static_cast<u32>(skill->second.tmplate().level())
-        << static_cast<u32>(skill->second.tmplate().castDuration().count())
-        << 1000  // reuse delay (in ms?)
+        << static_cast<u32>(skill->get().tmplate().id())
+        << static_cast<u32>(skill->get().tmplate().level())
+        << static_cast<u32>(skill->get().tmplate().castDuration().count())
+        << 1000  // reuse delay (in ms)
         << c.pos.x
         << c.pos.y
         << c.pos.z

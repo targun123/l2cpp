@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../../../game/Character.hpp"
+#include "../../../game/inventory/Gear.hpp"
 
 using namespace Network::Packet::Server;
 

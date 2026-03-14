@@ -4,6 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/Character.hpp"
+#include "../game/inventory/Gear.hpp"
 
 namespace
 {
