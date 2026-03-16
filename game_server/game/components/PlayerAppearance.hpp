@@ -12,10 +12,10 @@ class PlayerAppearance : public ActorAppearance
 {
 public:
     Sex  sex;
-    u32  faceId      = 0;
-    u32  hairStyleId = 0;
-    u32  hairColorId = 0;
-    u32  nameColor   = 0xffffff; // white
+    u32  faceId;
+    u32  hairStyleId;
+    u32  hairColorId;
+    u32  nameColor;
 
 public:
     explicit PlayerAppearance(Race race = Race::Human, Sex sex_ = Sex::Male);

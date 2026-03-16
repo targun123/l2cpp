@@ -9,6 +9,10 @@
 
 PlayerAppearance::PlayerAppearance(Race const race, Sex const sex_)
     : sex(sex_)
+    , faceId(0)
+    , hairStyleId(0)
+    , hairColorId(0)
+    , nameColor(0xffffff)
     , _race(race)
 {}
 
