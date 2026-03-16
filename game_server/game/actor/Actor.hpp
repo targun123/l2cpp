@@ -32,17 +32,19 @@ public:
     auto baseStats() const -> Stats const &;
     auto stats() const -> ComputedStats const &;
 
+    auto target() const -> OptionalRef<Actor const>;
     bool isInCombatStance() const;
 
 public:
     void setName(std::wstring name);
     void setTitle(std::wstring title);
-    void setPosition(Position position);
+    void setPosition(Position const & position);
     void setPosition(s32 x, s32 y, s32 z);
     void setPosX(s32 x);
     void setPosY(s32 y);
     void setPosZ(s32 z);
     void setTeam(Team team);
+    void setTarget(OptionalRef<Actor const>);
 
 private:
     struct ActorImpl;

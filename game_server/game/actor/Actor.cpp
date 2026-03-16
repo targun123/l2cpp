@@ -14,6 +14,8 @@ struct Actor::ActorImpl
 {
     Team team = Team::None;
     bool isInCombatStance = false;
+
+    OptionalRef<Actor const> target;
 };
 
 template class Pimpl<Actor::ActorImpl>;
@@ -63,12 +65,14 @@ auto Actor::team()     const -> Team              { return _impl->team;         
 auto Actor::baseStats()  const -> Stats         const & { return component<Stats>();         }
 auto Actor::stats()      const -> ComputedStats const & { return component<ComputedStats>(); }
 
+auto Actor::target() const -> OptionalRef<Actor const> { return _impl->target; }
+
 bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
 void Actor::setName (std::wstring name)  { component<ActorIdentity>().name  = std::move(name);  }
 void Actor::setTitle(std::wstring title) { component<ActorIdentity>().title = std::move(title); }
 
-void Actor::setPosition(Position const position)
+void Actor::setPosition(Position const & position)
 {
     component<Position>() = position;
 }
@@ -86,3 +90,5 @@ void Actor::setPosY(s32 const y) { component<Position>().y = y; }
 void Actor::setPosZ(s32 const z) { component<Position>().z = z; }
 
 void Actor::setTeam(Team const team) { _impl->team = team; }
+
+void Actor::setTarget(OptionalRef<Actor const> actor) { _impl->target = std::move(actor); }

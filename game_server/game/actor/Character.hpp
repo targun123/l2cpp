@@ -12,7 +12,6 @@
 #include <l2cpp/Typedefs.hpp>
 
 // C++ includes
-#include <optional>
 #include <vector>
 
 class Gear;
@@ -40,8 +39,6 @@ public:
     u16 evalAmount = 32, evalScore = 0;
 
     std::vector<u16> cubics;
-
-    std::optional<u32> targetId;
 
 public:
     auto appearance()       -> PlayerAppearance       &;

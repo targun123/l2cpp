@@ -14,7 +14,7 @@ namespace Network
         Authenticate                = 0x08,
         Move                        = 0x01,
         EnterWorld                  = 0x03,
-        TargetSelect                = 0x04,
+        ActionRequest               = 0x04,
         ConnectionClosing           = 0x09,
         CharacterCreate             = 0x0b,
         CharacterSelect             = 0x0d,

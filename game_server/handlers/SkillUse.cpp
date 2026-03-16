@@ -21,15 +21,15 @@ DEFINE_PACKET_HANDLER(SkillUse)
     Packet p(0x48);
     p
         << c.id()  // caster
-        << (c.targetId ? *c.targetId : c.id())  // target
+        << (c.target() ? c.target()->get().id() : c.id())
         << static_cast<u32>(skill->get().tmplate().id())
         << static_cast<u32>(skill->get().tmplate().level())
         << static_cast<u32>(skill->get().tmplate().castDuration().count())
-        << 1000  // reuse delay (in ms)
+        << 1000 // reuse delay (in ms)
         << c.position().x
         << c.position().y
         << c.position().z
-        << 0       // critical
+        << 0 // critical
         << c.position().x
         << c.position().y
         << c.position().z

@@ -9,6 +9,7 @@
 namespace Handler
 {
 #define HANDLER(name) void handle ## name(Player &);
+    HANDLER(ActionRequest)
     HANDLER(Authenticate)
     HANDLER(CharacterCancelDeletion)
     HANDLER(CharacterCreate)
@@ -33,13 +34,13 @@ namespace Handler
     HANDLER(SkillList)
     HANDLER(SkillUse)
     HANDLER(TargetClear)
-    HANDLER(TargetSelect)
 #undef HANDLER
 }
 
 std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHandlers
 {
 #define HANDLER(name) {std::to_underlying(Network::ClientOpCode::name), {&Handler::handle ## name, #name}}
+    HANDLER(ActionRequest),
     HANDLER(Authenticate),
     HANDLER(CharacterCancelDeletion),
     HANDLER(CharacterCreate),
@@ -64,6 +65,5 @@ std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHand
     HANDLER(SkillList),
     HANDLER(SkillUse),
     HANDLER(TargetClear),
-    HANDLER(TargetSelect),
 #undef HANDLER
 };
