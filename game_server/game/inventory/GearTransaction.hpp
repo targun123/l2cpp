@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include "Item.hpp"
+#include "../inventory/Item.hpp"
 
 #include <l2cpp/Typedefs.hpp>
 

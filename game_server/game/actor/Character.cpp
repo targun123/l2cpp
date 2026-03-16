@@ -54,6 +54,7 @@ Character::Character()
     infinitySpear.tmplate.id       = 6621;
     infinitySpear.tmplate.name     = "infinitySpear";
     infinitySpear.tmplate.category = ItemCategory::Weapon;
+    infinitySpear.tmplate.grade    = ItemGrade::S;
     infinitySpear.tmplate.bodyPart = GearSlot::Hands;
     item = _impl->inventory.add(std::move(infinitySpear));
     _impl->gear.equipItem(item.get());
@@ -62,6 +63,7 @@ Character::Character()
     infinityBlade.tmplate.id       = 6611;
     infinityBlade.tmplate.name     = "infinityBlade";
     infinityBlade.tmplate.category = ItemCategory::Weapon;
+    infinityBlade.tmplate.grade    = ItemGrade::S;
     infinityBlade.tmplate.bodyPart = GearSlot::RightHand;
     item = _impl->inventory.add(std::move(infinityBlade));
     _impl->gear.equipItem(item.get());
@@ -70,6 +72,7 @@ Character::Character()
     imperialCrusaderShield.tmplate.id       = 6377;
     imperialCrusaderShield.tmplate.name     = "imperialCrusaderShield";
     imperialCrusaderShield.tmplate.category = ItemCategory::Armor;
+    imperialCrusaderShield.tmplate.grade    = ItemGrade::S;
     imperialCrusaderShield.tmplate.bodyPart = GearSlot::LeftHand;
     item = _impl->inventory.add(std::move(imperialCrusaderShield));
     _impl->gear.equipItem(item.get());

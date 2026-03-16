@@ -14,21 +14,6 @@
 
 using namespace Network::Packet::Server;
 
-namespace
-{
-    u32 gearItemIdIfValid(Character const & c, GearSlot const s)
-    {
-        auto const item = c.gear().item(s);
-        return item ? item->get().id() : 0;
-    }
-
-    u32 gearItemTemplateIdIfValid(Character const & c, GearSlot const s)
-    {
-        auto const item = c.gear().item(s);
-        return item ? item->get().tmplate.id : 0;
-    }
-}
-
 CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     : Packet(0x04)
 {
@@ -60,38 +45,38 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.weight.current
         << c.weight.max
         << (c.gear().hasActiveWeapon() ? 20 : 40)
-        << gearItemIdIfValid(c, Underwear)
-        << gearItemIdIfValid(c, RightEar)
-        << gearItemIdIfValid(c, LeftEar)
-        << gearItemIdIfValid(c, Neck)
-        << gearItemIdIfValid(c, RightFinger)
-        << gearItemIdIfValid(c, LeftFinger)
-        << gearItemIdIfValid(c, Head)
-        << gearItemIdIfValid(c, RightHand)
-        << gearItemIdIfValid(c, LeftHand)
-        << gearItemIdIfValid(c, Gloves)
-        << gearItemIdIfValid(c, Chest)
-        << gearItemIdIfValid(c, Legs)
-        << gearItemIdIfValid(c, Feet)
-        << gearItemIdIfValid(c, Back)
-        << 0 // gearItemIdIfValid(c, LeftHand)
-        << gearItemIdIfValid(c, Hair)
-        << gearItemTemplateIdIfValid(c, Underwear)
-        << gearItemTemplateIdIfValid(c, RightEar)
-        << gearItemTemplateIdIfValid(c, LeftEar)
-        << gearItemTemplateIdIfValid(c, Neck)
-        << gearItemTemplateIdIfValid(c, LeftFinger)
-        << gearItemTemplateIdIfValid(c, RightFinger)
-        << gearItemTemplateIdIfValid(c, Head)
-        << gearItemTemplateIdIfValid(c, RightHand)
-        << gearItemTemplateIdIfValid(c, LeftHand)
-        << gearItemTemplateIdIfValid(c, Gloves)
-        << gearItemTemplateIdIfValid(c, Chest)
-        << gearItemTemplateIdIfValid(c, Legs)
-        << gearItemTemplateIdIfValid(c, Feet)
-        << gearItemTemplateIdIfValid(c, Back)
-        << 0 // gearItemTemplateIdIfValid(c, LeftHand)
-        << gearItemTemplateIdIfValid(c, Hair)
+        << c.gear().itemId(Underwear)
+        << c.gear().itemId(RightEar)
+        << c.gear().itemId(LeftEar)
+        << c.gear().itemId(Neck)
+        << c.gear().itemId(RightFinger)
+        << c.gear().itemId(LeftFinger)
+        << c.gear().itemId(Head)
+        << c.gear().itemId(RightHand)
+        << c.gear().itemId(LeftHand)
+        << c.gear().itemId(Gloves)
+        << c.gear().itemId(Chest)
+        << c.gear().itemId(Legs)
+        << c.gear().itemId(Feet)
+        << c.gear().itemId(Back)
+        << 0 // c.gear().itemId(LeftHand)
+        << c.gear().itemId(Hair)
+        << c.gear().itemTemplateId(Underwear)
+        << c.gear().itemTemplateId(RightEar)
+        << c.gear().itemTemplateId(LeftEar)
+        << c.gear().itemTemplateId(Neck)
+        << c.gear().itemTemplateId(LeftFinger)
+        << c.gear().itemTemplateId(RightFinger)
+        << c.gear().itemTemplateId(Head)
+        << c.gear().itemTemplateId(RightHand)
+        << c.gear().itemTemplateId(LeftHand)
+        << c.gear().itemTemplateId(Gloves)
+        << c.gear().itemTemplateId(Chest)
+        << c.gear().itemTemplateId(Legs)
+        << c.gear().itemTemplateId(Feet)
+        << c.gear().itemTemplateId(Back)
+        << 0 // c.gear().itemTemplateId(LeftHand)
+        << c.gear().itemTemplateId(Hair)
         << c.stats().pAtk
         << c.stats().pAtkSpeed
         << c.stats().pDef

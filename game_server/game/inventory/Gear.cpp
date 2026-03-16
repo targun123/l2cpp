@@ -4,8 +4,6 @@
 #include "Gear.hpp"
 
 // Project includes
-#include "GearTransaction.hpp"
-
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/details/Pimpl.hpp>
 
@@ -172,32 +170,23 @@ Gear::Gear(Gear &&) noexcept = default;
 Gear & Gear::operator=(Gear &&) noexcept = default;
 Gear::~Gear() = default;
 
-auto Gear::item(GearSlot const slot) -> OptionalRef<Item>
+auto Gear::item(GearSlot const slot)       -> OptionalRef<Item>       { return _impl->itemAt(slot); }
+auto Gear::item(GearSlot const slot) const -> OptionalRef<Item const> { return _impl->itemAt(slot); }
+
+auto Gear::itemId(GearSlot const slot) const -> u32
 {
-    return _impl->itemAt(slot);
+    auto const i = item(slot);
+    return i ? i->get().id() : 0;
 }
 
-auto Gear::item(GearSlot const slot) const -> OptionalRef<Item const>
+auto Gear::itemTemplateId(GearSlot const slot) const -> u32
 {
-    return _impl->itemAt(slot);
+    auto const i = item(slot);
+    return i ? i->get().tmplate.id : 0;
 }
 
-bool Gear::hasActiveWeapon() const
-{
-    return weapon().has_value();
-}
+bool Gear::hasActiveWeapon() const { return weapon().has_value(); }
+auto Gear::weapon() const -> OptionalRef<Item const> { return item(GearSlot::RightHand); }
 
-auto Gear::weapon() const -> OptionalRef<Item const>
-{
-    return item(GearSlot::RightHand);
-}
-
-auto Gear::equipItem(Item & item) -> GearTransaction
-{
-    return _impl->equipItem(item);
-}
-
-auto Gear::unequipItem(Item & item) -> GearTransaction
-{
-    return _impl->unequipItem(item);
-}
+auto Gear::equipItem(Item & item)   -> GearTransaction { return _impl->equipItem(item);   }
+auto Gear::unequipItem(Item & item) -> GearTransaction { return _impl->unequipItem(item); }

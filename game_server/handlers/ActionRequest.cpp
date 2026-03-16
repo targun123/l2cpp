@@ -5,6 +5,8 @@
 #include "_Common.hpp"
 #include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/constants/ItemGrade.hpp"
+#include "../game/inventory/Gear.hpp"
 
 DEFINE_PACKET_HANDLER(ActionRequest)
 {
@@ -34,18 +36,10 @@ DEFINE_PACKET_HANDLER(ActionRequest)
         player.connection().send(Packet(0x2b) << targetId);
         player.connection().send(Packet(0x2b) << character.id());
 
-        enum class ItemGrade
-        {
-            NoGrade = 0b0000'0000,
-            D       = 0b0000'0001,
-            C       = 0b0000'0010,
-            B       = 0b0000'0011,
-            A       = 0b0000'0100,
-            S       = 0b0000'0101,
-        };
-
-        // Attack once
-        u8 const flag = 0x10 | std::to_underlying(ItemGrade::S);
+        // Attack once, use soulshots if a weapon is equipped
+        auto flag = 0_u8;
+        if (auto const weapon = character.gear().weapon(); weapon)
+            flag |= 0x10 | std::to_underlying(weapon->get().tmplate.grade);
 
         Packet p(0x05);
         p
@@ -57,7 +51,7 @@ DEFINE_PACKET_HANDLER(ActionRequest)
             << character.position().x
             << character.position().y
             << character.position().z
-            << u16(0) // other hits
+            << u16(0) // other hits (e.g. dual fists)
             << character.target()->get().position().x
             << character.target()->get().position().y
             << character.target()->get().position().z
