@@ -3,7 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
 #include "../network/packets/server/ChatSayPacket.hpp"
 
 using Network::Packet::Server::ChatSayPacket;
@@ -24,7 +24,7 @@ DEFINE_PACKET_HANDLER(ChatSay)
 
     auto const & c = player.currentCharacter()->get();
     if (recipient.empty())
-        player.connection().send(ChatSayPacket(c.id(), c.name, type, msg));
+        player.connection().send(ChatSayPacket(c.id(), c.name(), type, msg));
     else
         player.connection().send(ChatSayPacket(c.id(), L"->" + recipient, type, msg));
 }

@@ -3,7 +3,8 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
+#include "../game/components/PlayerAppearance.hpp"
 
 DECLARE_PACKET_HANDLER(CharacterList)
 
@@ -11,11 +12,15 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
+    std::wstring name;
+    Race race;
+    Sex sex;
+
     auto & c = player.addCharacter();
     reader
-        >> c.name
-        >> c.raceId
-        >> c.sex
+        >> name
+        >> race
+        >> sex
         >> c.classId
         >> c.baseStats.INT
         >> c.baseStats.STR
@@ -23,11 +28,14 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
         >> c.baseStats.MEN
         >> c.baseStats.DEX
         >> c.baseStats.WIT
-        >> c.hairStyleId
-        >> c.hairColorId
-        >> c.faceId
+        >> c.appearance().hairStyleId
+        >> c.appearance().hairColorId
+        >> c.appearance().faceId
     ;
 
+    c.setName(std::move(name));
+    c.appearance().setRace(race);
+    c.appearance().sex = sex;
     c.selected = 1;
     player.connection().send(Packet(0x19) << 1);
     handleCharacterList(player);

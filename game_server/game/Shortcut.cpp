@@ -17,10 +17,10 @@ namespace Constants
 
 struct Shortcut::ShortcutImpl
 {
-    Type       type  = Type::None;
-    u32        index = Constants::maxShortcuts;
-    u32        id    = 0;
-    SkillLevel level = 0;
+    ShortcutType type  = ShortcutType::None;
+    u32          index = Constants::maxShortcuts;
+    u32          id    = 0;
+    SkillLevel   level = 0;
 };
 
 template class Pimpl<Shortcut::ShortcutImpl>;
@@ -42,7 +42,7 @@ auto Shortcut::index() const -> std::optional<size_t>
     return idx;
 }
 
-auto Shortcut::type() const -> Type
+auto Shortcut::type() const -> ShortcutType
 {
     return _impl->type;
 }
@@ -67,7 +67,7 @@ l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader & r, Shor
     Shortcut::ShortcutImpl tmp;
     r >> tmp.type >> tmp.index >> tmp.id /* >> u32(1) ?? */;
 
-    L2CPP_B_ASSERT(l2cpp::utils::isInContiguousRange(tmp.type, Shortcut::Type::None, Shortcut::Type::Count),
+    L2CPP_B_ASSERT(l2cpp::Utils::Enum::isInContiguousRange(tmp.type, ShortcutType::None, ShortcutType::Count),
                    "Attempt to add a shortcut with invalid type {}", std::to_underlying(tmp.type));
     L2CPP_B_ASSERT(tmp.index < Constants::maxShortcuts,
                    "Attempt to add a shortcut at invalid index {}", tmp.index);
@@ -80,8 +80,8 @@ l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, Shortcut const &
 {
     p << s._impl->type << s._impl->index << s._impl->id;
 
-    /**/ if (s._impl->type == Shortcut::Type::Skill) p << static_cast<u32>(s._impl->level);
-    else if (s._impl->type == Shortcut::Type::Item)  p << 1; // quantity?
+    /**/ if (s._impl->type == ShortcutType::Skill) p << static_cast<u32>(s._impl->level);
+    else if (s._impl->type == ShortcutType::Item)  p << 1; // quantity?
 
     return p;
 }

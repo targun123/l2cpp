@@ -3,7 +3,8 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
+#include "../game/components/PlayerAppearance.hpp"
 
 DEFINE_PACKET_HANDLER(MoveUpdate)
 {
@@ -11,8 +12,9 @@ DEFINE_PACKET_HANDLER(MoveUpdate)
 
     auto & c = player.currentCharacter()->get();
 
-    // s32 x, y;
-    reader >> c.pos.x >> c.pos.y >> c.pos.z >> c.headAngle;
+    s32 x, y, z;
+    reader >> x >> y >> z >> c.appearance().headAngle;
+    c.setPosition(x, y, z);
 
     // if (player.actions().empty())
     // {
@@ -37,7 +39,7 @@ DEFINE_PACKET_HANDLER(MoveUpdate)
     // if ((move.currentDistance/* += distanceCovered*/) >= move.totalDistance) // Reached destination
     // {
     //     Packet p(0x61);
-    //     p << c.id() << x << y << c.pos.z << c.headAngle;
+    //     p << c.id() << x << y << c.position().z << c.appearance().headAngle;
     //     player.connection().send(p);
     // }
 }

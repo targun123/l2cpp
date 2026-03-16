@@ -3,7 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
 #include "../game/Shortcut.hpp"
 
 DEFINE_PACKET_HANDLER(ShortcutBarRemove)

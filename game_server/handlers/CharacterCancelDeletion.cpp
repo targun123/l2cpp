@@ -3,7 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
 
 DECLARE_PACKET_HANDLER(CharacterList)
 

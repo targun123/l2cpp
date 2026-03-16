@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
 #include "_Common.hpp"
 
 // Third-party includes
@@ -95,9 +95,9 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
             << 42 // GameObjectId
             << 1'000'001 // display ID
             << 1 // attackable
-            << c.pos.x
-            << c.pos.y
-            << c.pos.z
+            << c.position().x
+            << c.position().y
+            << c.position().z
             << 0 // head angle
             << 0 // ?
             << 100 // castSpeed

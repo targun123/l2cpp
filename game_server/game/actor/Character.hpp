@@ -4,44 +4,33 @@
 #pragma once
 
 // Project includes
-#include "GameObject.hpp"
+#include "Actor.hpp"
+#include "../Gauge.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
 
 // C++ includes
 #include <optional>
-#include <string>
 #include <vector>
-
-template<typename T>
-struct Gauge
-{
-    T current{};
-    T max{current};
-};
 
 class Gear;
 class ItemStorage;
+class PlayerAppearance;
 class Shortcut;
 class SkillDirectory;
 
-class Character : public GameObject
+class Character : public Actor
 {
 public:
     Character();
-    ~Character() override;
-
     Character(Character &&) noexcept;
     Character & operator=(Character &&) noexcept;
+    ~Character() override;
 
 public:
     u32 accessLevel = 1;
-    std::wstring name = L"test", title = L"{l2cpp}";
-    u32 raceId = 0;
-    enum class Sex : u32 { Male, Female } sex = Sex::Male;
     u32 classId = 0;
-    s32 headAngle = 0;
     u32 active = 1;
     Gauge<double> cp{500};
     Gauge<double> hp{500};
@@ -53,9 +42,6 @@ public:
     u32 karma = 0;
     u32 pkCount = 0;
     u32 pvpCount = 0;
-    u32 hairStyleId = 0;
-    u32 hairColorId = 0;
-    u32 faceId = 0;
     u32 deleteTime = 0;
     u32 selected = 1;
     u8 enchantEffect = 0;
@@ -64,24 +50,13 @@ public:
     u32 clanId = 0;
     u16 evalAmount = 32, evalScore = 0;
     u16 inventoryLimit = 1000;
-    u32 nameColor = 0xFFFFFF; // RGB
     bool isPvpFlagged = false;
     bool isHero = false;
     bool isNoble = false;
 
-    double collisionRadius = 9;
-    double collisionHeight = 23.5;
-
     std::vector<u16> cubics;
 
     std::optional<u32> targetId;
-
-    enum class Team : u8 { None, Blue, Red } team = Team::None;
-
-    struct Position
-    {
-        s32 x = -83968, y = 244634, z = -3500;
-    } pos;
 
     struct Stats
     {
@@ -103,6 +78,9 @@ public:
     } baseStats, finalStats;
 
 public:
+    auto appearance()       -> PlayerAppearance       &;
+    auto appearance() const -> PlayerAppearance const &;
+
     auto inventory()       -> ItemStorage       &;
     auto inventory() const -> ItemStorage const &;
 

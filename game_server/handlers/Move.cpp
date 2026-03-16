@@ -3,13 +3,13 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
 
 // Taken from Ruk33
 // ================
-// float const distanceX = targetX - c.pos.x;
-// float const distanceY = targetY - c.pos.y;
-// float const distanceZ = targetZ - c.pos.z;
+// float const distanceX = targetX - c.position().x;
+// float const distanceY = targetY - c.position().y;
+// float const distanceZ = targetZ - c.position().z;
 //
 // float const distance = sqrt(distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ);
 // float const speed    = c.baseStats.runSpeed;
@@ -23,8 +23,8 @@
 // auto const xSpeedTicks = cos * speed / ticksPerSecond;
 // auto const ySpeedTicks = sin * speed / ticksPerSecond;
 //
-// targetX = c.pos.x + static_cast<s32>(distance * cos);
-// targetY = c.pos.y + static_cast<s32>(distance * sin);
+// targetX = c.position().x + static_cast<s32>(distance * cos);
+// targetY = c.position().y + static_cast<s32>(distance * sin);
 
 DEFINE_PACKET_HANDLER(Move)
 {
@@ -42,12 +42,10 @@ DEFINE_PACKET_HANDLER(Move)
     //              (action.input == MoveAction::Input::Mouse ? "mouse" : "keyboard"));
     //
     auto & c = player.currentCharacter()->get();
-    c.pos.x = action.originX;
-    c.pos.y = action.originY;
-    c.pos.z = action.originZ;
-    // float const distanceX = action.targetX - c.pos.x;
-    // float const distanceY = action.targetY - c.pos.y;
-    // float const distanceZ = action.targetZ - c.pos.z;
+    c.setPosition(action.originX, action.originY, action.originZ);
+    // float const distanceX = action.targetX - c.position().x;
+    // float const distanceY = action.targetY - c.position().y;
+    // float const distanceZ = action.targetZ - c.position().z;
     // action.totalDistance = std::sqrt(distanceX * distanceX + distanceY * distanceY/* + distanceZ * distanceZ*/);
     //
     // float const distanceCoveredInOneMs = c.finalStats.runSpeed / 1000.f;
@@ -59,9 +57,10 @@ DEFINE_PACKET_HANDLER(Move)
     // player.setNextAction<MoveAction>(action);
 
     Packet p(0x01); // Make character start moving, position will be validated in MoveUpdate handler
-    p << c.id()
-      << action.targetX << action.targetY << action.targetZ
-      << c.pos.x        << c.pos.y        << c.pos.z
+    p
+        << c.id()
+        << action.targetX << action.targetY << action.targetZ
+        << c.position().x << c.position().y << c.position().z
     ;
     player.connection().send(p);
 }

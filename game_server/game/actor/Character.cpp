@@ -4,18 +4,19 @@
 #include "Character.hpp"
 
 // Project includes
-#include "Shortcut.hpp"
-#include "inventory/Gear.hpp"
-#include "inventory/ItemStorage.hpp"
-#include "skill/SkillDirectory.hpp"
-#include "skill/SkillTemplateDirectory.hpp"
+#include "../Shortcut.hpp"
+#include "../components/PlayerAppearance.hpp"
+#include "../inventory/Gear.hpp"
+#include "../inventory/ItemStorage.hpp"
+#include "../skill/SkillDirectory.hpp"
+#include "../skill/SkillTemplateDirectory.hpp"
 
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/details/Pimpl.hpp>
+#include <l2cpp/utils/Enum.hpp>
 
 // C++ includes
 #include <array>
-#include <ranges>
 
 struct Character::CharacterImpl
 {
@@ -31,6 +32,13 @@ template class Pimpl<Character::CharacterImpl>;
 
 Character::Character()
 {
+    setPosition(-83968, 244634, -3500); // Talking Island GK
+    auto & appearance = component<PlayerAppearance>();
+    appearance.collisionHeight = 23.5; // Male human
+    appearance.collisionRadius = 9;    // Male human
+
+    addComponent<PlayerAppearance>();
+
     Item formalWear;
     formalWear.tmplate.id       = 6408;
     formalWear.tmplate.name     = "formalWear";
@@ -69,10 +77,12 @@ Character::Character()
     _impl->skills.learn(1239, 1); // Hurricane
 }
 
-Character::~Character() = default;
-
 Character::Character(Character &&) noexcept = default;
 Character & Character::operator=(Character &&) noexcept = default;
+Character::~Character() = default;
+
+auto Character::appearance()       -> PlayerAppearance       & { return component<PlayerAppearance>(); }
+auto Character::appearance() const -> PlayerAppearance const & { return component<PlayerAppearance>(); }
 
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
 auto Character::inventory() const -> ItemStorage const & { return _impl->inventory; }
@@ -95,7 +105,7 @@ auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
     L2CPP_B_ASSERT(shortcut.index(), "Cannot set a shortcut whose index ({}) is invalid", *shortcut.index());
     auto const index = *shortcut.index();
 
-    if (shortcut.type() == Shortcut::Type::Skill)
+    if (shortcut.type() == ShortcutType::Skill)
     {
         if (auto const skill = _impl->skills.skill(static_cast<SkillId>(shortcut.targetId())); skill)
             shortcut.setSkillLevel(skill->get().tmplate().level());

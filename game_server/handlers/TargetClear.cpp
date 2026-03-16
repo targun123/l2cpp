@@ -3,7 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
 
 DEFINE_PACKET_HANDLER(TargetClear)
 {
@@ -11,5 +11,5 @@ DEFINE_PACKET_HANDLER(TargetClear)
 
     auto & c = player.currentCharacter()->get();
     c.targetId.reset();
-    player.connection().send(Packet(0x2a) << c.id() << c.pos.x << c.pos.y << c.pos.z);
+    player.connection().send(Packet(0x2a) << c.id() << c.position().x << c.position().y << c.position().z);
 }

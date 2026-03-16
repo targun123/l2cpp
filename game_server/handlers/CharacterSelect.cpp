@@ -3,7 +3,8 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
+#include "../game/components/PlayerAppearance.hpp"
 
 DEFINE_PACKET_HANDLER(CharacterSelect)
 {
@@ -19,22 +20,22 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
     }
 
     player.setCurrentCharacter(index);
-    auto & c = player.currentCharacter()->get();
+    auto const & c = player.currentCharacter()->get();
     Packet p(0x15);
     p
-        << c.name
+        << c.name()
         << c.id()
-        << c.title
+        << c.title()
         << player.playOk1()
         << c.clanId
         << 0 // unknown
-        << c.sex
-        << c.raceId
+        << c.appearance().sex
+        << c.appearance().race()
         << c.classId
         << c.active
-        << c.pos.x
-        << c.pos.y
-        << c.pos.z
+        << c.position().x
+        << c.position().y
+        << c.position().z
         << c.hp.current
         << c.mp.current
         << c.sp

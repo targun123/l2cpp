@@ -3,7 +3,8 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
+#include "../game/components/PlayerAppearance.hpp"
 #include "../game/inventory/Gear.hpp"
 
 namespace
@@ -12,13 +13,13 @@ namespace
     {
         auto const item = c.gear().item(s);
         return item ? item->get().id() : 0;
-    };
+    }
 
     u32 gearItemTemplateIdIfValid(Character const & c, GearSlot const s)
     {
         auto const item = c.gear().item(s);
         return item ? item->get().tmplate.id : 0;
-    };
+    }
 }
 
 DEFINE_PACKET_HANDLER(CharacterList)
@@ -30,19 +31,19 @@ DEFINE_PACKET_HANDLER(CharacterList)
     for (auto const & c : player.characters())
     {
         p
-            << c.name
+            << c.name()
             << c.id()
             << player.accountName()
             << player.playOk1()
             << c.clanId
             << 0
-            << c.sex
-            << c.raceId
+            << c.appearance().sex
+            << c.appearance().race()
             << c.classId
             << 1 // active
-            << c.pos.x
-            << c.pos.y
-            << c.pos.z
+            << c.position().x
+            << c.position().y
+            << c.position().z
             << c.hp.current
             << c.mp.current
             << c.sp
@@ -82,9 +83,9 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << gearItemTemplateIdIfValid(c, Back)
             << 0 // gearItemTemplateIdIfValid(c, LeftHand)
             << gearItemTemplateIdIfValid(c, Hair)
-            << c.hairStyleId
-            << c.hairColorId
-            << c.faceId
+            << c.appearance().hairStyleId
+            << c.appearance().hairColorId
+            << c.appearance().faceId
             << c.hp.max
             << c.mp.max
             << c.deleteTime

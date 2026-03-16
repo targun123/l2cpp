@@ -5,7 +5,7 @@
 #pragma once
 
 // Project includes
-#include "../../../game/ChatType.hpp"
+#include "../../../game/constants/ChatType.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 

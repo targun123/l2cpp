@@ -4,7 +4,7 @@
 #include "Player.hpp"
 
 // Project includes
-#include "game/Character.hpp"
+#include "game/actor/Character.hpp"
 #include "network/Connection.hpp"
 
 #include <l2cpp/Exception.hpp>

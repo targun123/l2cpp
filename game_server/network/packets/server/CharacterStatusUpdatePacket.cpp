@@ -4,7 +4,8 @@
 #include "CharacterStatusUpdatePacket.hpp"
 
 // Project includes
-#include "../../../game/Character.hpp"
+#include "../../../game/actor/Character.hpp"
+#include "../../../game/components/PlayerAppearance.hpp"
 #include "../../../game/inventory/Gear.hpp"
 
 using namespace Network::Packet::Server;
@@ -15,13 +16,13 @@ namespace
     {
         auto const item = c.gear().item(s);
         return item ? item->get().id() : 0;
-    };
+    }
 
     u32 gearItemTemplateIdIfValid(Character const & c, GearSlot const s)
     {
         auto const item = c.gear().item(s);
         return item ? item->get().tmplate.id : 0;
-    };
+    }
 }
 
 CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
@@ -30,14 +31,14 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     using enum GearSlot;
 
     *this
-        << c.pos.x
-        << c.pos.y
-        << c.pos.z
-        << c.headAngle
+        << c.position().x
+        << c.position().y
+        << c.position().z
+        << c.appearance().headAngle
         << c.id()
-        << c.name
-        << c.raceId
-        << c.sex
+        << c.name()
+        << c.appearance().race()
+        << c.appearance().sex
         << c.classId
         << c.level
         << c.xp
@@ -109,13 +110,13 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.baseStats.flyWalkSpeed
         << c.finalStats.moveSpeedMutliplier
         << c.finalStats.pAtkSpeedMutliplier
-        << c.collisionRadius
-        << c.collisionHeight
-        << c.hairStyleId
-        << c.hairColorId
-        << c.faceId
+        << c.appearance().collisionRadius
+        << c.appearance().collisionHeight
+        << c.appearance().hairStyleId
+        << c.appearance().hairColorId
+        << c.appearance().faceId
         << (c.accessLevel > 0 ? 1 : 0)
-        << c.title
+        << c.title()
         << c.clanId
         << 0 // crest id
         << 0 // ally id
@@ -129,7 +130,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     ;
 
     *this << static_cast<u16>(c.cubics.size());
-    for (auto id : c.cubics)
+    for (auto const id : c.cubics)
         *this << id;
 
     *this
@@ -158,7 +159,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     *this << (weapon ? weapon->get().enchantLevel : 0_u8);
 
     *this
-        << c.team
+        << c.team()
         << 0 // clan crest large id
         << c.isNoble // noble symbol in status window
         << c.isHero  // hero aura
@@ -166,6 +167,6 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z
-        << c.nameColor
+        << c.appearance().nameColor
     ;
 }

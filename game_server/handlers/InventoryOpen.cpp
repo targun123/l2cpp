@@ -5,7 +5,7 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
 #include "../network/packets/server/inventory/InventoryListPacket.hpp"
 
 DEFINE_PACKET_HANDLER(InventoryOpen)

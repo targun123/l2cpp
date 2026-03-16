@@ -5,7 +5,7 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../game/Character.hpp"
+#include "../game/actor/Character.hpp"
 #include "../game/inventory/Gear.hpp"
 #include "../game/inventory/ItemStorage.hpp"
 #include "../network/packets/server/CharacterStatusUpdatePacket.hpp"

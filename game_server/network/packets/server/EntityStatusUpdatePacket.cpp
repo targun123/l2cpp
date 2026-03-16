@@ -4,8 +4,9 @@
 #include "EntityStatusUpdatePacket.hpp"
 
 // Project includes
-#include "../../../game/Character.hpp"
+#include "../../../game/actor/Character.hpp"
 #include "../../../game/inventory/Gear.hpp"
+#include "../../../game/components/PlayerAppearance.hpp"
 
 using namespace Network::Packet::Server;
 
@@ -13,14 +14,14 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
     : Packet(0x03)
 {
     *this
-        << c.pos.x
-        << c.pos.y
-        << c.pos.z
+        << c.position().x
+        << c.position().y
+        << c.position().z
         << 0 // vehicleId
         << c.id()
-        << c.name
-        << c.raceId
-        << c.sex
+        << c.name()
+        << c.appearance().race()
+        << c.appearance().sex
         << c.classId
         << 0 // separator?
     ;
@@ -45,12 +46,12 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << c.baseStats.flyWalkSpeed
         << c.finalStats.moveSpeedMutliplier
         << c.finalStats.pAtkSpeedMutliplier
-        << c.collisionRadius
-        << c.collisionHeight
-        << c.hairStyleId
-        << c.hairColorId
-        << c.faceId
-        << c.title
+        << c.appearance().collisionRadius
+        << c.appearance().collisionHeight
+        << c.appearance().hairStyleId
+        << c.appearance().hairColorId
+        << c.appearance().faceId
+        << c.title()
         << c.clanId
         << 0     // clan crest id
         << 0     // alliance id
@@ -78,7 +79,7 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << static_cast<u32>(c.cp.max)
         << static_cast<u32>(c.cp.current)
         << false // mounted
-        << c.team
+        << c.team()
         << 0 // clan large crest id
         << c.isNoble
         << c.isHero
@@ -86,6 +87,6 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z
-        << c.nameColor
+        << c.appearance().nameColor
     ;
 }

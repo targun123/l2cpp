@@ -4,6 +4,8 @@
 #pragma once
 
 // Project includes
+#include "constants/ShortcutType.hpp"
+
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Serialization.hpp>
@@ -18,9 +20,6 @@ class Shortcut
     DECLARE_PACKET_SERIALIZATION_OPERATORS(Shortcut);
 
 public:
-    enum class Type : u32 { None, Item, Skill, Action, Macro, Recipe, Count };
-
-public:
     Shortcut();
     Shortcut(Shortcut &&) noexcept;
     Shortcut & operator=(Shortcut &&) noexcept;
@@ -28,7 +27,7 @@ public:
 
 public:
     auto index()      const -> std::optional<size_t>;
-    auto type()       const -> Type;
+    auto type()       const -> ShortcutType;
     auto targetId()   const -> u32;
     auto skillLevel() const -> SkillLevel;
 
