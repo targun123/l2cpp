@@ -7,9 +7,9 @@
 #include "../game/actor/Character.hpp"
 #include "../game/actor/Monster.hpp"
 #include "../game/components/NpcAppearance.hpp"
-#include "../game/components/Stats.hpp"
 #include "../game/skill/SkillDirectory.hpp"
 #include "../network/packets/server/SkillListPacket.hpp"
+#include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
 #include "../utils/Conversion.hpp"
 #include "_Common.hpp"
 
@@ -40,7 +40,7 @@ static std::wstring readWholeFile(std::string_view path)
         constexpr auto fmt = R"(
 <html>
   <body>
-    <font color="BF0000">Failed to open path "</font><font color="C4945A">{}</font><font color="BF0000">".</font>
+    <font color="BF0000">Failed to open "</font><font color="LEVEL">{}</font><font color="BF0000">".</font>
   </body>
 </html>
 )";
@@ -102,55 +102,7 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         appearance.collisionHeight = 15;
         appearance.collisionRadius = 10;
 
-        Packet p(0x16); // NpcInfo
-        p
-            << gremlin.id()
-            << appearance.id()
-            << (gremlin.isAttackable() ? 1 : 0)
-            << gremlin.position().x
-            << gremlin.position().y
-            << gremlin.position().z
-            << appearance.headAngle
-            << 0 // ?
-            << gremlin.stats().mAtkSpeed
-            << gremlin.stats().pAtkSpeed
-            << gremlin.stats().runSpeed
-            << gremlin.stats().walkSpeed
-            << gremlin.stats().swimRunSpeed
-            << gremlin.stats().swimWalkSpeed
-            << gremlin.stats().flyRunSpeed
-            << gremlin.stats().flyWalkSpeed
-            << gremlin.stats().flyRunSpeed
-            << gremlin.stats().flyWalkSpeed
-            << gremlin.stats().moveSpeedMutliplier
-            << gremlin.stats().pAtkSpeedMutliplier
-            << appearance.collisionRadius
-            << appearance.collisionHeight
-            << 0 // right hand
-            << 0 // chest
-            << 0 // left hand
-            << true // name above char
-            << true // isRunning
-            << false // isInCombat
-            << false // is like dead
-            << false // isSummonned
-            << gremlin.name()
-            << gremlin.title()
-            << appearance.titleColor()
-            << 0 // not pvp flagged
-            << 0 // no karma
-            << 0 // no visual effect
-            << 0 // no clan
-            << 0 // no clan crest
-            << 0 // no ally
-            << 0 // no ally crest
-            << false // not in water nor flying
-            << gremlin.team()
-            << appearance.collisionRadius
-            << appearance.collisionHeight
-            << 0 // weapon enchant level
-        ;
-        player.connection().send(p);
+        player.connection().send(NpcStatusUpdatePacket(gremlin));
     }
     else if (text.starts_with(L"learn "))
     {

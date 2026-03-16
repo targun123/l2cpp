@@ -18,7 +18,7 @@ public:
     ~Monster() override;
 
 public:
-    bool isAttackable() override;
+    bool isAttackable() const override;
 
 private:
     struct MonsterActorImpl;

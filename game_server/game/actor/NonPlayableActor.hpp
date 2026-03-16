@@ -15,7 +15,7 @@ public:
 
 public:
     auto appearance() const -> NpcAppearance const &;
-    virtual bool isAttackable() = 0;
+    virtual bool isAttackable() const = 0;
 
 public:
 

@@ -20,7 +20,7 @@ Monster::Monster(Monster &&) noexcept = default;
 Monster & Monster::operator=(Monster &&) noexcept = default;
 Monster::~Monster() = default;
 
-bool Monster::isAttackable()
+bool Monster::isAttackable() const
 {
     return true;
 }
