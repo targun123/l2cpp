@@ -6,13 +6,15 @@
 // Project includes
 #include "Actor.hpp"
 
+class NpcAppearance;
+
 class NonPlayableActor : public Actor
 {
 public:
     NonPlayableActor();
 
 public:
-    auto appearance() -> u32;
+    auto appearance() const -> NpcAppearance const &;
     virtual bool isAttackable() = 0;
 
 public:

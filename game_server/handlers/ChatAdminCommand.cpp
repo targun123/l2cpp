@@ -5,6 +5,12 @@
 
 // Project includes
 #include "../game/actor/Character.hpp"
+#include "../game/actor/Monster.hpp"
+#include "../game/components/NpcAppearance.hpp"
+#include "../game/components/Stats.hpp"
+#include "../game/skill/SkillDirectory.hpp"
+#include "../network/packets/server/SkillListPacket.hpp"
+#include "../utils/Conversion.hpp"
 #include "_Common.hpp"
 
 // Third-party includes
@@ -15,10 +21,6 @@
 #include <format>
 #include <fstream>
 #include <string_view>
-
-#include "../game/skill/SkillDirectory.hpp"
-#include "../network/packets/server/SkillListPacket.hpp"
-#include "../utils/Conversion.hpp"
 
 using namespace std::string_view_literals;
 
@@ -90,30 +92,40 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
             </collision>
         */
 
+        Monster gremlin;
+        gremlin.setName(L"Gremlin");
+        gremlin.setTitle(L"yamete kudasai");
+        gremlin.setPosition(c.position());
+
+        auto & appearance = gremlin.component<NpcAppearance>();
+        appearance.setId(1);
+        appearance.collisionHeight = 15;
+        appearance.collisionRadius = 10;
+
         Packet p(0x16); // NpcInfo
         p
-            << 42 // GameObjectId
-            << 1'000'001 // display ID
-            << 1 // attackable
-            << c.position().x
-            << c.position().y
-            << c.position().z
-            << 0 // head angle
+            << gremlin.id()
+            << appearance.id()
+            << (gremlin.isAttackable() ? 1 : 0)
+            << gremlin.position().x
+            << gremlin.position().y
+            << gremlin.position().z
+            << appearance.headAngle
             << 0 // ?
-            << 100 // castSpeed
-            << 100 // pAtkSpeed
-            << 50  // runSpeed
-            << 20  // walkSpeed
-            << 50  // swim runSpeed
-            << 20  // swim walkSpeed
-            << 50  // fly runSpeed
-            << 20  // fly walkSpeed
-            << 50  // fly runSpeed
-            << 20  // fly walkSpeed
-            << 1.0 // move multiplier
-            << 1.0 // atkSpeed multiplier
-            << 10. // collision radius
-            << 15. // collision height
+            << gremlin.stats().mAtkSpeed
+            << gremlin.stats().pAtkSpeed
+            << gremlin.stats().runSpeed
+            << gremlin.stats().walkSpeed
+            << gremlin.stats().swimRunSpeed
+            << gremlin.stats().swimWalkSpeed
+            << gremlin.stats().flyRunSpeed
+            << gremlin.stats().flyWalkSpeed
+            << gremlin.stats().flyRunSpeed
+            << gremlin.stats().flyWalkSpeed
+            << gremlin.stats().moveSpeedMutliplier
+            << gremlin.stats().pAtkSpeedMutliplier
+            << appearance.collisionRadius
+            << appearance.collisionHeight
             << 0 // right hand
             << 0 // chest
             << 0 // left hand
@@ -122,9 +134,9 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
             << false // isInCombat
             << false // is like dead
             << false // isSummonned
-            << L"Gremlin" // name
-            << L"lv. 1" // title
-            << 0 // title color 0=default
+            << gremlin.name()
+            << gremlin.title()
+            << appearance.titleColor()
             << 0 // not pvp flagged
             << 0 // no karma
             << 0 // no visual effect
@@ -133,9 +145,9 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
             << 0 // no ally
             << 0 // no ally crest
             << false // not in water nor flying
-            << u16(0) // no team
-            << 10. // collision radius
-            << 15. // collision height
+            << gremlin.team()
+            << appearance.collisionRadius
+            << appearance.collisionHeight
             << 0 // weapon enchant level
         ;
         player.connection().send(p);

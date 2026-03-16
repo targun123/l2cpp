@@ -4,10 +4,10 @@
 #include "EntityStatusUpdatePacket.hpp"
 
 // Project includes
-#include "../../../game/actor/Character.hpp"
-#include "../../../game/inventory/Gear.hpp"
-#include "../../../game/components/Stats.hpp"
-#include "../../../game/components/PlayerAppearance.hpp"
+#include "../../../../game/actor/Character.hpp"
+#include "../../../../game/inventory/Gear.hpp"
+#include "../../../../game/components/Stats.hpp"
+#include "../../../../game/components/PlayerAppearance.hpp"
 
 using namespace Network::Packet::Server;
 

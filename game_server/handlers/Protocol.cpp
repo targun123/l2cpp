@@ -3,7 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
-#include "../network/packets/server/ProtocolHandshakePacket.hpp"
+#include "../network/packets/server/auth/ProtocolHandshakePacket.hpp"
 
 using namespace Network::Packet::Server;
 

@@ -35,6 +35,7 @@ public:
 public:
     void setName(std::wstring name);
     void setTitle(std::wstring title);
+    void setPosition(Position position);
     void setPosition(s32 x, s32 y, s32 z);
     void setPosX(s32 x);
     void setPosY(s32 y);

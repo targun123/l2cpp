@@ -65,6 +65,11 @@ auto Actor::stats()      const -> ComputedStats const & { return component<Compu
 void Actor::setName (std::wstring name)  { component<ActorIdentity>().name  = std::move(name);  }
 void Actor::setTitle(std::wstring title) { component<ActorIdentity>().title = std::move(title); }
 
+void Actor::setPosition(Position const position)
+{
+    component<Position>() = position;
+}
+
 void Actor::setPosition(s32 const x, s32 const y, s32 const z)
 {
     auto & pos = component<Position>();

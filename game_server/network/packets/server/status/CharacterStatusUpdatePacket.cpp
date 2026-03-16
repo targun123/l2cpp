@@ -6,11 +6,11 @@
 // Project includes
 #include <spdlog/spdlog.h>
 
-#include "../../../game/actor/Character.hpp"
-#include "../../../game/components/Stats.hpp"
-#include "../../../game/components/PlayerAppearance.hpp"
-#include "../../../game/inventory/Gear.hpp"
-#include "../../../game/inventory/ItemStorage.hpp"
+#include "../../../../game/actor/Character.hpp"
+#include "../../../../game/components/Stats.hpp"
+#include "../../../../game/components/PlayerAppearance.hpp"
+#include "../../../../game/inventory/Gear.hpp"
+#include "../../../../game/inventory/ItemStorage.hpp"
 
 using namespace Network::Packet::Server;
 
