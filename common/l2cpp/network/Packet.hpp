@@ -101,8 +101,8 @@ struct l2cpp::Network::HeaderOnlyPacket : public Packet
     {}
 };
 
-template<typename T>
-l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet && p, T && t)
+template<typename T> requires std::is_class_v<T>
+l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet && p, T const & t)
 {
-    return static_cast<l2cpp::Network::Packet &>(p) << static_cast<T const &>(t);
+    return p << t;
 }
