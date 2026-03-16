@@ -30,6 +30,7 @@ catch (l2cpp::Exception const & e)
     SPDLOG_CRITICAL("Caught top-level exception:\n{}", l2cpp::formatExceptionStack(e));
     return EXIT_FAILURE;
 }
+#ifdef NDEBUG
 catch (std::exception const & e)
 {
     SPDLOG_CRITICAL("Caught top-level exception:\n{}", l2cpp::formatExceptionStack(e));
@@ -40,3 +41,4 @@ catch (...)
     SPDLOG_CRITICAL("Unexpected top-level exception caught, terminating");
     return EXIT_FAILURE;
 }
+#endif
