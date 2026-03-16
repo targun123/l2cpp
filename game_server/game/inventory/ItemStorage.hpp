@@ -24,6 +24,7 @@ public:
     auto item(GameObjectId uid)       -> OptionalRef<Item>;
     auto item(GameObjectId uid) const -> OptionalRef<Item const>;
     auto items() const -> std::vector<Ref<Item const>>;
+    auto limit() const -> u16;
 
 public:
     auto add(Item && item) -> Item &;

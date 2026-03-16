@@ -7,6 +7,7 @@
 #include "../../../game/actor/Character.hpp"
 #include "../../../game/components/PlayerAppearance.hpp"
 #include "../../../game/inventory/Gear.hpp"
+#include "../../../game/inventory/ItemStorage.hpp"
 
 using namespace Network::Packet::Server;
 
@@ -148,7 +149,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.evalAmount
         << c.evalScore
         << 0 // ?
-        << c.inventoryLimit
+        << c.inventory().limit()
         << c.profession()
         << 0 // special effects? circles around player...
         << static_cast<u32>(c.cp.max)

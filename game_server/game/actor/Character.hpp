@@ -49,7 +49,6 @@ public:
     u32 transformationId = 0;
     u32 clanId = 0;
     u16 evalAmount = 32, evalScore = 0;
-    u16 inventoryLimit = 1000;
     bool isPvpFlagged = false;
     bool isHero = false;
     bool isNoble = false;

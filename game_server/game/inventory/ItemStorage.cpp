@@ -52,6 +52,11 @@ auto ItemStorage::items() const -> std::vector<Ref<Item const>>
     return result;
 }
 
+auto ItemStorage::limit() const -> u16
+{
+    return 1000; // TODO
+}
+
 auto ItemStorage::add(Item && item) -> Item &
 {
     auto const uid      = item.id();
