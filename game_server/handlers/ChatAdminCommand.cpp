@@ -61,9 +61,13 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
     std::wstring text;
     reader >> text;
 
-    boost::algorithm::trim_right(text);
+    auto & c = player.currentCharacter()->get();
 
-    if (text == L"/")
+    boost::algorithm::trim_right(text);
+    std::vector<std::wstring_view> args;
+    boost::algorithm::split(args, text, boost::algorithm::is_any_of(L" "), boost::token_compress_on);
+
+    if (args[0] == L"/")
     {
         Packet p(0x0f);
         p
@@ -72,39 +76,19 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         ;
         player.connection().send(p);
     }
-    else if (text.starts_with(L"spawn"))
+    else if (args[0] == L"spawn")
     {
-        auto const & c = player.currentCharacter()->get();
-
-        /*  <stats str="40" int="21" dex="30" wit="20" con="43" men="10">
-            <vitals hp="39.74519" hpRegen="2" mp="40" mpRegen="0.9" />
-            <attack physical="8.47458" magical="5.78704" random="30" critical="4" accuracy="4.75" attackSpeed="253" type="SWORD" range="40" distance="80" width="120" />
-            <defence physical="44.44444" magical="29.5916164000214" />
-            <speed>
-            <walk ground="20" />
-            <run ground="50" />
-            </speed>
-            <hitTime>370</hitTime>
-            </stats>
-            <collision>
-                <radius normal="10" />
-                <height normal="15" />
-            </collision>
-        */
-
         Monster gremlin;
         gremlin.setName(L"Gremlin");
         gremlin.setTitle(L"yamete kudasai");
         gremlin.setPosition(c.position());
-
-        auto & appearance = gremlin.component<NpcAppearance>();
-        appearance.setId(1);
-        appearance.collisionHeight = 15;
-        appearance.collisionRadius = 10;
+        gremlin.appearance().setId(1);
+        gremlin.appearance().collisionHeight = 15;
+        gremlin.appearance().collisionRadius = 10;
 
         player.connection().send(NpcStatusUpdatePacket(gremlin));
     }
-    else if (text.starts_with(L"learn "))
+    else if (args[0] == L"learn")
     {
         std::wstring cmd;
         SkillId id;
@@ -113,7 +97,7 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         std::wistringstream iss(text);
         iss >> cmd >> id >> level;
 
-        auto & skills = player.currentCharacter()->get().skills();
+        auto & skills = c.skills();
         skills.learn(id, level);
         player.connection().send(SkillListPacket(skills));
     }
