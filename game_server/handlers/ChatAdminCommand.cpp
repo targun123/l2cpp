@@ -82,7 +82,7 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         gremlin.setName(L"Gremlin");
         gremlin.setTitle(L"yamete kudasai");
         gremlin.setPosition(c.position());
-        gremlin.appearance().setId(1);
+        gremlin.appearance().setId(args.size() >= 2 ? std::stoi(std::wstring(args[1])) : 1);
         gremlin.appearance().collisionHeight = 15;
         gremlin.appearance().collisionRadius = 10;
 
