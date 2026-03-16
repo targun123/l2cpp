@@ -30,7 +30,9 @@ Player::PlayerImpl::PlayerImpl(boost::asio::ip::tcp::socket && socket)
     : conn(std::move(socket))
     , playOk1()
 {
-    characters.emplace_back();
+    auto & c = characters.emplace_back();
+    c.setName(L"test");
+    c.setTitle(L"{l2cpp}");
 }
 
 template class Pimpl<Player::PlayerImpl>;
