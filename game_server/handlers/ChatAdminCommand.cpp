@@ -4,13 +4,13 @@
 #pragma once
 
 // Project includes
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/actor/Monster.hpp"
 #include "../game/components/NpcAppearance.hpp"
 #include "../game/skill/SkillDirectory.hpp"
 #include "../network/packets/server/SkillListPacket.hpp"
 #include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
-#include "../utils/Conversion.hpp"
 #include "_Common.hpp"
 
 // Third-party includes
@@ -78,15 +78,15 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
     }
     else if (args[0] == L"spawn")
     {
-        Monster gremlin;
-        gremlin.setName(L"Gremlin");
-        gremlin.setTitle(L"yamete kudasai");
-        gremlin.setPosition(c.position());
-        gremlin.appearance().setId(args.size() >= 2 ? std::stoi(std::wstring(args[1])) : 1);
-        gremlin.appearance().collisionHeight = 15;
-        gremlin.appearance().collisionRadius = 10;
+        auto & npc = World::addMonster();
+        npc.setName(L"Gremlin");
+        npc.setTitle(L"yamete kudasai");
+        npc.setPosition(c.position());
+        npc.appearance().setId(args.size() >= 2 ? std::stoi(std::wstring(args[1])) : 1);
+        npc.appearance().collisionHeight = 15;
+        npc.appearance().collisionRadius = 10;
 
-        player.connection().send(NpcStatusUpdatePacket(gremlin));
+        player.connection().send(NpcStatusUpdatePacket(npc));
     }
     else if (args[0] == L"learn")
     {

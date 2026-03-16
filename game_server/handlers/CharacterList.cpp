@@ -28,8 +28,10 @@ DEFINE_PACKET_HANDLER(CharacterList)
     p << static_cast<u32>(player.characters().size());
 
     using enum GearSlot;
-    for (auto const & c : player.characters())
+    for (auto const & ref : player.characters())
     {
+        auto const & c = ref.get();
+
         p
             << c.name()
             << c.id()

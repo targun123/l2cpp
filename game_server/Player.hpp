@@ -65,8 +65,8 @@ public:
     auto connection()       -> Network::Connection &;
     auto connection() const -> Network::Connection const &;
 
-    auto characters()       -> std::span<Character>;
-    auto characters() const -> std::span<Character const>;
+    auto characters()       -> std::span<Ref<Character>>;
+    auto characters() const -> std::span<Ref<Character> const>;
     auto currentCharacter() -> OptionalRef<Character>;
 
     auto actions() -> std::deque<std::unique_ptr<Action>> &;

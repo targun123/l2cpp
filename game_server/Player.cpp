@@ -4,6 +4,7 @@
 #include "Player.hpp"
 
 // Project includes
+#include "game/World.hpp"
 #include "game/actor/Character.hpp"
 #include "network/Connection.hpp"
 
@@ -16,12 +17,13 @@
 
 struct Player::PlayerImpl
 {
-    Network::Connection                 conn;
-    std::wstring                        accountName;
-    u32                                 playOk1;
-    std::vector<Character>              characters;
-    OptionalRef<Character>              currentCharacter;
-    std::deque<std::unique_ptr<Action>> actionQueue;
+    Network::Connection conn;
+    std::wstring        accountName;
+    u32                 playOk1;
+
+    std::vector<std::reference_wrapper<Character>> characters;
+    OptionalRef<Character>                         currentCharacter;
+    std::deque<std::unique_ptr<Action>>            actionQueue;
 
     explicit PlayerImpl(boost::asio::ip::tcp::socket && socket);
 };
@@ -30,7 +32,7 @@ Player::PlayerImpl::PlayerImpl(boost::asio::ip::tcp::socket && socket)
     : conn(std::move(socket))
     , playOk1()
 {
-    auto & c = characters.emplace_back();
+    auto & c = characters.emplace_back(World::addCharacter()).get();
     c.setName(L"test");
     c.setTitle(L"{l2cpp}");
 }
@@ -48,9 +50,9 @@ Player::~Player() = default;
 auto Player::connection()       -> Network::Connection       & { return _impl->conn; }
 auto Player::connection() const -> Network::Connection const & { return _impl->conn; }
 
-auto Player::characters()       -> std::span<Character>       { return _impl->characters;       }
-auto Player::characters() const -> std::span<Character const> { return _impl->characters;       }
-auto Player::currentCharacter() -> OptionalRef<Character>     { return _impl->currentCharacter; }
+auto Player::characters()       -> std::span<Ref<Character>>       { return _impl->characters;       }
+auto Player::characters() const -> std::span<Ref<Character> const> { return _impl->characters;       }
+auto Player::currentCharacter() -> OptionalRef<Character>          { return _impl->currentCharacter; }
 
 auto Player::actions() -> std::deque<std::unique_ptr<Action>> & { return _impl->actionQueue; }
 
@@ -62,7 +64,7 @@ void Player::setPlayOk1(u32 const playOk1)         { _impl->playOk1 = playOk1;  
 
 auto Player::addCharacter() -> Character &
 {
-    return _impl->characters.emplace_back();
+    return _impl->characters.emplace_back(World::addCharacter()).get();
 }
 
 void Player::setCurrentCharacter(size_t const index)

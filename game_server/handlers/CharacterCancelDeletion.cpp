@@ -3,6 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 
 DECLARE_PACKET_HANDLER(CharacterList)
@@ -14,10 +15,8 @@ DEFINE_PACKET_HANDLER(CharacterCancelDeletion)
     u32 characterId;
     reader >> characterId;
 
-    // ReSharper disable once CppTooWideScopeInitStatement
-    auto const it = std::ranges::find_if(player.characters(), [=] (auto const & c) { return c.id() == characterId; });
-    if (it != player.characters().cend())
-        it->deleteTime = 0;
+    if (auto const c = World::character(characterId); c)
+        c->get().deleteTime = 0;
 
     handleCharacterList(player);
 }
