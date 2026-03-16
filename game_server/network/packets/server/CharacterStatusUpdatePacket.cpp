@@ -39,7 +39,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.name()
         << c.appearance().race()
         << c.appearance().sex
-        << c.classId
+        << c.profession()
         << c.level
         << c.xp
         << c.finalStats.STR
@@ -149,7 +149,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.evalScore
         << 0 // ?
         << c.inventoryLimit
-        << c.classId
+        << c.profession()
         << 0 // special effects? circles around player...
         << static_cast<u32>(c.cp.max)
         << static_cast<u32>(c.cp.current)

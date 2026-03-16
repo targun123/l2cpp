@@ -22,7 +22,7 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << c.name()
         << c.appearance().race()
         << c.appearance().sex
-        << c.classId
+        << c.profession()
         << 0 // separator?
     ;
 
@@ -75,7 +75,7 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << 0 // abnormal visual effects
         << static_cast<u8>(c.evalAmount)
         << c.evalScore
-        << c.classId
+        << c.profession()
         << static_cast<u32>(c.cp.max)
         << static_cast<u32>(c.cp.current)
         << false // mounted

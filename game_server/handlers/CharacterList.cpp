@@ -39,7 +39,7 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << 0
             << c.appearance().sex
             << c.appearance().race()
-            << c.classId
+            << c.profession()
             << 1 // active
             << c.position().x
             << c.position().y
@@ -89,7 +89,7 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.hp.max
             << c.mp.max
             << c.deleteTime
-            << c.classId
+            << c.profession()
             << c.selected
         ;
 

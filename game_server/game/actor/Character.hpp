@@ -6,6 +6,7 @@
 // Project includes
 #include "Actor.hpp"
 #include "../Gauge.hpp"
+#include "../constants/Profession.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>
@@ -30,7 +31,6 @@ public:
 
 public:
     u32 accessLevel = 1;
-    u32 classId = 0;
     u32 active = 1;
     Gauge<double> cp{500};
     Gauge<double> hp{500};
@@ -80,6 +80,7 @@ public:
 public:
     auto appearance()       -> PlayerAppearance       &;
     auto appearance() const -> PlayerAppearance const &;
+    auto profession() const -> Profession;
 
     auto inventory()       -> ItemStorage       &;
     auto inventory() const -> ItemStorage const &;
@@ -91,6 +92,8 @@ public:
     auto skills() const -> SkillDirectory const &;
 
 public:
+    void setProfession(Profession profession);
+
     auto setShortcut(Shortcut shortcut) -> Shortcut &;
     void delShortcut(size_t index);
 

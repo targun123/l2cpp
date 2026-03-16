@@ -20,6 +20,8 @@
 
 struct Character::CharacterImpl
 {
+    Profession profession = Profession::HumanFighter;
+
     Gear                      gear;
     ItemStorage               inventory;
     SkillDirectory            skills;
@@ -83,6 +85,7 @@ Character::~Character() = default;
 
 auto Character::appearance()       -> PlayerAppearance       & { return component<PlayerAppearance>(); }
 auto Character::appearance() const -> PlayerAppearance const & { return component<PlayerAppearance>(); }
+auto Character::profession() const -> Profession            { return _impl->profession;          }
 
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
 auto Character::inventory() const -> ItemStorage const & { return _impl->inventory; }
@@ -99,6 +102,8 @@ auto Character::skills() const -> SkillDirectory const &
 {
     return _impl->skills;
 }
+
+void Character::setProfession(Profession const profession) { _impl->profession = profession; }
 
 auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
 {

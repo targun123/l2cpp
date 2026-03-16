@@ -15,13 +15,14 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
     std::wstring name;
     Race race;
     Sex sex;
+    Profession profession;
 
     auto & c = player.addCharacter();
     reader
         >> name
         >> race
         >> sex
-        >> c.classId
+        >> profession
         >> c.baseStats.INT
         >> c.baseStats.STR
         >> c.baseStats.CON
@@ -37,6 +38,8 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
     c.appearance().setRace(race);
     c.appearance().sex = sex;
     c.selected = 1;
+    c.setProfession(profession);
+
     player.connection().send(Packet(0x19) << 1);
     handleCharacterList(player);
 }

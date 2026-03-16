@@ -31,7 +31,7 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
         << 0 // unknown
         << c.appearance().sex
         << c.appearance().race()
-        << c.classId
+        << c.profession()
         << c.active
         << c.position().x
         << c.position().y
