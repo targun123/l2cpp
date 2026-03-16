@@ -14,9 +14,8 @@ public:
     NonPlayableActor();
 
 public:
+    auto appearance()       -> NpcAppearance       &;
     auto appearance() const -> NpcAppearance const &;
+
     virtual bool isAttackable() const = 0;
-
-public:
-
 };

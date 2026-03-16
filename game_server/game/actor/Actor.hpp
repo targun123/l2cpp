@@ -32,6 +32,8 @@ public:
     auto baseStats() const -> Stats const &;
     auto stats() const -> ComputedStats const &;
 
+    bool isInCombatStance() const;
+
 public:
     void setName(std::wstring name);
     void setTitle(std::wstring title);

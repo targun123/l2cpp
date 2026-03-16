@@ -14,11 +14,14 @@ public:
 public:
     auto id() const -> u32;
     auto titleColor() const -> u32;
+    bool nameIsVisible() const;
 
 public:
     void setId(u32 id);
     void setTitleColor(u32 color);
+    void setNameIsVisible(bool visible);
 
 private:
     u32 _id, _titleColor;
+    bool _nameIsVisible;
 };

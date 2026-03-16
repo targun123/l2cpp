@@ -60,7 +60,7 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << 0     // separator
         << true  // standing
         << true  // running
-        << false // in combat
+        << c.isInCombatStance()
         << false // not in Oly, not (fake) dead
         << false // not invisible
         << static_cast<u8>(0) // mount type (0=none 1=Strider 2=Wyvern)

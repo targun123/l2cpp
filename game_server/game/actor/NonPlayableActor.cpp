@@ -11,8 +11,6 @@ NonPlayableActor::NonPlayableActor()
     addComponent<NpcAppearance>();
 }
 
-auto NonPlayableActor::appearance() const -> NpcAppearance const &
-{
-    return component<NpcAppearance>();
-}
+auto NonPlayableActor::appearance()       -> NpcAppearance       & { return component<NpcAppearance>(); }
+auto NonPlayableActor::appearance() const -> NpcAppearance const & { return component<NpcAppearance>(); }
 

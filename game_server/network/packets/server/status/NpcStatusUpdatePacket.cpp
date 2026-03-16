@@ -39,11 +39,11 @@ NpcStatusUpdatePacket::NpcStatusUpdatePacket(NonPlayableActor const & actor)
         << 0 // right hand
         << 0 // chest
         << 0 // left hand
-        << true // name above char
+        << actor.appearance().nameIsVisible()
         << true // isRunning
-        << false // isInCombat
+        << actor.isInCombatStance()
         << false // is like dead
-        << false // isSummonned
+        << false // isSummoned
         << actor.name()
         << actor.title()
         << actor.appearance().titleColor()

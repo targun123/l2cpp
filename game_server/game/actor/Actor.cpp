@@ -13,6 +13,7 @@
 struct Actor::ActorImpl
 {
     Team team = Team::None;
+    bool isInCombatStance = false;
 };
 
 template class Pimpl<Actor::ActorImpl>;
@@ -61,6 +62,8 @@ auto Actor::team()     const -> Team              { return _impl->team;         
 
 auto Actor::baseStats()  const -> Stats         const & { return component<Stats>();         }
 auto Actor::stats()      const -> ComputedStats const & { return component<ComputedStats>(); }
+
+bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
 void Actor::setName (std::wstring name)  { component<ActorIdentity>().name  = std::move(name);  }
 void Actor::setTitle(std::wstring title) { component<ActorIdentity>().title = std::move(title); }
