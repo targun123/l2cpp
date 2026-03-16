@@ -23,19 +23,19 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << c.appearance().race()
         << c.appearance().sex
         << c.profession()
-        << 0 // separator?
+        << 0 // unknown
     ;
 
     auto const headItem = c.gear().item(GearSlot::Head);
-    *this << (headItem ? headItem->get().tmplate.id : 0_u32);
+    *this << (headItem ? headItem->get().tmplate.id : 0);
 
     *this
-        << (c.isPvpFlagged ? 1 : 0)
-        << c.karma
+        << 0 // (c.isPvpFlagged ? 1 : 0)
+        << 0 // karma
         << c.finalStats.mAtkSpeed
         << c.finalStats.pAtkSpeed
-        << (c.isPvpFlagged ? 1 : 0) // again…
-        << c.karma                  // again…
+        << 0 // (c.isPvpFlagged ? 1 : 0) // repeated
+        << 0 // karma                    // repeated
         << c.baseStats.runSpeed
         << c.baseStats.walkSpeed
         << c.baseStats.swimRunSpeed
@@ -52,7 +52,7 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << c.appearance().hairColorId
         << c.appearance().faceId
         << c.title()
-        << c.clanId
+        << 0     // clanId
         << 0     // clan crest id
         << 0     // alliance id
         << 0     // alliance crest id
@@ -71,8 +71,8 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         *this << id;
 
     *this
-        << false // looking for party members
-        << 0 // abnormal visual effects
+        << false  // looking for party members
+        << 0      // abnormal visual effects
         << static_cast<u8>(c.evalAmount)
         << c.evalScore
         << c.profession()
@@ -81,8 +81,8 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << false // mounted
         << c.team()
         << 0 // clan large crest id
-        << c.isNoble
-        << c.isHero
+        << false // c.isNoble
+        << false // c.isHero
         << false // fishing
         << 0 // fish x
         << 0 // fish y

@@ -31,27 +31,13 @@ public:
 
 public:
     u32 accessLevel = 1;
-    u32 active = 1;
     Gauge<double> cp{500};
     Gauge<double> hp{500};
     Gauge<double> mp{500};
     Gauge<u32> weight{0, 10'000};
-    u32 sp = 0;
-    u32 xp = 0;
-    u32 level = 1;
-    u32 karma = 0;
-    u32 pkCount = 0;
-    u32 pvpCount = 0;
     u32 deleteTime = 0;
     u32 selected = 1;
-    u8 enchantEffect = 0;
-    u32 augmentationId = 0;
-    u32 transformationId = 0;
-    u32 clanId = 0;
     u16 evalAmount = 32, evalScore = 0;
-    bool isPvpFlagged = false;
-    bool isHero = false;
-    bool isNoble = false;
 
     std::vector<u16> cubics;
 

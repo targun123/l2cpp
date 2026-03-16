@@ -35,11 +35,10 @@ template class Pimpl<Character::CharacterImpl>;
 Character::Character()
 {
     setPosition(-83968, 244634, -3500); // Talking Island GK
-    auto & appearance = component<PlayerAppearance>();
+
+    auto & appearance = addComponent<PlayerAppearance>();
     appearance.collisionHeight = 23.5; // Male human
     appearance.collisionRadius = 9;    // Male human
-
-    addComponent<PlayerAppearance>();
 
     Item formalWear;
     formalWear.tmplate.id       = 6408;

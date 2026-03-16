@@ -27,22 +27,22 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
         << c.id()
         << c.title()
         << player.playOk1()
-        << c.clanId
+        << 0 // clanId
         << 0 // unknown
         << c.appearance().sex
         << c.appearance().race()
         << c.profession()
-        << c.active
+        << 1 // active
         << c.position().x
         << c.position().y
         << c.position().z
         << c.hp.current
         << c.mp.current
-        << c.sp
-        << c.xp
-        << c.level
-        << c.karma
-        << c.pkCount
+        << 0 // sp
+        << 0 // xp
+        << 1 // level
+        << 0 // karma
+        << 0 // pkCount
         << c.baseStats.INT
         << c.baseStats.STR
         << c.baseStats.CON

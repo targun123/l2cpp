@@ -41,8 +41,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.appearance().race()
         << c.appearance().sex
         << c.profession()
-        << c.level
-        << c.xp
+        << 1 // level
+        << 0 // xp
         << c.finalStats.STR
         << c.finalStats.DEX
         << c.finalStats.CON
@@ -53,7 +53,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << static_cast<u32>(c.hp.current)
         << static_cast<u32>(c.mp.max)
         << static_cast<u32>(c.mp.current)
-        << c.sp
+        << 0 // sp
         << c.weight.current
         << c.weight.max
         << (c.gear().hasActiveWeapon() ? 20 : 40)
@@ -99,8 +99,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.finalStats.mAtkSpeed
         << c.baseStats.pAtkSpeed
         << c.finalStats.mDef
-        << (c.isPvpFlagged ? 1 : 0)
-        << c.karma
+        << 0 // (c.isPvpFlagged ? 1 : 0)
+        << 0 // karma
         << c.baseStats.runSpeed
         << c.baseStats.walkSpeed
         << c.baseStats.swimRunSpeed
@@ -118,16 +118,16 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.appearance().faceId
         << (c.accessLevel > 0 ? 1 : 0)
         << c.title()
-        << c.clanId
-        << 0 // crest id
-        << 0 // ally id
-        << 0 // ally crest id
-        << 0 // clan leader: 0x60 | in-siege: 0x40 | leader rights: 0x20
+        << 0                  // clanId
+        << 0                  // crest id
+        << 0                  // ally id
+        << 0                  // ally crest id
+        << 0                  // clan leader: 0x60 | in-siege: 0x40 | leader rights: 0x20
         << static_cast<u8>(0) // mount type
         << static_cast<u8>(0) // private store type
-        << false // can dwarven craft
-        << c.pkCount
-        << c.pvpCount
+        << false              // can dwarven craft
+        << 0                  // pkCount
+        << 0                  // pvpCount
     ;
 
     *this << static_cast<u16>(c.cubics.size());
@@ -162,8 +162,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     *this
         << c.team()
         << 0 // clan crest large id
-        << c.isNoble // noble symbol in status window
-        << c.isHero  // hero aura
+        << false // c.isNoble // noble symbol in status window
+        << false // c.isHero  // hero aura
         << false // is fishing
         << 0 // fish x
         << 0 // fish y

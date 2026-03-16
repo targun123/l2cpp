@@ -35,7 +35,7 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.id()
             << player.accountName()
             << player.playOk1()
-            << c.clanId
+            << 0 // clanId
             << 0
             << c.appearance().sex
             << c.appearance().race()
@@ -46,10 +46,10 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.position().z
             << c.hp.current
             << c.mp.current
-            << c.sp
-            << c.xp
-            << c.level
-            << c.karma
+            << 0 // sp
+            << 0 // xp
+            << 1 // level
+            << 0 // karma
             << std::array<u32, 9>{} // unknown
             << gearItemIdIfValid(c, Underwear)
             << gearItemIdIfValid(c, LeftEar)
