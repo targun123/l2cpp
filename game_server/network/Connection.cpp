@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <boost/asio/write.hpp>
 
 using Network::Connection;
 
@@ -105,11 +106,11 @@ void Connection::ConnectionImpl::close()
     {
         boost::system::error_code ec;
         if (socket.shutdown(socket.shutdown_both, ec))
-            SPDLOG_ERROR("shutdown error {}: {}", ec.default_error_condition().message(), ec.message());
+            SPDLOG_ERROR("shutdown error '{}' ({}): {}", ec.category().name(), ec.value(), ec.message());
 
         ec.clear();
         if (socket.close(ec))
-            SPDLOG_ERROR("close error {}: {}", ec.default_error_condition().value(), ec.message());
+            SPDLOG_ERROR("close error '{}' ({}): {}", ec.category().name(), ec.value(), ec.message());
     }
 }
 
@@ -207,7 +208,10 @@ void Connection::send(l2cpp::Network::Packet & p)
     else
         _impl->encryptionKey = gEncryptionKey;
 
-    _impl->socket.send(boost::asio::buffer(p.buffer()));
+    boost::system::error_code ec;
+    boost::asio::write(_impl->socket, boost::asio::buffer(p.buffer()), ec);
+    if (ec)
+        SPDLOG_ERROR("send error '{}' ({}): {}", ec.category().name(), ec.value(), ec.message());
 
 #ifdef NDEBUG
     SPDLOG_INFO("sent: 0x{:0{}x} ({} bytes)", opCode, opCode > 0xff ? 4 : 2, p.size());
