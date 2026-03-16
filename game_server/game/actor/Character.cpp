@@ -6,6 +6,7 @@
 // Project includes
 #include "../Shortcut.hpp"
 #include "../components/PlayerAppearance.hpp"
+#include "../components/Stats.hpp"
 #include "../inventory/Gear.hpp"
 #include "../inventory/ItemStorage.hpp"
 #include "../skill/SkillDirectory.hpp"
@@ -37,8 +38,9 @@ Character::Character()
     setPosition(-83968, 244634, -3500); // Talking Island GK
 
     auto & appearance = addComponent<PlayerAppearance>();
-    appearance.collisionHeight = 23.5; // Male human
-    appearance.collisionRadius = 9;    // Male human
+    appearance.collisionHeight = 23.5;
+    appearance.collisionRadius = 9;
+
 
     Item formalWear;
     formalWear.tmplate.id       = 6408;
@@ -54,7 +56,7 @@ Character::Character()
     infinitySpear.tmplate.category = ItemCategory::Weapon;
     infinitySpear.tmplate.bodyPart = GearSlot::Hands;
     item = _impl->inventory.add(std::move(infinitySpear));
-     _impl->gear.equipItem(item.get());
+    _impl->gear.equipItem(item.get());
 
     Item infinityBlade;
     infinityBlade.tmplate.id       = 6611;
@@ -84,6 +86,7 @@ Character::~Character() = default;
 
 auto Character::appearance()       -> PlayerAppearance       & { return component<PlayerAppearance>(); }
 auto Character::appearance() const -> PlayerAppearance const & { return component<PlayerAppearance>(); }
+
 auto Character::profession() const -> Profession            { return _impl->profession;          }
 
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
@@ -92,14 +95,30 @@ auto Character::inventory() const -> ItemStorage const & { return _impl->invento
 auto Character::gear()       -> Gear       & { return _impl->gear; }
 auto Character::gear() const -> Gear const & { return _impl->gear; }
 
-auto Character::skills() -> SkillDirectory &
-{
-    return _impl->skills;
-}
+auto Character::skills()       -> SkillDirectory       & { return _impl->skills; }
+auto Character::skills() const -> SkillDirectory const & { return _impl->skills; }
 
-auto Character::skills() const -> SkillDirectory const &
+template<typename T, typename F>
+void assign(T & t, F f) { t = static_cast<T>(f); }
+
+void Character::computeStats()
 {
-    return _impl->skills;
+    // First update race stats from gear & buffs
+
+    auto const & baseStats = component<Stats>();
+    auto       & stats     = component<ComputedStats>();
+
+    // Then update dependent stats
+    assign(stats.pAtkSpeedMutliplier, 1. + (stats.DEX - 20) / 100.);
+    assign(stats.moveSpeedMutliplier, 1. + (stats.DEX - 20) / 100.);
+
+    assign(stats.pAtkSpeed,     baseStats.pAtkSpeed     * stats.pAtkSpeedMutliplier);
+    assign(stats.runSpeed,      baseStats.runSpeed      * stats.moveSpeedMutliplier);
+    assign(stats.walkSpeed,     baseStats.walkSpeed     * stats.moveSpeedMutliplier);
+    assign(stats.swimRunSpeed,  baseStats.swimRunSpeed  * stats.moveSpeedMutliplier);
+    assign(stats.swimWalkSpeed, baseStats.swimWalkSpeed * stats.moveSpeedMutliplier);
+    assign(stats.flyRunSpeed,   baseStats.flyRunSpeed   * stats.moveSpeedMutliplier);
+    assign(stats.flyWalkSpeed,  baseStats.flyWalkSpeed  * stats.moveSpeedMutliplier);
 }
 
 void Character::setProfession(Profession const profession) { _impl->profession = profession; }

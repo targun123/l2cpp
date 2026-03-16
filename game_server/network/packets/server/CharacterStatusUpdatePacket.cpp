@@ -4,7 +4,10 @@
 #include "CharacterStatusUpdatePacket.hpp"
 
 // Project includes
+#include <spdlog/spdlog.h>
+
 #include "../../../game/actor/Character.hpp"
+#include "../../../game/components/Stats.hpp"
 #include "../../../game/components/PlayerAppearance.hpp"
 #include "../../../game/inventory/Gear.hpp"
 #include "../../../game/inventory/ItemStorage.hpp"
@@ -43,12 +46,12 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.profession()
         << 1 // level
         << 0 // xp
-        << c.finalStats.STR
-        << c.finalStats.DEX
-        << c.finalStats.CON
-        << c.finalStats.INT
-        << c.finalStats.WIT
-        << c.finalStats.MEN
+        << c.stats().STR
+        << c.stats().DEX
+        << c.stats().CON
+        << c.stats().INT
+        << c.stats().WIT
+        << c.stats().MEN
         << static_cast<u32>(c.hp.max)
         << static_cast<u32>(c.hp.current)
         << static_cast<u32>(c.mp.max)
@@ -89,28 +92,28 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << gearItemTemplateIdIfValid(c, Back)
         << 0 // gearItemTemplateIdIfValid(c, LeftHand)
         << gearItemTemplateIdIfValid(c, Hair)
-        << c.finalStats.pAtk
-        << c.finalStats.pAtkSpeed
-        << c.finalStats.pDef
-        << c.finalStats.evasion
-        << c.finalStats.accuracy
-        << c.finalStats.pCritRate
-        << c.finalStats.mAtk
-        << c.finalStats.mAtkSpeed
-        << c.baseStats.pAtkSpeed
-        << c.finalStats.mDef
+        << c.stats().pAtk
+        << c.stats().pAtkSpeed
+        << c.stats().pDef
+        << c.stats().evasion
+        << c.stats().accuracy
+        << c.stats().pCritRate
+        << c.stats().mAtk
+        << c.stats().mAtkSpeed
+        << c.baseStats().pAtkSpeed
+        << c.stats().mDef
         << 0 // (c.isPvpFlagged ? 1 : 0)
         << 0 // karma
-        << c.baseStats.runSpeed
-        << c.baseStats.walkSpeed
-        << c.baseStats.swimRunSpeed
-        << c.baseStats.swimWalkSpeed
-        << c.baseStats.flyRunSpeed
-        << c.baseStats.flyWalkSpeed
-        << c.baseStats.flyRunSpeed
-        << c.baseStats.flyWalkSpeed
-        << c.finalStats.moveSpeedMutliplier
-        << c.finalStats.pAtkSpeedMutliplier
+        << c.baseStats().runSpeed
+        << c.baseStats().walkSpeed
+        << c.baseStats().swimRunSpeed
+        << c.baseStats().swimWalkSpeed
+        << c.baseStats().flyRunSpeed
+        << c.baseStats().flyWalkSpeed
+        << c.baseStats().flyRunSpeed
+        << c.baseStats().flyWalkSpeed
+        << c.stats().moveSpeedMutliplier
+        << c.stats().pAtkSpeedMutliplier
         << c.appearance().collisionRadius
         << c.appearance().collisionHeight
         << c.appearance().hairStyleId

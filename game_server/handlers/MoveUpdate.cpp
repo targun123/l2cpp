@@ -28,7 +28,7 @@ DEFINE_PACKET_HANDLER(MoveUpdate)
     //
     // auto const now             = std::chrono::steady_clock::now();
     // auto const elapsed         = std::chrono::duration_cast<std::chrono::milliseconds>(now - move.lastUpdateTime);
-    // auto const unitSpeedPerMs  = c.finalStats.runSpeed / 1000.f;
+    // auto const unitSpeedPerMs  = c.stats().runSpeed / 1000.f;
     // auto const distanceCovered = elapsed.count() * unitSpeedPerMs;
     //
     // move.currentDistance += distanceCovered;

@@ -11,6 +11,9 @@
 
 #include <l2cpp/Pimpl.hpp>
 
+struct ComputedStats;
+struct Stats;
+
 /// Base class for player characters, npcs, summons, pets…
 class Actor : public GameObject, public Entity
 {
@@ -25,6 +28,9 @@ public:
     auto title() const -> std::wstring_view;
     auto position() const -> Position const &;
     auto team() const -> Team;
+
+    auto baseStats() const -> Stats const &;
+    auto stats() const -> ComputedStats const &;
 
 public:
     void setName(std::wstring name);

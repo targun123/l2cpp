@@ -4,6 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/components/Stats.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 
 DEFINE_PACKET_HANDLER(CharacterSelect)
@@ -43,12 +44,12 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
         << 1 // level
         << 0 // karma
         << 0 // pkCount
-        << c.baseStats.INT
-        << c.baseStats.STR
-        << c.baseStats.CON
-        << c.baseStats.MEN
-        << c.baseStats.DEX
-        << c.baseStats.WIT
+        << c.baseStats().INT
+        << c.baseStats().STR
+        << c.baseStats().CON
+        << c.baseStats().MEN
+        << c.baseStats().DEX
+        << c.baseStats().WIT
         << std::array<u32, 53>{} // unknown
     ;
     player.connection().send(p);

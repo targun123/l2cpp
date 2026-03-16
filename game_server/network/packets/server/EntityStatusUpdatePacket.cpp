@@ -6,6 +6,7 @@
 // Project includes
 #include "../../../game/actor/Character.hpp"
 #include "../../../game/inventory/Gear.hpp"
+#include "../../../game/components/Stats.hpp"
 #include "../../../game/components/PlayerAppearance.hpp"
 
 using namespace Network::Packet::Server;
@@ -32,20 +33,20 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
     *this
         << 0 // (c.isPvpFlagged ? 1 : 0)
         << 0 // karma
-        << c.finalStats.mAtkSpeed
-        << c.finalStats.pAtkSpeed
+        << c.stats().mAtkSpeed
+        << c.stats().pAtkSpeed
         << 0 // (c.isPvpFlagged ? 1 : 0) // repeated
         << 0 // karma                    // repeated
-        << c.baseStats.runSpeed
-        << c.baseStats.walkSpeed
-        << c.baseStats.swimRunSpeed
-        << c.baseStats.swimWalkSpeed
-        << c.baseStats.flyRunSpeed
-        << c.baseStats.flyWalkSpeed
-        << c.baseStats.flyRunSpeed
-        << c.baseStats.flyWalkSpeed
-        << c.finalStats.moveSpeedMutliplier
-        << c.finalStats.pAtkSpeedMutliplier
+        << c.baseStats().runSpeed
+        << c.baseStats().walkSpeed
+        << c.baseStats().swimRunSpeed
+        << c.baseStats().swimWalkSpeed
+        << c.baseStats().flyRunSpeed
+        << c.baseStats().flyWalkSpeed
+        << c.baseStats().flyRunSpeed
+        << c.baseStats().flyWalkSpeed
+        << c.stats().moveSpeedMutliplier
+        << c.stats().pAtkSpeedMutliplier
         << c.appearance().collisionRadius
         << c.appearance().collisionHeight
         << c.appearance().hairStyleId

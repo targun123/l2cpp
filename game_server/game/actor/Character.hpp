@@ -43,28 +43,10 @@ public:
 
     std::optional<u32> targetId;
 
-    struct Stats
-    {
-        u32 STR = 40, DEX = 30, CON = 43;
-        u32 INT = 21, WIT = 11, MEN = 25;
-
-        u32 pAtk         = 10,  pDef          = 80;
-        u32 mAtk         = 6,   mDef          = 40;
-        u32 pAtkSpeed    = 300, mAtkSpeed     = 333;
-        u32 pAtkRange    = 20,  pAtkRandom    = 10;
-        u32 accuracy     = 10,  evasion       = 10;
-        u32 pCritRate    = 10,  mCritRate     = 10;
-        u32 runSpeed     = 115, walkSpeed     = 80;
-        u32 swimRunSpeed = 50,  swimWalkSpeed = 50;
-        u32 flyRunSpeed  = 0,   flyWalkSpeed  = 0;
-
-        double moveSpeedMutliplier = 1;
-        double pAtkSpeedMutliplier = 1;
-    } baseStats, finalStats;
-
 public:
     auto appearance()       -> PlayerAppearance       &;
     auto appearance() const -> PlayerAppearance const &;
+
     auto profession() const -> Profession;
 
     auto inventory()       -> ItemStorage       &;
@@ -77,6 +59,7 @@ public:
     auto skills() const -> SkillDirectory const &;
 
 public:
+    void computeStats();
     void setProfession(Profession profession);
 
     auto setShortcut(Shortcut shortcut) -> Shortcut &;

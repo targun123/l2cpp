@@ -4,6 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/components/Stats.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 
 DECLARE_PACKET_HANDLER(CharacterList)
@@ -17,18 +18,20 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
     Sex sex;
     Profession profession;
 
-    auto & c = player.addCharacter();
+    auto & c         = player.addCharacter();
+    auto & baseStats = c.component<Stats>();
+
     reader
         >> name
         >> race
         >> sex
         >> profession
-        >> c.baseStats.INT
-        >> c.baseStats.STR
-        >> c.baseStats.CON
-        >> c.baseStats.MEN
-        >> c.baseStats.DEX
-        >> c.baseStats.WIT
+        >> baseStats.INT
+        >> baseStats.STR
+        >> baseStats.CON
+        >> baseStats.MEN
+        >> baseStats.DEX
+        >> baseStats.WIT
         >> c.appearance().hairStyleId
         >> c.appearance().hairColorId
         >> c.appearance().faceId
