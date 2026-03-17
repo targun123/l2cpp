@@ -8,8 +8,10 @@
 #include "../game/actor/Character.hpp"
 #include "../game/actor/Monster.hpp"
 #include "../game/components/NpcAppearance.hpp"
+#include "../game/components/PlayerAppearance.hpp"
 #include "../game/skill/SkillDirectory.hpp"
 #include "../network/packets/server/SkillListPacket.hpp"
+#include "../network/packets/server/status/EntityStatusUpdatePacket.hpp"
 #include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
 #include "_Common.hpp"
 
@@ -100,5 +102,17 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         auto & skills = c.skills();
         skills.learn(id, level);
         player.connection().send(SkillListPacket(skills));
+    }
+    else if (args[0] == L"char")
+    {
+        auto & d = World::addCharacter();
+        d.setName(L"dummy");
+        d.setPosition(c.position());
+        d.appearance().setRace(Race::Elf);
+        d.appearance().sex = Sex::Female;
+        d.appearance().collisionHeight = 23;
+        d.appearance().collisionRadius = 7.5;
+        d.setProfession(Profession::ElvenMystic);
+        player.connection().send(EntityStatusUpdatePacket(d));
     }
 }
