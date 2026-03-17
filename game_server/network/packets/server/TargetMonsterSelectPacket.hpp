@@ -13,5 +13,5 @@ namespace Network::Packet::Server { struct TargetMonsterSelectPacket; }
 
 struct Network::Packet::Server::TargetMonsterSelectPacket final : public l2cpp::Network::Packet
 {
-    explicit TargetMonsterSelectPacket(Character const & actor, Monster const & target);
+    explicit TargetMonsterSelectPacket(Character const & source, Monster const & target);
 };

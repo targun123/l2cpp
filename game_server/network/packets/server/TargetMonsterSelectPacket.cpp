@@ -6,14 +6,16 @@
 // Project includes
 #include "../../../game/actor/Character.hpp"
 #include "../../../game/actor/Monster.hpp"
+#include "../../../game/components/ActorStatus.hpp"
+#include "../../../game/components/CharacterStatus.hpp"
 
 using Network::Packet::Server::TargetMonsterSelectPacket;
 
-TargetMonsterSelectPacket::TargetMonsterSelectPacket(Character const & actor, Monster const & target)
+TargetMonsterSelectPacket::TargetMonsterSelectPacket(Character const & source, Monster const & target)
     : Packet(0xa6)
 {
     *this
         << target.id()
-        << static_cast<u16>(actor.level() - target.level())
+        << static_cast<u16>(source.status().level() - target.status().level())
     ;
 }

@@ -19,10 +19,6 @@ public:
 
 public:
     bool isAttackable() const override;
-    auto level() const -> u32;
-
-public:
-    void setLevel(u32 level);
 
 private:
     struct MonsterActorImpl;

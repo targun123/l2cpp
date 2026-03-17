@@ -5,7 +5,6 @@
 
 // Project includes
 #include "Actor.hpp"
-#include "../Gauge.hpp"
 #include "../constants/Profession.hpp"
 
 #include <l2cpp/Pimpl.hpp>
@@ -19,6 +18,7 @@ class ItemStorage;
 class PlayerAppearance;
 class Shortcut;
 class SkillDirectory;
+struct CharacterStatus;
 
 class Character : public Actor
 {
@@ -30,10 +30,6 @@ public:
 
 public:
     u32 accessLevel = 1;
-    Gauge<double> cp{500};
-    Gauge<double> hp{500};
-    Gauge<double> mp{500};
-    Gauge<u32> weight{0, 10'000};
     u32 deleteTime = 0;
     u32 selected = 1;
     u16 evalAmount = 32, evalScore = 0;
@@ -42,7 +38,8 @@ public:
 
 public:
     auto profession() const -> Profession;
-    auto level() const -> u32;
+
+    auto status() const -> CharacterStatus const &;
 
     auto appearance()       -> PlayerAppearance       &;
     auto appearance() const -> PlayerAppearance const &;

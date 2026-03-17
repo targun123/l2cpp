@@ -6,6 +6,7 @@
 // Project includes
 #include "../../../../game/actor/Character.hpp"
 #include "../../../../game/inventory/Gear.hpp"
+#include "../../../../game/components/CharacterStatus.hpp"
 #include "../../../../game/components/Stats.hpp"
 #include "../../../../game/components/PlayerAppearance.hpp"
 
@@ -38,11 +39,11 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << 0 // c.gear().itemTemplateId(GearSlot::LeftHand)
         << c.gear().itemTemplateId(Hair)
         << 0 // (c.isPvpFlagged ? 1 : 0)
-        << 0 // karma
+        << c.status().karma
         << c.stats().mAtkSpeed
         << c.stats().pAtkSpeed
         << 0 // (c.isPvpFlagged ? 1 : 0) // repeated
-        << 0 // karma                    // repeated
+        << c.status().karma              // repeated
         << c.baseStats().runSpeed
         << c.baseStats().walkSpeed
         << c.baseStats().swimRunSpeed
@@ -78,13 +79,13 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         *this << id;
 
     *this
-        << false  // looking for party members
-        << 0      // abnormal visual effects
+        << false // looking for party members
+        << 0     // abnormal visual effects
         << static_cast<u8>(c.evalAmount)
         << c.evalScore
         << c.profession()
-        << static_cast<u32>(c.cp.max)
-        << static_cast<u32>(c.cp.current)
+        << static_cast<u32>(c.status().cp.max)
+        << static_cast<u32>(c.status().cp.current)
     ;
 
     auto const weapon = c.gear().weapon();
@@ -93,8 +94,8 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
     *this
         << c.team()
         << 0 // clan large crest id
-        << false // c.isNoble
-        << false // c.isHero
+        << c.status().isNoble
+        << c.status().isHero
         << false // fishing
         << 0 // fish x
         << 0 // fish y

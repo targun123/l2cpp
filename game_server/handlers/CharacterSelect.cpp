@@ -4,6 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/components/CharacterStatus.hpp"
 #include "../game/components/Stats.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 
@@ -29,28 +30,28 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
         << c.title()
         << player.playOk1()
         << 0 // clanId
-        << 0 // unknown
+        << 0 // ?
         << c.appearance().sex
         << c.appearance().race()
         << c.profession()
-        << 1 // active
+        << 1 // active (?)
         << c.position().x
         << c.position().y
         << c.position().z
-        << c.hp.current
-        << c.mp.current
-        << 0 // sp
-        << 0 // xp
-        << 1 // level
-        << 0 // karma
-        << 0 // pkCount
+        << c.status().hp.current
+        << c.status().mp.current
+        << c.status().sp
+        << c.status().xp
+        << c.status().level()
+        << c.status().karma
+        << c.status().pkCount
         << c.baseStats().INT
         << c.baseStats().STR
         << c.baseStats().CON
         << c.baseStats().MEN
         << c.baseStats().DEX
         << c.baseStats().WIT
-        << std::array<u32, 53>{} // unknown
+        << std::array<u32, 53>{} // ?
     ;
     player.connection().send(p);
 }

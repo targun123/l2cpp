@@ -4,6 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/components/CharacterStatus.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/inventory/Gear.hpp"
 
@@ -23,20 +24,20 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << player.accountName()
             << player.playOk1()
             << 0 // clanId
-            << 0
+            << 0 // ?
             << c.appearance().sex
             << c.appearance().race()
             << c.profession()
-            << 1 // active
+            << 1 // active (?)
             << c.position().x
             << c.position().y
             << c.position().z
-            << c.hp.current
-            << c.mp.current
-            << 0 // sp
-            << 0 // xp
-            << 1 // level
-            << 0 // karma
+            << c.status().hp.current
+            << c.status().mp.current
+            << c.status().sp
+            << c.status().xp
+            << c.status().level()
+            << c.status().karma
             << std::array<u32, 9>{} // unknown
             << c.gear().itemId(Underwear)
             << c.gear().itemId(LeftEar)
@@ -73,8 +74,8 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.appearance().hairStyleId
             << c.appearance().hairColorId
             << c.appearance().faceId
-            << c.hp.max
-            << c.mp.max
+            << c.status().hp.max
+            << c.status().mp.max
             << c.deleteTime
             << c.profession()
             << c.selected

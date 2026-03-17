@@ -6,6 +6,7 @@
 // Project includes
 #include "Actor.hpp"
 
+class ActorStatus;
 class NpcAppearance;
 
 class NonPlayableActor : public Actor
@@ -16,6 +17,8 @@ public:
 public:
     auto appearance()       -> NpcAppearance       &;
     auto appearance() const -> NpcAppearance const &;
+
+    virtual auto status() const -> ActorStatus const &;
 
     virtual bool isAttackable() const = 0;
 };

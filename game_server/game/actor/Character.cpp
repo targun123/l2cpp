@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../Shortcut.hpp"
+#include "../components/CharacterStatus.hpp"
 #include "../components/PlayerAppearance.hpp"
 #include "../components/Stats.hpp"
 #include "../inventory/Gear.hpp"
@@ -22,7 +23,6 @@
 struct Character::CharacterImpl
 {
     Profession profession = Profession::HumanFighter;
-    u32 level = 1;
 
     Gear                      gear;
     ItemStorage               inventory;
@@ -41,6 +41,8 @@ Character::Character()
     auto & appearance = addComponent<PlayerAppearance>();
     appearance.collisionHeight = 23.5;
     appearance.collisionRadius = 9;
+
+    addComponent<CharacterStatus>();
 
     Item formalWear;
     formalWear.tmplate.id       = 6408;
@@ -88,7 +90,8 @@ Character & Character::operator=(Character &&) noexcept = default;
 Character::~Character() = default;
 
 auto Character::profession() const -> Profession { return _impl->profession; }
-auto Character::level()      const -> u32        { return _impl->level;      }
+
+auto Character::status() const -> CharacterStatus const & { return component<CharacterStatus>(); }
 
 auto Character::appearance()       -> PlayerAppearance       & { return component<PlayerAppearance>(); }
 auto Character::appearance() const -> PlayerAppearance const & { return component<PlayerAppearance>(); }
@@ -126,12 +129,6 @@ void Character::computeStats()
 }
 
 void Character::setProfession(Profession const profession) { _impl->profession = profession; }
-
-void Character::setLevel(u32 level)
-{
-    L2CPP_B_ASSERT(0 < level && level <= 80, "Invalid character level '{}' (should be between [ 1 ; 80 ])", level);
-    _impl->level = level;
-}
 
 auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
 {

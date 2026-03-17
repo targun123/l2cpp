@@ -7,6 +7,7 @@
 #include <spdlog/spdlog.h>
 
 #include "../../../../game/actor/Character.hpp"
+#include "../../../../game/components/CharacterStatus.hpp"
 #include "../../../../game/components/Stats.hpp"
 #include "../../../../game/components/PlayerAppearance.hpp"
 #include "../../../../game/inventory/Gear.hpp"
@@ -29,21 +30,21 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.appearance().race()
         << c.appearance().sex
         << c.profession()
-        << 1 // level
-        << 0 // xp
+        << c.status().level()
+        << c.status().xp
         << c.stats().STR
         << c.stats().DEX
         << c.stats().CON
         << c.stats().INT
         << c.stats().WIT
         << c.stats().MEN
-        << static_cast<u32>(c.hp.max)
-        << static_cast<u32>(c.hp.current)
-        << static_cast<u32>(c.mp.max)
-        << static_cast<u32>(c.mp.current)
-        << 0 // sp
-        << c.weight.current
-        << c.weight.max
+        << static_cast<u32>(c.status().hp.max)
+        << static_cast<u32>(c.status().hp.current)
+        << static_cast<u32>(c.status().mp.max)
+        << static_cast<u32>(c.status().mp.current)
+        << c.status().sp
+        << c.status().weight.current
+        << c.status().weight.max
         << (c.gear().hasActiveWeapon() ? 20 : 40)
         << c.gear().itemId(Underwear)
         << c.gear().itemId(RightEar)
@@ -88,7 +89,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.baseStats().pAtkSpeed
         << c.stats().mDef
         << 0 // (c.isPvpFlagged ? 1 : 0)
-        << 0 // karma
+        << c.status().karma
         << c.baseStats().runSpeed
         << c.baseStats().walkSpeed
         << c.baseStats().swimRunSpeed
@@ -114,8 +115,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << static_cast<u8>(0) // mount type
         << static_cast<u8>(0) // private store type
         << false              // can dwarven craft
-        << 0                  // pkCount
-        << 0                  // pvpCount
+        << c.status().pkCount
+        << c.status().pvpCount
     ;
 
     *this << static_cast<u16>(c.cubics.size());
@@ -140,8 +141,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.inventory().limit()
         << c.profession()
         << 0 // special effects? circles around player...
-        << static_cast<u32>(c.cp.max)
-        << static_cast<u32>(c.cp.current)
+        << static_cast<u32>(c.status().cp.max)
+        << static_cast<u32>(c.status().cp.current)
     ;
 
     auto const weapon = c.gear().weapon();
@@ -150,8 +151,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     *this
         << c.team()
         << 0 // clan crest large id
-        << false // c.isNoble // noble symbol in status window
-        << false // c.isHero  // hero aura
+        << c.status().isNoble // noble symbol in status window
+        << c.status().isHero  // hero aura
         << false // is fishing
         << 0 // fish x
         << 0 // fish y
