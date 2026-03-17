@@ -4,7 +4,7 @@
 #include "TargetSelectPacket.hpp"
 
 // Project includes
-#include "../../../game/actor/Character.hpp"
+#include "../../../../game/actor/Character.hpp"
 
 using Network::Packet::Server::TargetSelectPacket;
 

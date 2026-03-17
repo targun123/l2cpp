@@ -7,8 +7,8 @@
 #include "../game/actor/Character.hpp"
 #include "../game/constants/ItemGrade.hpp"
 #include "../game/inventory/Gear.hpp"
-#include "../network/packets/server/TargetMonsterSelectPacket.hpp"
-#include "../network/packets/server/TargetSelectPacket.hpp"
+#include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
+#include "../network/packets/server/target/TargetSelectPacket.hpp"
 
 DEFINE_PACKET_HANDLER(ActionRequest)
 {

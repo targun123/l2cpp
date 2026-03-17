@@ -4,10 +4,10 @@
 #include "TargetMonsterSelectPacket.hpp"
 
 // Project includes
-#include "../../../game/actor/Character.hpp"
-#include "../../../game/actor/Monster.hpp"
-#include "../../../game/components/ActorStatus.hpp"
-#include "../../../game/components/CharacterStatus.hpp"
+#include "../../../../game/actor/Character.hpp"
+#include "../../../../game/actor/Monster.hpp"
+#include "../../../../game/components/ActorStatus.hpp"
+#include "../../../../game/components/CharacterStatus.hpp"
 
 using Network::Packet::Server::TargetMonsterSelectPacket;
 
