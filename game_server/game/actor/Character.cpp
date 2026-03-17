@@ -7,10 +7,10 @@
 #include "../Shortcut.hpp"
 #include "../components/CharacterStatus.hpp"
 #include "../components/PlayerAppearance.hpp"
+#include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
 #include "../inventory/Gear.hpp"
 #include "../inventory/ItemStorage.hpp"
-#include "../skill/SkillDirectory.hpp"
 #include "../skill/SkillTemplateDirectory.hpp"
 
 #include <l2cpp/Exception.hpp>
@@ -26,7 +26,6 @@ struct Character::CharacterImpl
 
     Gear                      gear;
     ItemStorage               inventory;
-    SkillDirectory            skills;
     std::array<Shortcut, 120> shortcuts{};
 };
 
@@ -78,11 +77,6 @@ Character::Character()
     imperialCrusaderShield.tmplate.bodyPart = GearSlot::LeftHand;
     item = _impl->inventory.add(std::move(imperialCrusaderShield));
     _impl->gear.equipItem(item.get());
-
-    if (accessLevel > 0)
-        _impl->skills.learn(7029, 4); // Super Haste
-
-    _impl->skills.learn(1239, 1); // Hurricane
 }
 
 Character::Character(Character &&) noexcept = default;
@@ -101,9 +95,6 @@ auto Character::inventory() const -> ItemStorage const & { return _impl->invento
 
 auto Character::gear()       -> Gear       & { return _impl->gear; }
 auto Character::gear() const -> Gear const & { return _impl->gear; }
-
-auto Character::skills()       -> SkillDirectory       & { return _impl->skills; }
-auto Character::skills() const -> SkillDirectory const & { return _impl->skills; }
 
 template<typename T, typename F>
 void assign(T & t, F f) { t = static_cast<T>(f); }
@@ -137,7 +128,7 @@ auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
 
     if (shortcut.type() == ShortcutType::Skill)
     {
-        if (auto const skill = _impl->skills.skill(static_cast<SkillId>(shortcut.targetId())); skill)
+        if (auto const skill = skills().skill(static_cast<SkillId>(shortcut.targetId())); skill)
             shortcut.setSkillLevel(skill->get().tmplate().level());
     }
 

@@ -4,7 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
-#include "../game/skill/SkillDirectory.hpp"
+#include "../game/components/SkillDirectory.hpp"
 
 DEFINE_PACKET_HANDLER(SkillUse)
 {

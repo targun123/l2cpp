@@ -6,6 +6,7 @@
 // Project includes
 #include "../components/ActorIdentity.hpp"
 #include "../components/Position.hpp"
+#include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
 
 #include <l2cpp/details/Pimpl.hpp>
@@ -26,6 +27,7 @@ Actor::Actor()
 {
     addComponent<ActorIdentity>();
     addComponent<Position>();
+    addComponent<SkillDirectory>();
 
     auto & stats = addComponent<Stats>();
     stats.STR           = 40;
@@ -64,6 +66,9 @@ auto Actor::team()     const -> Team              { return _impl->team;         
 
 auto Actor::baseStats()  const -> Stats         const & { return component<Stats>();         }
 auto Actor::stats()      const -> ComputedStats const & { return component<ComputedStats>(); }
+
+auto Actor::skills()       -> SkillDirectory       & { return component<SkillDirectory>(); }
+auto Actor::skills() const -> SkillDirectory const & { return component<SkillDirectory>(); }
 
 auto Actor::target() const -> OptionalRef<Actor const> { return _impl->target; }
 

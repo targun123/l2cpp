@@ -9,7 +9,7 @@
 #include "../game/actor/Monster.hpp"
 #include "../game/components/NpcAppearance.hpp"
 #include "../game/components/PlayerAppearance.hpp"
-#include "../game/skill/SkillDirectory.hpp"
+#include "../game/components/SkillDirectory.hpp"
 #include "../network/packets/server/SkillListPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"

@@ -4,7 +4,7 @@
 #include "SkillDirectory.hpp"
 
 // Project includes
-#include "SkillTemplateDirectory.hpp"
+#include "../skill/SkillTemplateDirectory.hpp"
 
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/details/Pimpl.hpp>

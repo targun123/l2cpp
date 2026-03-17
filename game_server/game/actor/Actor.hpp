@@ -11,6 +11,7 @@
 
 #include <l2cpp/Pimpl.hpp>
 
+class SkillDirectory;
 struct ComputedStats;
 struct Stats;
 
@@ -31,6 +32,9 @@ public:
 
     auto baseStats() const -> Stats const &;
     auto stats() const -> ComputedStats const &;
+
+    auto skills()       -> SkillDirectory &;
+    auto skills() const -> SkillDirectory const &;
 
     auto target() const -> OptionalRef<Actor const>;
     bool isInCombatStance() const;

@@ -50,13 +50,9 @@ public:
     auto gear()       -> Gear       &;
     auto gear() const -> Gear const &;
 
-    auto skills()       -> SkillDirectory &;
-    auto skills() const -> SkillDirectory const &;
-
 public:
     void computeStats();
     void setProfession(Profession profession);
-    void setLevel(u32 level);
 
     auto setShortcut(Shortcut shortcut) -> Shortcut &;
     void delShortcut(size_t index);

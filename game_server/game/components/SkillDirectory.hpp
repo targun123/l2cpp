@@ -4,18 +4,19 @@
 #pragma once
 
 // Project includes
-#include "Skill.hpp"
+#include "../ecs/Component.hpp"
+#include "../skill/Skill.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 
 /// List of skills a (N)PC has learned.
-class SkillDirectory
+class SkillDirectory : public Component
 {
 public:
     SkillDirectory();
     SkillDirectory(SkillDirectory &&) noexcept;
     SkillDirectory & operator=(SkillDirectory &&) noexcept;
-    ~SkillDirectory();
+    ~SkillDirectory() override;
 
 public:
     auto size() const -> size_t;
