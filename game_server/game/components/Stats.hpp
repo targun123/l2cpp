@@ -30,6 +30,6 @@ struct ComputedStats : public Stats
         : Stats(std::move(stats))
     {}
 
-    double moveSpeedMutliplier = 1;
-    double pAtkSpeedMutliplier = 1;
+    double moveSpeedMultiplier = 1;
+    double pAtkSpeedMultiplier = 1;
 };

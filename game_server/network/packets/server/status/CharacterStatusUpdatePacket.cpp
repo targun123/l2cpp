@@ -97,8 +97,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.baseStats().flyWalkSpeed
         << c.baseStats().flyRunSpeed
         << c.baseStats().flyWalkSpeed
-        << c.stats().moveSpeedMutliplier
-        << c.stats().pAtkSpeedMutliplier
+        << c.stats().moveSpeedMultiplier
+        << c.stats().pAtkSpeedMultiplier
         << c.appearance().collisionRadius
         << c.appearance().collisionHeight
         << c.appearance().hairStyleId

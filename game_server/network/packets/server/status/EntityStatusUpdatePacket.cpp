@@ -14,6 +14,8 @@ using namespace Network::Packet::Server;
 EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
     : Packet(0x03)
 {
+    using enum GearSlot;
+
     *this
         << c.position().x
         << c.position().y
@@ -24,13 +26,17 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << c.appearance().race()
         << c.appearance().sex
         << c.profession()
-        << 0 // unknown
-    ;
-
-    auto const headItem = c.gear().item(GearSlot::Head);
-    *this << (headItem ? headItem->get().tmplate.id : 0);
-
-    *this
+        << 0 // ?
+        << c.gear().itemTemplateId(Head)
+        << c.gear().itemTemplateId(RightHand)
+        << c.gear().itemTemplateId(LeftHand)
+        << c.gear().itemTemplateId(Gloves)
+        << c.gear().itemTemplateId(Chest)
+        << c.gear().itemTemplateId(Legs)
+        << c.gear().itemTemplateId(Feet)
+        << c.gear().itemTemplateId(Back)
+        << 0 // c.gear().itemTemplateId(GearSlot::LeftHand)
+        << c.gear().itemTemplateId(Hair)
         << 0 // (c.isPvpFlagged ? 1 : 0)
         << 0 // karma
         << c.stats().mAtkSpeed
@@ -45,8 +51,8 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << c.baseStats().flyWalkSpeed
         << c.baseStats().flyRunSpeed
         << c.baseStats().flyWalkSpeed
-        << c.stats().moveSpeedMutliplier
-        << c.stats().pAtkSpeedMutliplier
+        << c.stats().moveSpeedMultiplier
+        << c.stats().pAtkSpeedMultiplier
         << c.appearance().collisionRadius
         << c.appearance().collisionHeight
         << c.appearance().hairStyleId
@@ -57,14 +63,14 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << 0     // clan crest id
         << 0     // alliance id
         << 0     // alliance crest id
-        << 0     // separator
+        << 0     // ?
         << true  // standing
         << true  // running
         << c.isInCombatStance()
         << false // not in Oly, not (fake) dead
         << false // not invisible
-        << static_cast<u8>(0) // mount type (0=none 1=Strider 2=Wyvern)
-        << static_cast<u8>(0) // private store type
+        << 0_u8 // mount type (0=none 1=Strider 2=Wyvern)
+        << 0_u8 // private store type
     ;
 
     *this << static_cast<u16>(c.cubics.size());
@@ -79,7 +85,12 @@ EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
         << c.profession()
         << static_cast<u32>(c.cp.max)
         << static_cast<u32>(c.cp.current)
-        << false // mounted
+    ;
+
+    auto const weapon = c.gear().weapon();
+    *this << (weapon ? weapon->get().enchantLevel : 0_u8);
+
+    *this
         << c.team()
         << 0 // clan large crest id
         << false // c.isNoble

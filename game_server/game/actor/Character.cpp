@@ -22,6 +22,7 @@
 struct Character::CharacterImpl
 {
     Profession profession = Profession::HumanFighter;
+    u32 level = 1;
 
     Gear                      gear;
     ItemStorage               inventory;
@@ -40,7 +41,6 @@ Character::Character()
     auto & appearance = addComponent<PlayerAppearance>();
     appearance.collisionHeight = 23.5;
     appearance.collisionRadius = 9;
-
 
     Item formalWear;
     formalWear.tmplate.id       = 6408;
@@ -87,10 +87,11 @@ Character::Character(Character &&) noexcept = default;
 Character & Character::operator=(Character &&) noexcept = default;
 Character::~Character() = default;
 
+auto Character::profession() const -> Profession { return _impl->profession; }
+auto Character::level()      const -> u32        { return _impl->level;      }
+
 auto Character::appearance()       -> PlayerAppearance       & { return component<PlayerAppearance>(); }
 auto Character::appearance() const -> PlayerAppearance const & { return component<PlayerAppearance>(); }
-
-auto Character::profession() const -> Profession            { return _impl->profession;          }
 
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
 auto Character::inventory() const -> ItemStorage const & { return _impl->inventory; }
@@ -112,19 +113,25 @@ void Character::computeStats()
     auto       & stats     = component<ComputedStats>();
 
     // Then update dependent stats
-    assign(stats.pAtkSpeedMutliplier, 1. + (stats.DEX - 20) / 100.);
-    assign(stats.moveSpeedMutliplier, 1. + (stats.DEX - 20) / 100.);
+    assign(stats.pAtkSpeedMultiplier, 1. + (stats.DEX - 20) / 100.);
+    assign(stats.moveSpeedMultiplier, 1. + (stats.DEX - 20) / 100.);
 
-    assign(stats.pAtkSpeed,     baseStats.pAtkSpeed     * stats.pAtkSpeedMutliplier);
-    assign(stats.runSpeed,      baseStats.runSpeed      * stats.moveSpeedMutliplier);
-    assign(stats.walkSpeed,     baseStats.walkSpeed     * stats.moveSpeedMutliplier);
-    assign(stats.swimRunSpeed,  baseStats.swimRunSpeed  * stats.moveSpeedMutliplier);
-    assign(stats.swimWalkSpeed, baseStats.swimWalkSpeed * stats.moveSpeedMutliplier);
-    assign(stats.flyRunSpeed,   baseStats.flyRunSpeed   * stats.moveSpeedMutliplier);
-    assign(stats.flyWalkSpeed,  baseStats.flyWalkSpeed  * stats.moveSpeedMutliplier);
+    assign(stats.pAtkSpeed,     baseStats.pAtkSpeed     * stats.pAtkSpeedMultiplier);
+    assign(stats.runSpeed,      baseStats.runSpeed      * stats.moveSpeedMultiplier);
+    assign(stats.walkSpeed,     baseStats.walkSpeed     * stats.moveSpeedMultiplier);
+    assign(stats.swimRunSpeed,  baseStats.swimRunSpeed  * stats.moveSpeedMultiplier);
+    assign(stats.swimWalkSpeed, baseStats.swimWalkSpeed * stats.moveSpeedMultiplier);
+    assign(stats.flyRunSpeed,   baseStats.flyRunSpeed   * stats.moveSpeedMultiplier);
+    assign(stats.flyWalkSpeed,  baseStats.flyWalkSpeed  * stats.moveSpeedMultiplier);
 }
 
 void Character::setProfession(Profession const profession) { _impl->profession = profession; }
+
+void Character::setLevel(u32 level)
+{
+    L2CPP_B_ASSERT(0 < level && level <= 80, "Invalid character level '{}' (should be between [ 1 ; 80 ])", level);
+    _impl->level = level;
+}
 
 auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
 {

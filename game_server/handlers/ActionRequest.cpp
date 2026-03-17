@@ -7,6 +7,8 @@
 #include "../game/actor/Character.hpp"
 #include "../game/constants/ItemGrade.hpp"
 #include "../game/inventory/Gear.hpp"
+#include "../network/packets/server/TargetMonsterSelectPacket.hpp"
+#include "../network/packets/server/TargetSelectPacket.hpp"
 
 DEFINE_PACKET_HANDLER(ActionRequest)
 {
@@ -24,11 +26,16 @@ DEFINE_PACKET_HANDLER(ActionRequest)
     // No current target or current target is different?
     if (!character.target() || character.target()->get().id() != targetId)
     {
-        /**/ if (auto const c = World::character(targetId); c) character.setTarget(c->get());
-        else if (auto const m = World::monster(targetId);   m) character.setTarget(m->get());
-        else                                                   return;
-
-        player.connection().send(Packet(0xa6) << targetId << static_cast<u16>(-10));
+        /**/ if (auto const c = World::character(targetId); c)
+        {
+            character.setTarget(c->get());
+            player.connection().send(TargetSelectPacket(character, c->get()));
+        }
+        else if (auto const m = World::monster(targetId); m)
+        {
+            character.setTarget(m->get());
+            player.connection().send(TargetMonsterSelectPacket(character, m->get()));
+        }
     }
     else // second request on target, launch attack!
     {

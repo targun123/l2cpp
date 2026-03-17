@@ -32,8 +32,8 @@ NpcStatusUpdatePacket::NpcStatusUpdatePacket(NonPlayableActor const & actor)
         << actor.stats().flyWalkSpeed
         << actor.stats().flyRunSpeed
         << actor.stats().flyWalkSpeed
-        << actor.stats().moveSpeedMutliplier
-        << actor.stats().pAtkSpeedMutliplier
+        << actor.stats().moveSpeedMultiplier
+        << actor.stats().pAtkSpeedMultiplier
         << actor.appearance().collisionRadius
         << actor.appearance().collisionHeight
         << 0 // right hand
