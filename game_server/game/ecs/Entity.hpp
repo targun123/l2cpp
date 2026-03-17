@@ -45,7 +45,7 @@ public:
 
         if (auto const it = _components.find(typeid(T)); it != _components.end())
         {
-            component = std::move(it->second);
+            component.reset(static_cast<T *>(it->second.release()));
             _components.erase(it);
         }
 
