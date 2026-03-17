@@ -5,8 +5,8 @@
 
 // Project includes
 #include "SkillUid.hpp"
-#include "SkillType.hpp"
-#include "SkillTargetType.hpp"
+#include "../constants/SkillType.hpp"
+#include "../constants/SkillTargetType.hpp"
 
 // C++ includes
 #include <chrono>
