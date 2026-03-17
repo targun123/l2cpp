@@ -1,7 +1,7 @@
 /// @author    Chnossos
 /// @date      Created on 2026-02-28
 
-#include "EntityStatusUpdatePacket.hpp"
+#include "CharacterStatusUpdateBroadcastPacket.hpp"
 
 // Project includes
 #include "../../../../game/actor/Character.hpp"
@@ -12,7 +12,7 @@
 
 using namespace Network::Packet::Server;
 
-EntityStatusUpdatePacket::EntityStatusUpdatePacket(Character const & c)
+CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Character const & c)
     : Packet(0x03)
 {
     using enum GearSlot;

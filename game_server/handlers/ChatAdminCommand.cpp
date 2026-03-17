@@ -11,7 +11,7 @@
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/skill/SkillDirectory.hpp"
 #include "../network/packets/server/SkillListPacket.hpp"
-#include "../network/packets/server/status/EntityStatusUpdatePacket.hpp"
+#include "../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
 #include "_Common.hpp"
 
@@ -113,6 +113,6 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         d.appearance().collisionHeight = 23;
         d.appearance().collisionRadius = 7.5;
         d.setProfession(Profession::ElvenMystic);
-        player.connection().send(EntityStatusUpdatePacket(d));
+        player.connection().send(CharacterStatusUpdateBroadcastPacket(d));
     }
 }
