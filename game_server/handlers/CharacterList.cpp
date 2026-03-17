@@ -6,7 +6,7 @@
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterStatus.hpp"
 #include "../game/components/PlayerAppearance.hpp"
-#include "../game/inventory/Gear.hpp"
+#include "../game/components/Gear.hpp"
 
 DEFINE_PACKET_HANDLER(CharacterList)
 {

@@ -11,6 +11,7 @@
 
 #include <l2cpp/Pimpl.hpp>
 
+class Gear;
 class SkillDirectory;
 struct ComputedStats;
 struct Stats;
@@ -32,6 +33,9 @@ public:
 
     auto baseStats() const -> Stats const &;
     auto stats() const -> ComputedStats const &;
+
+    auto gear()       -> Gear       &;
+    auto gear() const -> Gear const &;
 
     auto skills()       -> SkillDirectory &;
     auto skills() const -> SkillDirectory const &;

@@ -6,7 +6,7 @@
 #include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/constants/ItemGrade.hpp"
-#include "../game/inventory/Gear.hpp"
+#include "../game/components/Gear.hpp"
 #include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
 #include "../network/packets/server/target/TargetSelectPacket.hpp"
 

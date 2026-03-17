@@ -13,11 +13,9 @@
 // C++ includes
 #include <vector>
 
-class Gear;
 class ItemStorage;
 class PlayerAppearance;
 class Shortcut;
-class SkillDirectory;
 struct CharacterStatus;
 
 class Character : public Actor
@@ -46,9 +44,6 @@ public:
 
     auto inventory()       -> ItemStorage       &;
     auto inventory() const -> ItemStorage const &;
-
-    auto gear()       -> Gear       &;
-    auto gear() const -> Gear const &;
 
 public:
     void computeStats();

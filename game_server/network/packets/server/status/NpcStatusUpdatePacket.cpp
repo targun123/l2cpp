@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../../../../game/actor/NonPlayableActor.hpp"
+#include "../../../../game/components/Gear.hpp"
 #include "../../../../game/components/NpcAppearance.hpp"
 #include "../../../../game/components/Stats.hpp"
 
@@ -36,17 +37,18 @@ NpcStatusUpdatePacket::NpcStatusUpdatePacket(NonPlayableActor const & actor)
         << actor.stats().pAtkSpeedMultiplier
         << actor.appearance().collisionRadius
         << actor.appearance().collisionHeight
-        << 0 // right hand
-        << 0 // chest
-        << 0 // left hand
+        << actor.gear().itemTemplateId(GearSlot::RightHand)
+        << actor.gear().itemTemplateId(GearSlot::Chest)
+        << actor.gear().itemTemplateId(GearSlot::LeftHand)
         << actor.appearance().nameIsVisible()
         << true // isRunning
         << actor.isInCombatStance()
         << false // is like dead
-        << false // isSummoned
+        << 0_u8  // visibility: 0=visible 1=invisible 2=summoned (??)
         << actor.name()
         << actor.title()
         << actor.appearance().titleColor()
+        // next properties taken from summon's owner
         << 0 // not pvp flagged
         << 0 // no karma
         << 0 // no visual effect
@@ -58,6 +60,8 @@ NpcStatusUpdatePacket::NpcStatusUpdatePacket(NonPlayableActor const & actor)
         << actor.team()
         << actor.appearance().collisionRadius
         << actor.appearance().collisionHeight
-        << 0 // weapon enchant level
     ;
+
+    auto const weapon = actor.gear().weapon();
+    *this << (weapon ? weapon->get().enchantLevel : 0);
 }

@@ -6,10 +6,10 @@
 // Project includes
 #include "../Shortcut.hpp"
 #include "../components/CharacterStatus.hpp"
+#include "../components/Gear.hpp"
 #include "../components/PlayerAppearance.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
-#include "../inventory/Gear.hpp"
 #include "../inventory/ItemStorage.hpp"
 #include "../skill/SkillTemplateDirectory.hpp"
 
@@ -24,7 +24,6 @@ struct Character::CharacterImpl
 {
     Profession profession = Profession::HumanFighter;
 
-    Gear                      gear;
     ItemStorage               inventory;
     std::array<Shortcut, 120> shortcuts{};
 };
@@ -43,13 +42,15 @@ Character::Character()
 
     addComponent<CharacterStatus>();
 
+    auto & gear = component<Gear>();
+
     Item formalWear;
     formalWear.tmplate.id       = 6408;
     formalWear.tmplate.name     = "formalWear";
     formalWear.tmplate.category = ItemCategory::Armor;
     formalWear.tmplate.bodyPart = GearSlot::Dress;
     Ref item = _impl->inventory.add(std::move(formalWear));
-    _impl->gear.equipItem(item.get());
+    gear.equipItem(item.get());
 
     Item infinitySpear;
     infinitySpear.tmplate.id       = 6621;
@@ -58,7 +59,7 @@ Character::Character()
     infinitySpear.tmplate.grade    = ItemGrade::S;
     infinitySpear.tmplate.bodyPart = GearSlot::Hands;
     item = _impl->inventory.add(std::move(infinitySpear));
-    _impl->gear.equipItem(item.get());
+    gear.equipItem(item.get());
 
     Item infinityBlade;
     infinityBlade.tmplate.id       = 6611;
@@ -67,7 +68,7 @@ Character::Character()
     infinityBlade.tmplate.grade    = ItemGrade::S;
     infinityBlade.tmplate.bodyPart = GearSlot::RightHand;
     item = _impl->inventory.add(std::move(infinityBlade));
-    _impl->gear.equipItem(item.get());
+    gear.equipItem(item.get());
 
     Item imperialCrusaderShield;
     imperialCrusaderShield.tmplate.id       = 6377;
@@ -76,7 +77,7 @@ Character::Character()
     imperialCrusaderShield.tmplate.grade    = ItemGrade::S;
     imperialCrusaderShield.tmplate.bodyPart = GearSlot::LeftHand;
     item = _impl->inventory.add(std::move(imperialCrusaderShield));
-    _impl->gear.equipItem(item.get());
+    gear.equipItem(item.get());
 }
 
 Character::Character(Character &&) noexcept = default;
@@ -92,9 +93,6 @@ auto Character::appearance() const -> PlayerAppearance const & { return componen
 
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
 auto Character::inventory() const -> ItemStorage const & { return _impl->inventory; }
-
-auto Character::gear()       -> Gear       & { return _impl->gear; }
-auto Character::gear() const -> Gear const & { return _impl->gear; }
 
 template<typename T, typename F>
 void assign(T & t, F f) { t = static_cast<T>(f); }

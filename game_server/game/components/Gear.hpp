@@ -4,18 +4,19 @@
 #pragma once
 
 // Project includes
-#include "GearTransaction.hpp"
+#include "../ecs/Component.hpp"
+#include "../inventory/GearTransaction.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 
 /// Handles the items that the character currently wears
-class Gear
+class Gear : public Component
 {
 public:
     Gear();
     Gear(Gear &&) noexcept;
     Gear & operator=(Gear &&) noexcept;
-    ~Gear();
+    ~Gear() override;
 
 public:
     auto item(GearSlot slot)       -> OptionalRef<Item>;

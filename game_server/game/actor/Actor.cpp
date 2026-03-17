@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../components/ActorIdentity.hpp"
+#include "../components/Gear.hpp"
 #include "../components/Position.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
@@ -26,6 +27,7 @@ template class Pimpl<Actor::ActorImpl>;
 Actor::Actor()
 {
     addComponent<ActorIdentity>();
+    addComponent<Gear>();
     addComponent<Position>();
     addComponent<SkillDirectory>();
 
@@ -66,6 +68,9 @@ auto Actor::team()     const -> Team              { return _impl->team;         
 
 auto Actor::baseStats()  const -> Stats         const & { return component<Stats>();         }
 auto Actor::stats()      const -> ComputedStats const & { return component<ComputedStats>(); }
+
+auto Actor::gear()       -> Gear       & { return component<Gear>(); }
+auto Actor::gear() const -> Gear const & { return component<Gear>(); }
 
 auto Actor::skills()       -> SkillDirectory       & { return component<SkillDirectory>(); }
 auto Actor::skills() const -> SkillDirectory const & { return component<SkillDirectory>(); }
