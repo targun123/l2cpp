@@ -1,0 +1,49 @@
+stateDiagram-v2
+    direction LR
+
+    [*] --> Idle
+
+    Idle --> Moving
+    Moving --> [*]
+
+    Idle --> Sitting
+    Sitting --> [*]
+
+    Idle --> AlikeDead
+    AlikeDead --> [*]
+
+    Idle --> Fishing
+    Fishing --> [*]
+
+    Idle --> Trading
+    Trading --> [*]
+
+    Idle --> PreparingStore
+    PreparingStore --> [*]
+
+    Idle --> PreparingWorkshop
+    PreparingWorkshop --> [*]
+
+    Idle --> RunningStore
+    RunningStore --> [*]
+
+    Idle --> RunningWorkshop
+    RunningWorkshop --> [*]
+
+    Idle --> Attacking
+    Attacking --> CombatIdle
+
+    Idle --> Casting
+    Casting --> CombatIdle
+    Casting --> [*]
+    CombatIdle --> [*]
+
+    Idle --> Following
+    Following --> [*]
+
+    Idle --> Chasing
+    Chasing --> ChasingTired
+    ChasingTired --> ChasingStopped
+    ChasingStopped --> Chasing
+    ChasingStopped --> BackToSpawn
+    BackToSpawn --> [*]

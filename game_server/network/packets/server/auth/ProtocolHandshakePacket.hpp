@@ -1,0 +1,26 @@
+/// @author    Chnossos
+/// @date      Created on 2026-03-03
+
+#pragma once
+
+// Project includes
+#include <l2cpp/network/Packet.hpp>
+
+namespace Network::Packet::Server
+{
+    namespace details
+    {
+        template<bool ok>
+        struct ProtocolHandshakeBase : public l2cpp::Network::Packet
+        {
+            ProtocolHandshakeBase(): Packet(0x00) { *this << ok; }
+        };
+    }
+
+    using ProtocolHandshakeFailPacket = details::ProtocolHandshakeBase<false>;
+
+    struct ProtocolHandshakeOkPacket final : public details::ProtocolHandshakeBase<true>
+    {
+        explicit ProtocolHandshakeOkPacket(std::span<byte const> encryptionKey);
+    };
+}

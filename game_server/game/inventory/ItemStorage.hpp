@@ -1,0 +1,38 @@
+/// @author    Chnossos
+/// @date      Created on 2026-03-09
+
+#pragma once
+
+// Project includes
+#include "Item.hpp"
+
+#include <l2cpp/Pimpl.hpp>
+
+// C++ includes
+#include <vector>
+
+/// Could be a player/pet inventory, a wharehouse, etc.
+class ItemStorage
+{
+public:
+    ItemStorage();
+    ItemStorage(ItemStorage &&) noexcept;
+    ItemStorage & operator=(ItemStorage &&) noexcept;
+    virtual ~ItemStorage();
+
+public:
+    auto item(GameObjectId uid)       -> OptionalRef<Item>;
+    auto item(GameObjectId uid) const -> OptionalRef<Item const>;
+    auto items() const -> std::vector<Ref<Item const>>;
+    auto limit() const -> u16;
+
+public:
+    auto add(Item && item) -> Item &;
+
+    /// @return Gives a chance to take back ownership the item instance, else it gets deleted.
+    auto remove(Item const &) -> Item;
+
+private:
+    struct ItemStorageImpl;
+    Pimpl<ItemStorageImpl> _impl;
+};

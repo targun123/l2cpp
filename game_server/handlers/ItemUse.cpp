@@ -1,0 +1,63 @@
+/// @author    Chnossos
+/// @date      Created on 2026-03-04
+
+#pragma once
+
+// Project includes
+#include "_Common.hpp"
+#include "../game/actor/Character.hpp"
+#include "../game/components/Gear.hpp"
+#include "../game/inventory/ItemStorage.hpp"
+#include "../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
+#include "../network/packets/server/inventory/InventoryUpdatePacket.hpp"
+
+// C++ includes
+#include <ranges>
+
+DEFINE_PACKET_HANDLER(ItemUse)
+{
+    PacketReader reader(player.connection().readBuffer().subspan(3));
+
+    GameObjectId uid;
+    bool ctrlPressed;
+    reader >> uid >> ctrlPressed;
+
+    auto & character = player.currentCharacter()->get();
+    auto const item  = character.inventory().item(uid);
+    if (!item)
+        return;
+
+    switch (item->get().tmplate.category)
+    {
+        case ItemCategory::Weapon:
+        case ItemCategory::Armor:
+        case ItemCategory::Accessory:
+        {
+            if (auto const transaction = character.gear().equipItem(item->get()); transaction.succeeded)
+            {
+                InventoryUpdatePacket p;
+                if (!transaction.oldItems.empty())
+                {
+                    for (auto const & oldItem : transaction.oldItems | std::views::values)
+                        p.appendModifiedItem(oldItem.get());
+                }
+
+                if (transaction.curItem)
+                    p.appendModifiedItem(*transaction.curItem);
+
+                player.connection().send(p);
+                player.connection().send(CharacterStatusUpdatePacket(character));
+            }
+            break;
+        }
+        case ItemCategory::Quest:
+            break;
+        case ItemCategory::Adena:
+            break;
+        case ItemCategory::Misc:
+            break;
+
+        default:
+            break;
+    }
+}
