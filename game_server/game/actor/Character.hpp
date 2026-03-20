@@ -14,6 +14,7 @@
 #include <vector>
 
 class ItemStorage;
+class Player;
 class PlayerAppearance;
 class Shortcut;
 struct CharacterStatus;
@@ -21,7 +22,10 @@ struct CharacterStatus;
 class Character : public Actor
 {
 public:
-    Character();
+    OptionalRef<Player> player;
+
+public:
+    explicit Character(OptionalRef<Player> = {});
     Character(Character &&) noexcept;
     Character & operator=(Character &&) noexcept;
     ~Character() override;

@@ -39,14 +39,13 @@ DEFINE_PACKET_HANDLER(ActionRequest)
     }
     else // second request on target, launch attack!
     {
-        // Enable attack stance on opponents
-        player.connection().send(Packet(0x2b) << targetId);
-        player.connection().send(Packet(0x2b) << character.id());
+        character.state = ActorState::Attacking;
+        character.setNextAction<AttackAction>();
 
         // Attack once, use soulshots if a weapon is equipped
-        auto flag = 0_u8;
+        auto flags = 0_u8;
         if (auto const weapon = character.gear().weapon(); weapon)
-            flag |= 0x10 | std::to_underlying(weapon->get().tmplate.grade);
+            flags |= 0x10 | std::to_underlying(weapon->get().tmplate.grade);
 
         Packet p(0x05);
         p
@@ -54,11 +53,11 @@ DEFINE_PACKET_HANDLER(ActionRequest)
             // Hit
             << targetId
             << 10 // dmg
-            << flag  // flags: 0x10=use_ss 0x20=crit_sound 0x40=shield_sound 0x80=miss_sound
+            << flags // flags: 0x10=use_ss 0x20=crit_sound 0x40=shield_sound 0x80=miss_sound
             << character.position().x
             << character.position().y
             << character.position().z
-            << u16(0) // other hits (e.g. dual fists)
+            << u16(0) // other hits (e.g. polearm)
             << character.target()->get().position().x
             << character.target()->get().position().y
             << character.target()->get().position().z

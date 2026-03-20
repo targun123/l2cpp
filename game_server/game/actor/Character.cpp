@@ -32,7 +32,8 @@ template class Pimpl<Character::CharacterImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Character::Character()
+Character::Character(OptionalRef<Player> p)
+    : player(std::move(p))
 {
     setPosition(-83968, 244634, -3500); // Talking Island GK
 

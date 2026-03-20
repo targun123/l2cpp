@@ -18,6 +18,7 @@ struct Actor::ActorImpl
     bool isInCombatStance = false;
 
     OptionalRef<Actor const> target;
+    std::deque<std::unique_ptr<Action>>            actionQueue;
 };
 
 template class Pimpl<Actor::ActorImpl>;
@@ -78,6 +79,8 @@ auto Actor::skills() const -> SkillDirectory const & { return component<SkillDir
 auto Actor::target() const -> OptionalRef<Actor const> { return _impl->target; }
 
 bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
+
+auto Actor::actions() -> std::deque<std::unique_ptr<Action>> & { return _impl->actionQueue; }
 
 void Actor::setName (std::wstring name)  { component<ActorIdentity>().name  = std::move(name);  }
 void Actor::setTitle(std::wstring title) { component<ActorIdentity>().title = std::move(title); }

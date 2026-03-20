@@ -25,7 +25,9 @@ public:
     static auto monster(GameObjectId)   -> OptionalRef<Monster>;
 
 public:
-    static auto addCharacter() -> Character &;
+    static void update(ClockDuration elapsed);
+
+    static auto addCharacter(OptionalRef<Player> = {}) -> Character &;
     static void delCharacter(GameObjectId id);
 
     static auto addMonster() -> Monster &;
