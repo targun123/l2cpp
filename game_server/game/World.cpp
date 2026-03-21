@@ -6,18 +6,15 @@
 // Project includes
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include "../network/packets/server/chat/ChatNpcSayPacket.hpp"
 #include "actions/Attack.hpp"
 #include "components/Gear.hpp"
-#include "components/NpcAppearance.hpp"
-#include "components/Stats.hpp"
+#include "components/Position.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 
 // C++ includes
 #include <ranges>
-#include <spdlog/spdlog.h>
-
-#include "components/Position.hpp"
 
 std::unordered_map<GameObjectId, Character> World::_characters;
 std::unordered_map<GameObjectId, Monster>   World::_monsters;
@@ -99,10 +96,8 @@ void World::update(ClockDuration const elapsed)
                 player.connection().send(l2cpp::Network::Packet(0x2b) << c.id());
 
                 // Make the target go Ouch!
-                l2cpp::Network::Packet p(0x02);
-                p << c.target()->get().id() << 0 << static_cast<Monster const &>(c.target()->get()).appearance().id()
-                  << L"Ouch!";
-                c.player->get().connection().send(p);
+                Network::Packet::Server::ChatNpcSayPacket p(c.target()->get(), ChatType::General, L"Ouch!");
+                player.connection().send(p);
                 action.restart();
                 // c.state = ActorState::Idle;
             }

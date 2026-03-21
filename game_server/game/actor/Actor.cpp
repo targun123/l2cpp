@@ -14,6 +14,7 @@
 
 struct Actor::ActorImpl
 {
+    ActorType type;
     Team team = Team::None;
     bool isInCombatStance = false;
 
@@ -25,8 +26,10 @@ template class Pimpl<Actor::ActorImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Actor::Actor()
+Actor::Actor(ActorType const type)
 {
+    _impl->type = type;
+
     addComponent<ActorIdentity>();
     addComponent<Gear>();
     addComponent<Position>();
@@ -62,6 +65,7 @@ Actor::Actor(Actor &&) noexcept = default;
 Actor & Actor::operator=(Actor &&) noexcept = default;
 Actor::~Actor() = default;
 
+auto Actor::type()     const -> ActorType         { return _impl->type;                      }
 auto Actor::name()     const -> std::wstring_view { return component<ActorIdentity>().name;  }
 auto Actor::title()    const -> std::wstring_view { return component<ActorIdentity>().title; }
 auto Actor::position() const -> Position const &  { return component<Position>();            }

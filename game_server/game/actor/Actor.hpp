@@ -7,6 +7,7 @@
 #include "../GameObject.hpp"
 #include "../actions/Action.hpp"
 #include "../constants/ActorState.hpp"
+#include "../constants/ActorType.hpp"
 #include "../constants/Team.hpp"
 #include "../ecs/Entity.hpp"
 
@@ -25,12 +26,13 @@ public:
     ActorState state = ActorState::Idle;
 
 public:
-    Actor();
+    explicit Actor(ActorType type);
     Actor(Actor &&) noexcept;
     Actor & operator=(Actor &&) noexcept;
     ~Actor() override = 0;
 
 public:
+    auto type() const -> ActorType;
     auto name() const -> std::wstring_view;
     auto title() const -> std::wstring_view;
     auto position() const -> Position const &;
