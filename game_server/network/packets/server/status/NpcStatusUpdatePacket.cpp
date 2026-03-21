@@ -7,6 +7,7 @@
 #include "../../../../game/actor/NonPlayableActor.hpp"
 #include "../../../../game/components/Gear.hpp"
 #include "../../../../game/components/NpcAppearance.hpp"
+#include "../../../../game/components/Position.hpp"
 #include "../../../../game/components/Stats.hpp"
 
 using Network::Packet::Server::NpcStatusUpdatePacket;

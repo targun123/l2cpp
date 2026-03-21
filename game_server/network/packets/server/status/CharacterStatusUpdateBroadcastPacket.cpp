@@ -8,6 +8,7 @@
 #include "../../../../game/components/Gear.hpp"
 #include "../../../../game/components/CharacterStatus.hpp"
 #include "../../../../game/components/Stats.hpp"
+#include "../../../../game/components/Position.hpp"
 #include "../../../../game/components/PlayerAppearance.hpp"
 
 using namespace Network::Packet::Server;

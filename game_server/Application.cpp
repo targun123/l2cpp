@@ -95,8 +95,8 @@ bool Application::ApplicationImpl::run()
         ioClock.restart();
         if (auto const count = ioContext.poll(); count)
         {
-            SPDLOG_TRACE("{} io handlers took {:%Q%q} to execute",
-                         count, std::chrono::duration_cast<std::chrono::milliseconds>(ioClock.restart()));
+            SPDLOG_TRACE("{} io handlers took {:%Q%q} to execute", count,
+                std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(ioClock.restart()));
         }
 
         World::update(worldClock.restart());

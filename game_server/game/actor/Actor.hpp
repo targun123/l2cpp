@@ -5,69 +5,18 @@
 
 // Project includes
 #include "../GameObject.hpp"
-#include "../ecs/Entity.hpp"
-#include "../components/Position.hpp"
+#include "../actions/Action.hpp"
 #include "../constants/ActorState.hpp"
 #include "../constants/Team.hpp"
+#include "../ecs/Entity.hpp"
 
 #include <l2cpp/Pimpl.hpp>
-
-// C++ includes
-#include <deque>
 
 class Gear;
 class SkillDirectory;
 struct ComputedStats;
+struct Position;
 struct Stats;
-
-class Action
-{
-public:
-    enum class Type
-    {
-        Move, Attack
-    };
-
-public:
-    explicit Action(Type const type) noexcept: _type(type) {}
-    virtual ~Action() noexcept = default;
-
-public:
-    Type type() const { return _type; }
-
-private:
-    Type _type;
-};
-
-struct AttackAction : public Action
-{
-    AttackAction()
-        : Action(Type::Attack)
-        , startTime(std::chrono::steady_clock::now())
-        , lastUpdateTime(startTime)
-    {}
-
-    std::chrono::steady_clock::time_point startTime, lastUpdateTime;
-};
-
-struct MoveAction : public Action
-{
-    MoveAction() noexcept
-        : Action(Type::Move)
-        , startTime(std::chrono::steady_clock::now())
-        , lastUpdateTime(startTime)
-        , input()
-    {}
-
-    s32 originX = 0, originY = 0, originZ = 0;
-    s32 targetX = 0, targetY = 0, targetZ = 0;
-
-    float currentDistance = 0, totalDistance = 0;
-
-    std::chrono::steady_clock::time_point startTime, lastUpdateTime;
-
-    enum class Input { Keyboard, Mouse } input;
-};
 
 /// Base class for player characters, npcs, summons, pets…
 class Actor : public GameObject, public Entity
@@ -99,7 +48,8 @@ public:
     auto target() const -> OptionalRef<Actor const>;
     bool isInCombatStance() const;
 
-    auto actions() -> std::deque<std::unique_ptr<Action>> &;
+    auto currentAction() const -> OptionalRef<Action>;
+    auto nextAction() const -> OptionalRef<Action>;
 
 public:
     void setName(std::wstring name);
@@ -112,11 +62,11 @@ public:
     void setTeam(Team team);
     void setTarget(OptionalRef<Actor const>);
 
-    template<typename A, typename... Args, typename = std::enable_if_t<std::is_base_of_v<Action, A>>>
-    auto setNextAction(Args &&... args)
+    auto setNextAction(std::unique_ptr<Action>) -> Action &;
+    template<typename A, typename... Args> requires std::is_base_of_v<Action, A>
+    auto setNextAction(Args &&... args) -> A &
     {
-        actions().clear();
-        return static_cast<A &>(*actions().emplace_back(std::make_unique<A>(std::forward<Args>(args)...)));
+        return static_cast<A &>(setNextAction(std::make_unique<A>(std::forward<Args>(args)...)));
     }
 
 private:

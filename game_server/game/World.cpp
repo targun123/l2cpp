@@ -6,6 +6,8 @@
 // Project includes
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include "actions/Attack.hpp"
+#include "components/Gear.hpp"
 #include "components/NpcAppearance.hpp"
 #include "components/Stats.hpp"
 
@@ -13,6 +15,9 @@
 
 // C++ includes
 #include <ranges>
+#include <spdlog/spdlog.h>
+
+#include "components/Position.hpp"
 
 std::unordered_map<GameObjectId, Character> World::_characters;
 std::unordered_map<GameObjectId, Monster>   World::_monsters;
@@ -55,13 +60,37 @@ void World::update(ClockDuration const elapsed)
     {
         if (c.state == ActorState::Attacking)
         {
-            auto & action = static_cast<AttackAction &>(*c.actions().front());
+            auto & action = static_cast<AttackAction &>(c.currentAction()->get());
+            if (action.startTime() >= action.lastUpdateTime()) // First tick
+            {
+                action.update(elapsed);
 
-            auto const nextHit = action.startTime + MSec{static_cast<u32>(c.stats().pAtkSpeed / 500. * 1000 * 1.1)};
+                // Attack once, use soulshots if a weapon is equipped
+                auto flags = 0_u8;
+                if (auto const weapon = c.gear().weapon(); weapon)
+                    flags |= 0x10 | std::to_underlying(weapon->get().tmplate.grade);
 
-            action.lastUpdateTime += elapsed;
+                l2cpp::Network::Packet p(0x05);
+                p
+                    << c.id()
+                    // Hit
+                    << c.target()->get().id()
+                    << 10 // dmg
+                    << flags // flags: 0x10=use_ss 0x20=crit_sound 0x40=shield_sound 0x80=miss_sound
+                    << c.position().x
+                    << c.position().y
+                    << c.position().z
+                    << u16(0) // other hits (e.g. polearm)
+                    << c.target()->get().position().x
+                    << c.target()->get().position().y
+                    << c.target()->get().position().z
+                ;
+                c.player->get().connection().send(p);
+                return;
+            }
 
-            if (action.lastUpdateTime >= nextHit)
+            action.update(elapsed);
+            if (action.lastUpdateTime() >= action.startTime() + action.hitDuration)
             {
                 auto & player = c.player->get();
 
@@ -74,17 +103,19 @@ void World::update(ClockDuration const elapsed)
                 p << c.target()->get().id() << 0 << static_cast<Monster const &>(c.target()->get()).appearance().id()
                   << L"Ouch!";
                 c.player->get().connection().send(p);
+                action.restart();
+                // c.state = ActorState::Idle;
             }
 
-            if (action.lastUpdateTime >= (nextHit + 2s))
-            {
-                auto & player = c.player->get();
-                // Stop stance after 2s
-                player.connection().send(l2cpp::Network::Packet(0x2c) << c.id());
-                player.connection().send(l2cpp::Network::Packet(0x2c) << c.target()->get().id());
-
-                c.state = ActorState::Idle;
-            }
+            // if (action.lastUpdateTime() >= action.startTime() + action.hitDuration * 3)
+            // {
+            //     auto & player = c.player->get();
+            //     // Stop stance after 2s
+            //     player.connection().send(l2cpp::Network::Packet(0x2c) << c.id());
+            //     player.connection().send(l2cpp::Network::Packet(0x2c) << c.target()->get().id());
+            //
+            //     c.state = ActorState::Idle;
+            // }
         }
     }
 }
