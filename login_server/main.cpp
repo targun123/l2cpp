@@ -78,7 +78,7 @@ struct Connection
         p << calculateChecksum({p.body().data(), p.bodySize()});
         p << 0_u32; // Align to 8 bytes with zeroes, required by Blowfish
 
-        p.writeSize();
+        p.finalize();
 
         // Save the value before it gets blowfished
         auto const type = p.opCode().has_value() ? std::format("0x{:02x}", p.opCode().value())
@@ -89,19 +89,6 @@ struct Connection
 
         socket.send(boost::asio::buffer(p.buffer()));
         SPDLOG_INFO("sent: {} ({} bytes)", type, p.size());
-    }
-
-private:
-    static void finalize(Packet & p)
-    {
-        // Align to 8 bytes then append checksum
-        while (p.bodySize() % 8 != 0)
-            p << 0_u8;
-
-        p << calculateChecksum({p.body().data(), p.bodySize()});
-        p << 0_u32; // Align to 8 bytes with zeroes, required by Blowfish
-
-        p.writeSize();
     }
 };
 

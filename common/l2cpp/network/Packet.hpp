@@ -28,6 +28,7 @@ public:
 
 public:
     /// Appends a span of bytes to the packet.
+    /// @warning Appending to a finalized packet won't work!
     Packet & operator<<(std::span<byte const> span);
 
     template<typename T, size_t N>
@@ -61,10 +62,6 @@ public:
     }
 
 public:
-    /// Writes the total size at the beginning.
-    void writeSize();
-
-public:
     /// @returns A read-only span of the whole buffer.
     auto buffer() const -> std::span<byte const>;
 
@@ -81,12 +78,23 @@ public:
     /// @returns Size of the body (buffer size minus the initial size).
     auto bodySize() const -> size_t;
 
+public:
+    /// Writes the last bits of data into the packet, then writes the size of the packet at the very beginning.
+    /// @warning Calling more than once won't do anything.
+    void finalize();
+
+protected:
+    virtual void finalizeImpl() {}
+
 private:
     template<typename T>
     Packet & append(T const * ptr, size_t const sz)
     {
         return operator<<({reinterpret_cast<byte const *>(ptr), sz});
     }
+
+    /// Writes the total size at the beginning.
+    void writeSize();
 
 private:
     struct PacketImpl;

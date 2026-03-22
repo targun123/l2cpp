@@ -196,7 +196,7 @@ void Connection::send(l2cpp::Network::Packet & p)
     L2CPP_B_ASSERT(p.opCode().has_value(), "Trying to send a packet without any opCode");
     auto const opCode = p.opCode().value();
 
-    p.writeSize();
+    p.finalize();
 
 #ifndef NDEBUG
     SPDLOG_INFO("sent: 0x{:0{}x} ({} bytes)", opCode, opCode > 0xff ? 4 : 2, p.size());

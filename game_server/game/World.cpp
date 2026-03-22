@@ -7,15 +7,17 @@
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
 #include "../network/packets/server/chat/ChatNpcSayPacket.hpp"
+#include "../network/packets/server/combat/AttackPacket.hpp"
 #include "../network/packets/server/combat/AttackStanceTogglePacket.hpp"
 #include "actions/Attack.hpp"
 #include "components/Gear.hpp"
-#include "components/Position.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 
 // C++ includes
 #include <ranges>
+
+namespace SM = Network::Packet::Server;
 
 std::unordered_map<GameObjectId, Character> World::_characters;
 std::unordered_map<GameObjectId, Monster>   World::_monsters;
@@ -58,52 +60,41 @@ void World::update(ClockDuration const elapsed)
     {
         if (c.state == ActorState::Attacking)
         {
+            auto & player = c.player->get();
+            auto & target = c.target()->get();
             auto & action = static_cast<AttackAction &>(c.currentAction()->get());
-            if (action.startTime() >= action.lastUpdateTime()) // First tick
-            {
-                action.update(elapsed);
 
-                // Attack once, use soulshots if a weapon is equipped
-                auto flags = 0_u8;
-                if (auto const weapon = c.gear().weapon(); weapon)
-                    flags |= 0x10 | std::to_underlying(weapon->get().tmplate.grade);
-
-                l2cpp::Network::Packet p(0x05);
-                p
-                    << c.id()
-                    // Hit
-                    << c.target()->get().id()
-                    << 10 // dmg
-                    << flags // flags: 0x10=use_ss 0x20=crit_sound 0x40=shield_sound 0x80=miss_sound
-                    << c.position().x
-                    << c.position().y
-                    << c.position().z
-                    << u16(0) // other hits (e.g. polearm)
-                    << c.target()->get().position().x
-                    << c.target()->get().position().y
-                    << c.target()->get().position().z
-                ;
-                c.player->get().connection().send(p);
-                return;
-            }
+            bool const isFirstTick = action.startTime() == action.lastUpdateTime();
+            static bool impactDone = false;
 
             action.update(elapsed);
-            if (action.lastUpdateTime() >= action.startTime() + action.hitDuration)
+            if (isFirstTick) // Start a physical attack
             {
-                namespace SM = Network::Packet::Server;
+                // Use soulshots if a weapon is equipped
+                std::optional<ItemGrade> soulShotGrade;
+                if (auto const weapon = c.gear().weapon(); weapon)
+                    soulShotGrade = weapon->get().tmplate.grade;
 
-                auto & player = c.player->get();
-                auto & target = c.target()->get();
-
+                player.connection().send(SM::AttackPacket(c, target, {target, 10, false, soulShotGrade}));
+            }
+            else if (action.lastUpdateTime() >= action.impactTimePoint && !impactDone)
+            {
                 // Enable attack stance on opponents
                 player.connection().send(SM::AttackStanceTogglePacket(true, c));
                 player.connection().send(SM::AttackStanceTogglePacket(true, target));
 
                 // Make the target go Ouch!
-                player.connection().send(SM::ChatNpcSayPacket(target, ChatType::General, L"Ouch!"));
+                static bool toggle;
+                player.connection().send(SM::ChatNpcSayPacket(target, ChatType::General, toggle ? L"Ouch!" : L"Waah!"));
+                toggle = !toggle;
 
-                // Continue attacking
+                impactDone = true;
+            }
+            else if (action.lastUpdateTime() >= action.startTime() + action.hitDuration)
+            {
+                // Continue attacking once the animation is complete
                 action.restart();
+                impactDone = false;
             }
         }
     }
