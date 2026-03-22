@@ -18,6 +18,8 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
 {
     using enum GearSlot;
 
+    auto const weapon = c.gear().weapon();
+
     *this
         << c.position().x
         << c.position().y
@@ -31,13 +33,13 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0 // ?
         << c.gear().itemTemplateId(Head)
         << c.gear().itemTemplateId(RightHand)
-        << c.gear().itemTemplateId(LeftHand)
+        << (weapon && weapon->get().tmplate.bodyPart == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
         << c.gear().itemTemplateId(Gloves)
         << c.gear().itemTemplateId(Chest)
         << c.gear().itemTemplateId(Legs)
         << c.gear().itemTemplateId(Feet)
         << c.gear().itemTemplateId(Back)
-        << 0 // c.gear().itemTemplateId(GearSlot::LeftHand)
+        << c.gear().itemTemplateId(RightHand)
         << c.gear().itemTemplateId(Hair)
         << 0 // (c.isPvpFlagged ? 1 : 0)
         << c.status().karma
@@ -87,12 +89,7 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << c.profession()
         << static_cast<u32>(c.status().cp.max)
         << static_cast<u32>(c.status().cp.current)
-    ;
-
-    auto const weapon = c.gear().weapon();
-    *this << (weapon ? weapon->get().enchantLevel : 0_u8);
-
-    *this
+        << (weapon ? weapon->get().enchantLevel : 0_u8)
         << c.team()
         << 0 // clan large crest id
         << c.status().isNoble

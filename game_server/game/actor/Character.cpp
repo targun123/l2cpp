@@ -80,6 +80,15 @@ Character::Character(OptionalRef<Player> p)
     imperialCrusaderShield.tmplate.bodyPart = GearSlot::LeftHand;
     item = _impl->inventory.add(std::move(imperialCrusaderShield));
     gear.equipItem(item.get());
+
+    Item infinityFang;
+    infinityFang.tmplate.id       = 6618;
+    infinityFang.tmplate.name     = "infinityFang";
+    infinityFang.tmplate.category = ItemCategory::Weapon;
+    infinityFang.tmplate.grade    = ItemGrade::S;
+    infinityFang.tmplate.bodyPart = GearSlot::Hands;
+    item = _impl->inventory.add(std::move(infinityFang));
+    gear.equipItem(item.get());
 }
 
 Character::Character(Character &&) noexcept = default;
