@@ -7,6 +7,7 @@
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
 #include "../network/packets/server/chat/ChatNpcSayPacket.hpp"
+#include "../network/packets/server/combat/AttackStanceTogglePacket.hpp"
 #include "actions/Attack.hpp"
 #include "components/Gear.hpp"
 #include "components/Position.hpp"
@@ -89,28 +90,21 @@ void World::update(ClockDuration const elapsed)
             action.update(elapsed);
             if (action.lastUpdateTime() >= action.startTime() + action.hitDuration)
             {
+                namespace SM = Network::Packet::Server;
+
                 auto & player = c.player->get();
+                auto & target = c.target()->get();
 
                 // Enable attack stance on opponents
-                player.connection().send(l2cpp::Network::Packet(0x2b) << c.target()->get().id());
-                player.connection().send(l2cpp::Network::Packet(0x2b) << c.id());
+                player.connection().send(SM::AttackStanceTogglePacket(true, c));
+                player.connection().send(SM::AttackStanceTogglePacket(true, target));
 
                 // Make the target go Ouch!
-                Network::Packet::Server::ChatNpcSayPacket p(c.target()->get(), ChatType::General, L"Ouch!");
-                player.connection().send(p);
-                action.restart();
-                // c.state = ActorState::Idle;
-            }
+                player.connection().send(SM::ChatNpcSayPacket(target, ChatType::General, L"Ouch!"));
 
-            // if (action.lastUpdateTime() >= action.startTime() + action.hitDuration * 3)
-            // {
-            //     auto & player = c.player->get();
-            //     // Stop stance after 2s
-            //     player.connection().send(l2cpp::Network::Packet(0x2c) << c.id());
-            //     player.connection().send(l2cpp::Network::Packet(0x2c) << c.target()->get().id());
-            //
-            //     c.state = ActorState::Idle;
-            // }
+                // Continue attacking
+                action.restart();
+            }
         }
     }
 }
