@@ -33,7 +33,7 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0 // ?
         << c.gear().itemTemplateId(Head)
         << c.gear().itemTemplateId(RightHand)
-        << (weapon && weapon->get().tmplate.bodyPart == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
+        << (weapon && weapon->get().tmplate.gearSlot == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
         << c.gear().itemTemplateId(Gloves)
         << c.gear().itemTemplateId(Chest)
         << c.gear().itemTemplateId(Legs)
