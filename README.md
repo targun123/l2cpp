@@ -23,9 +23,9 @@ Unless explicitely specified, don't assume anything to be available. Here's what
 
 **Login Server**
 - [x] Protocol `c621` only;
-- [x] Only one user is served at any point in time;
+- [x] Only one user is served at any point in time for now;
 - [x] Users can log in with any credentials, no data is stored on disk (yet);
-- [x] Server list always displays 2 server (one up, one down), both lead to game server if started.
+- [x] Server list always displays 2 server (one up, one down), both lead to game server.
 
 **Game Server**
 - [x] Protocol 656 only; 
@@ -37,21 +37,17 @@ Unless explicitely specified, don't assume anything to be available. Here's what
 - [x] Mini-map;
 - [x] Character status;
 - [x] Skills list (can give yourself any skill with `//learn <skill_id> <skill_level>` command);
-- [x] Skill use
+- [x] Skill use (animation only);
 - [x] Shortcuts (skills and items);
 - [x] Target select and unselect;
-- [x] inflict physical hits on click (no auto-attacking yet);
 - [x] Chat (no restrictions);
-- [x] Can spawn any NPC with `//spawn <npc_id>`;
+- [x] Can spawn any NPC with `//spawn <npc_id>` (collision is bugged);
 - [x] game loop to handle over-time actions and updates (regen, auto-attacks, DoTs…);
+- [x] Auto-attacking (infinite).
 
 ## What's coming next
 
-- [ ] Send target's status when targetting;
-- [ ] HP/MP/CP regeneration tick system;
-- [ ] infinite auto-attacks; 
-- [ ] Inflict damages during auto-attacks;
-- [ ] Better state machine handling
+See the _Unrealeased_ section of [CHANGELOG.md](CHANGELOG.md)
 
 ## How to build
 
