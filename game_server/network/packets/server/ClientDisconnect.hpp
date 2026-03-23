@@ -8,5 +8,5 @@
 
 namespace Network::Packet::Server
 {
-    using ClientDisconnect = l2cpp::Network::HeaderOnlyPacket<0x26>;
+    using ClientDisconnectPacket = l2cpp::Network::HeaderOnlyPacket<0x26>;
 }

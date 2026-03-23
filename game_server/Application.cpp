@@ -119,7 +119,7 @@ void Application::ApplicationImpl::shutdown()
         if (player.connection().isAlive())
         {
             // This packet displays the disconnected message box, but doesn't close the connection until OK is clicked
-            player.connection().send(Network::Packet::Server::ClientDisconnect());
+            player.connection().send(Network::Packet::Server::ClientDisconnectPacket());
             player.connection().close();
         }
     }
