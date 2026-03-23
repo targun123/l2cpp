@@ -5,27 +5,34 @@
 
 // Project includes
 #include "../GameObject.hpp"
-#include "../ecs/Entity.hpp"
-#include "../components/Position.hpp"
+#include "../actions/Action.hpp"
+#include "../constants/ActorState.hpp"
+#include "../constants/ActorType.hpp"
 #include "../constants/Team.hpp"
+#include "../ecs/Entity.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 
 class Gear;
 class SkillDirectory;
 struct ComputedStats;
+struct Position;
 struct Stats;
 
 /// Base class for player characters, npcs, summons, pets…
 class Actor : public GameObject, public Entity
 {
 public:
-    Actor();
+    ActorState state = ActorState::Idle;
+
+public:
+    explicit Actor(ActorType type);
     Actor(Actor &&) noexcept;
     Actor & operator=(Actor &&) noexcept;
     ~Actor() override = 0;
 
 public:
+    auto type() const -> ActorType;
     auto name() const -> std::wstring_view;
     auto title() const -> std::wstring_view;
     auto position() const -> Position const &;
@@ -43,6 +50,9 @@ public:
     auto target() const -> OptionalRef<Actor const>;
     bool isInCombatStance() const;
 
+    auto currentAction() const -> OptionalRef<Action>;
+    auto nextAction() const -> OptionalRef<Action>;
+
 public:
     void setName(std::wstring name);
     void setTitle(std::wstring title);
@@ -53,6 +63,13 @@ public:
     void setPosZ(s32 z);
     void setTeam(Team team);
     void setTarget(OptionalRef<Actor const>);
+
+    auto setNextAction(std::unique_ptr<Action>) -> Action &;
+    template<typename A, typename... Args> requires std::is_base_of_v<Action, A>
+    auto setNextAction(Args &&... args) -> A &
+    {
+        return static_cast<A &>(setNextAction(std::make_unique<A>(std::forward<Args>(args)...)));
+    }
 
 private:
     struct ActorImpl;

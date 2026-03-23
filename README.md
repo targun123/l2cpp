@@ -6,7 +6,7 @@ This is my latest passion project. I've been wanting to do this since I was 15, 
 
 Even though I never played C4 (began on Interlude), I'm targeting this one because the game is less big and the protocol is slightly easier. I'd love to support more protocols in the future.
 
-Last update: `2026-03-08`.
+Last README update: `2026-03-19`.
 
 ## The goal
 
@@ -17,35 +17,37 @@ Go fast (but not too fast) and break things. YAGNI. Do solo gameplay for now, br
 Unless explicitely specified, don't assume anything to be available. Here's what's been done so far:
 
 **Core**
- - Packet creation, reading and sending;
- - Auth & Game protocols encryption/decryption;
- - Exception stack handling.
+- [x] Packet creation, reading and sending;
+- [x] Auth & Game protocols encryption/decryption;
+- [x] Exception stack handling.
 
 **Login Server**
- - Only one user is served at any point in time;
- - Users can log in with any credentials, no data is stored on disk (yet);
- - Server list always displays 2 server (one up, one down), both lead to game server if started.
+- [x] Protocol `c621` only;
+- [x] Only one user is served at any point in time for now;
+- [x] Users can log in with any credentials, no data is stored on disk (yet);
+- [x] Server list always displays 2 server (one up, one down), both lead to game server.
 
 **Game Server**
- - Protocol 656 only; 
- - Character creation (but not restored as no data is stored on disk yet);
- - One male human fighter named "test" is automatically created (for uh… test purposes);
- - World entering (every character spawns at Talking Island);
- - Inventory list (with one weapon that can be equipped or unequipped);
- - Mini-map;
- - Character status;
- - Skills list (with only GM-only _Super Haste lv. 4_ 😎);
- - Skill use (only _Super Haste_ is supported; no animation supported yet);
- - Shortcuts;
- - Target select and unselect;
- - Chat (no restriction).
+- [x] Protocol 656 only; 
+- [x] Character creation (but not restored as no data is stored on disk yet);
+- [x] One male human fighter named "test" is automatically created (for uh… test purposes);
+- [x] World entering (every character spawns at Talking Island);
+- [x] Moving around (not broadcasted yet);
+- [x] Inventory list (gear items can be equipped and unequipped);
+- [x] Mini-map;
+- [x] Character status;
+- [x] Skills list (can give yourself any skill with `//learn <skill_id> <skill_level>` command);
+- [x] Skill use (animation only);
+- [x] Shortcuts (skills and items);
+- [x] Target select and unselect;
+- [x] Chat (no restrictions);
+- [x] Can spawn any NPC with `//spawn <npc_id>` (collision is bugged);
+- [x] game loop to handle over-time actions and updates (regen, auto-attacks, DoTs…);
+- [x] Auto-attacking (infinite).
 
 ## What's coming next
 
- - There's much internal work I want to do around the structure of the code itself: game loop, ECS, serialization…
- - ~~Equip/Unequip any wearable item~~;
- - Load all skills from disk and look them up through GM UI;
- - Implement some basic skill logic (buff, physical/magical offensive on non-self target).
+See the _Unrealeased_ section of [CHANGELOG.md](CHANGELOG.md)
 
 ## How to build
 
@@ -62,6 +64,10 @@ conan install -b missing -c tools.cmake.cmaketoolchain:generator="Ninja Multi-Co
 cmake --preset conan-default
 cmake --build build --preset conan-release # or conan-debug
 ```
+
+## How to run
+
+Build then start a login server, then a game server. Now log in with a game client supporting protocol 656 and voilà!
 
 ## Credits
 

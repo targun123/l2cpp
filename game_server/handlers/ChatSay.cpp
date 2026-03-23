@@ -4,7 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
-#include "../network/packets/server/ChatSayPacket.hpp"
+#include "../network/packets/server/chat/ChatSayPacket.hpp"
 
 using Network::Packet::Server::ChatSayPacket;
 

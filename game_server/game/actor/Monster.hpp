@@ -12,7 +12,7 @@
 class Monster : public NonPlayableActor
 {
 public:
-    Monster();
+    Monster() noexcept;
     Monster(Monster &&) noexcept;
     Monster & operator=(Monster &&) noexcept;
     ~Monster() override;

@@ -12,7 +12,7 @@ class NpcAppearance;
 class NonPlayableActor : public Actor
 {
 public:
-    NonPlayableActor();
+    explicit NonPlayableActor(ActorType type);
 
 public:
     auto appearance()       -> NpcAppearance       &;

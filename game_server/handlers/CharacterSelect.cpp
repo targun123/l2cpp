@@ -7,6 +7,7 @@
 #include "../game/components/CharacterStatus.hpp"
 #include "../game/components/Stats.hpp"
 #include "../game/components/PlayerAppearance.hpp"
+#include "../game/components/Position.hpp"
 
 DEFINE_PACKET_HANDLER(CharacterSelect)
 {

@@ -33,28 +33,34 @@ DEFINE_PACKET_HANDLER(ItemUse)
         case ItemCategory::Armor:
         case ItemCategory::Accessory:
         {
-            if (auto const transaction = character.gear().equipItem(item->get()); transaction.succeeded)
+            if (auto const transaction = character.gear().equipItem(*item); transaction.succeeded)
             {
                 InventoryUpdatePacket p;
                 if (!transaction.oldItems.empty())
                 {
                     for (auto const & oldItem : transaction.oldItems | std::views::values)
-                        p.appendModifiedItem(oldItem.get());
+                        p.appendModifiedItem(oldItem);
                 }
 
                 if (transaction.curItem)
                     p.appendModifiedItem(*transaction.curItem);
+
+                if (item->get().tmplate.id == 6619) // FIXME: if any bow, find matching arrows to equip in left hand
+                {
+                    if (auto const matchingArrows = character.inventory().item({.id = 1345}); !matchingArrows.empty())
+                    {
+                        auto const subTr = character.gear().equipItem(matchingArrows.front());
+                        p.appendModifiedItem(*subTr.curItem);
+                    }
+                }
 
                 player.connection().send(p);
                 player.connection().send(CharacterStatusUpdatePacket(character));
             }
             break;
         }
-        case ItemCategory::Quest:
-            break;
-        case ItemCategory::Adena:
-            break;
         case ItemCategory::Misc:
+            // Do something if item is usable (e.g. potions)
             break;
 
         default:

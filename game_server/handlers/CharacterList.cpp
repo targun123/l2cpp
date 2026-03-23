@@ -5,8 +5,9 @@
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterStatus.hpp"
-#include "../game/components/PlayerAppearance.hpp"
 #include "../game/components/Gear.hpp"
+#include "../game/components/PlayerAppearance.hpp"
+#include "../game/components/Position.hpp"
 
 DEFINE_PACKET_HANDLER(CharacterList)
 {
@@ -16,7 +17,8 @@ DEFINE_PACKET_HANDLER(CharacterList)
     using enum GearSlot;
     for (auto const & ref : player.characters())
     {
-        auto const & c = ref.get();
+        auto const & c    = ref.get();
+        auto const weapon = c.gear().weapon();
 
         p
             << c.name()
@@ -47,13 +49,13 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.gear().itemId(RightFinger)
             << c.gear().itemId(Head)
             << c.gear().itemId(RightHand)
-            << c.gear().itemId(LeftHand)
+            << (weapon && weapon->get().tmplate.gearSlot == Hands ? 0 : c.gear().itemId(LeftHand))
             << c.gear().itemId(Gloves)
             << c.gear().itemId(Chest)
             << c.gear().itemId(Legs)
             << c.gear().itemId(Feet)
             << c.gear().itemId(Back)
-            << 0 // c.gear().itemId(LeftHand)
+            << c.gear().itemId(RightHand)
             << c.gear().itemId(Hair)
             << c.gear().itemTemplateId(Underwear)
             << c.gear().itemTemplateId(LeftEar)
@@ -63,13 +65,13 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.gear().itemTemplateId(RightFinger)
             << c.gear().itemTemplateId(Head)
             << c.gear().itemTemplateId(RightHand)
-            << c.gear().itemTemplateId(LeftHand)
+            << (weapon && weapon->get().tmplate.gearSlot == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
             << c.gear().itemTemplateId(Gloves)
             << c.gear().itemTemplateId(Chest)
             << c.gear().itemTemplateId(Legs)
             << c.gear().itemTemplateId(Feet)
             << c.gear().itemTemplateId(Back)
-            << 0 // c.gear().itemTemplateId(LeftHand)
+            << c.gear().itemTemplateId(RightHand)
             << c.gear().itemTemplateId(Hair)
             << c.appearance().hairStyleId
             << c.appearance().hairColorId
@@ -79,10 +81,8 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.deleteTime
             << c.profession()
             << c.selected
+            << (weapon ? weapon->get().enchantLevel : 0_u8)
         ;
-
-        auto const weapon = c.gear().weapon();
-        p << (weapon ? weapon->get().enchantLevel : 0_u8);
     }
 
     player.connection().send(p);

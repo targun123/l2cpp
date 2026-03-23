@@ -5,6 +5,7 @@
 
 // Project includes
 #include "Player.hpp"
+#include "game/World.hpp"
 #include "game/skill/SkillTemplateDirectory.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
@@ -64,6 +65,18 @@ catch (l2cpp::Exception const & e)
     return false;
 }
 
+struct Clock
+{
+    std::chrono::steady_clock::time_point start;
+    Clock(): start(std::chrono::steady_clock::now()) {}
+    auto restart() -> std::chrono::steady_clock::duration
+    {
+        auto const d = std::chrono::steady_clock::now() - start;
+        start = std::chrono::steady_clock::now();
+        return d;
+    }
+};
+
 bool Application::ApplicationImpl::run()
 {
     signalSet.async_wait([this] (auto const & ec, int s) { onSignal(ec, s); });
@@ -76,7 +89,18 @@ bool Application::ApplicationImpl::run()
     SPDLOG_INFO("Listening for clients on {}:{}", ip, port);
 
     SPDLOG_INFO("Server running. Input CTRL+C to initiate shutdown…");
-    ioContext.run();
+    Clock worldClock, ioClock;
+    while (!ioContext.stopped())
+    {
+        ioClock.restart();
+        if (auto const count = ioContext.poll(); count)
+        {
+            SPDLOG_TRACE("{} io handlers took {:%Q%q} to execute", count,
+                std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(ioClock.restart()));
+        }
+
+        World::update(worldClock.restart());
+    }
 
     SPDLOG_INFO("Goodbye.");
     return EXIT_SUCCESS;
@@ -101,6 +125,7 @@ void Application::ApplicationImpl::shutdown()
     }
 
     boost::asio::post(ioContext, [] { SPDLOG_INFO("Shutting down sequence done."); });
+    boost::asio::post(ioContext, [this] { ioContext.stop(); });
 }
 
 void Application::ApplicationImpl::onSignal(boost::system::error_code const & ec, int)

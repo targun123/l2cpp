@@ -23,7 +23,6 @@ struct Player::PlayerImpl
 
     std::vector<std::reference_wrapper<Character>> characters;
     OptionalRef<Character>                         currentCharacter;
-    std::deque<std::unique_ptr<Action>>            actionQueue;
 
     explicit PlayerImpl(boost::asio::ip::tcp::socket && socket);
 };
@@ -31,11 +30,7 @@ struct Player::PlayerImpl
 Player::PlayerImpl::PlayerImpl(boost::asio::ip::tcp::socket && socket)
     : conn(std::move(socket))
     , playOk1()
-{
-    auto & c = characters.emplace_back(World::addCharacter()).get();
-    c.setName(L"test");
-    c.setTitle(L"{l2cpp}");
-}
+{}
 
 template class Pimpl<Player::PlayerImpl>;
 
@@ -43,7 +38,11 @@ template class Pimpl<Player::PlayerImpl>;
 
 Player::Player(boost::asio::ip::tcp::socket && socket)
     : _impl(std::move(socket))
-{}
+{
+    auto & c = _impl->characters.emplace_back(World::addCharacter(*this)).get();
+    c.setName(L"test");
+    c.setTitle(L"{l2cpp}");
+}
 
 Player::~Player() = default;
 
@@ -54,8 +53,6 @@ auto Player::characters()       -> std::span<Ref<Character>>       { return _imp
 auto Player::characters() const -> std::span<Ref<Character> const> { return _impl->characters;       }
 auto Player::currentCharacter() -> OptionalRef<Character>          { return _impl->currentCharacter; }
 
-auto Player::actions() -> std::deque<std::unique_ptr<Action>> & { return _impl->actionQueue; }
-
 auto Player::accountName() const -> std::wstring_view { return _impl->accountName; }
 auto Player::playOk1()     const -> u32               { return _impl->playOk1;     }
 
@@ -64,7 +61,7 @@ void Player::setPlayOk1(u32 const playOk1)         { _impl->playOk1 = playOk1;  
 
 auto Player::addCharacter() -> Character &
 {
-    return _impl->characters.emplace_back(World::addCharacter()).get();
+    return _impl->characters.emplace_back(World::addCharacter(*this)).get();
 }
 
 void Player::setCurrentCharacter(size_t const index)

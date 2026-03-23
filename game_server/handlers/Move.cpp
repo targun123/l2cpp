@@ -2,8 +2,10 @@
 /// @date      Created on 2026-02-24
 
 // Project includes
-#include "_Common.hpp"
+#include "../game/actions/Move.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/components/Position.hpp"
+#include "_Common.hpp"
 
 // Taken from Ruk33
 // ================
@@ -54,7 +56,8 @@ DEFINE_PACKET_HANDLER(Move)
     // SPDLOG_TRACE("Character must travel through {} units. At a speed of {} units per 1s, it will take {:%Q%q}",
     //              action.totalDistance, c.stats().runSpeed, std::chrono::duration_cast<std::chrono::milliseconds>(totalDuration));
     //
-    // player.setNextAction<MoveAction>(action);
+    // c.setNextAction<MoveAction>(action);
+    c.state = ActorState::Moving;
 
     Packet p(0x01); // Make character start moving, position will be validated in MoveUpdate handler
     p

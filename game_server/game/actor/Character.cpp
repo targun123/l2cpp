@@ -32,7 +32,9 @@ template class Pimpl<Character::CharacterImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Character::Character()
+Character::Character(OptionalRef<Player> p)
+    : Actor(ActorType::Character)
+    , player(std::move(p))
 {
     setPosition(-83968, 244634, -3500); // Talking Island GK
 
@@ -48,7 +50,7 @@ Character::Character()
     formalWear.tmplate.id       = 6408;
     formalWear.tmplate.name     = "formalWear";
     formalWear.tmplate.category = ItemCategory::Armor;
-    formalWear.tmplate.bodyPart = GearSlot::Dress;
+    formalWear.tmplate.gearSlot = GearSlot::Dress;
     Ref item = _impl->inventory.add(std::move(formalWear));
     gear.equipItem(item.get());
 
@@ -57,7 +59,7 @@ Character::Character()
     infinitySpear.tmplate.name     = "infinitySpear";
     infinitySpear.tmplate.category = ItemCategory::Weapon;
     infinitySpear.tmplate.grade    = ItemGrade::S;
-    infinitySpear.tmplate.bodyPart = GearSlot::Hands;
+    infinitySpear.tmplate.gearSlot = GearSlot::Hands;
     item = _impl->inventory.add(std::move(infinitySpear));
     gear.equipItem(item.get());
 
@@ -66,7 +68,7 @@ Character::Character()
     infinityBlade.tmplate.name     = "infinityBlade";
     infinityBlade.tmplate.category = ItemCategory::Weapon;
     infinityBlade.tmplate.grade    = ItemGrade::S;
-    infinityBlade.tmplate.bodyPart = GearSlot::RightHand;
+    infinityBlade.tmplate.gearSlot = GearSlot::RightHand;
     item = _impl->inventory.add(std::move(infinityBlade));
     gear.equipItem(item.get());
 
@@ -75,8 +77,36 @@ Character::Character()
     imperialCrusaderShield.tmplate.name     = "imperialCrusaderShield";
     imperialCrusaderShield.tmplate.category = ItemCategory::Armor;
     imperialCrusaderShield.tmplate.grade    = ItemGrade::S;
-    imperialCrusaderShield.tmplate.bodyPart = GearSlot::LeftHand;
+    imperialCrusaderShield.tmplate.gearSlot = GearSlot::LeftHand;
     item = _impl->inventory.add(std::move(imperialCrusaderShield));
+    gear.equipItem(item.get());
+
+    Item infinityFang;
+    infinityFang.tmplate.id       = 6618;
+    infinityFang.tmplate.name     = "infinityFang";
+    infinityFang.tmplate.category = ItemCategory::Weapon;
+    infinityFang.tmplate.grade    = ItemGrade::S;
+    infinityFang.tmplate.gearSlot = GearSlot::Hands;
+    item = _impl->inventory.add(std::move(infinityFang));
+    gear.equipItem(item.get());
+
+    Item infinityBow;
+    infinityBow.tmplate.id       = 6619;
+    infinityBow.tmplate.name     = "infinityBow";
+    infinityBow.tmplate.category = ItemCategory::Weapon;
+    infinityBow.tmplate.grade    = ItemGrade::S;
+    infinityBow.tmplate.gearSlot = GearSlot::Hands;
+    item = _impl->inventory.add(std::move(infinityBow));
+    gear.equipItem(item.get());
+
+    Item sGradeArrows;
+    sGradeArrows.tmplate.id = 1345;
+    sGradeArrows.tmplate.name     = "sGradeArrows";
+    sGradeArrows.tmplate.category = ItemCategory::Misc;
+    sGradeArrows.tmplate.grade    = ItemGrade::S;
+    sGradeArrows.tmplate.gearSlot = GearSlot::LeftHand;
+    sGradeArrows.quantity         = 100;
+    item = _impl->inventory.add(std::move(sGradeArrows));
     gear.equipItem(item.get());
 }
 
