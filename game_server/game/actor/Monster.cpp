@@ -14,7 +14,7 @@ template class Pimpl<Monster::MonsterActorImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Monster::Monster() = default;
+Monster::Monster() noexcept: NonPlayableActor(ActorType::Monster) {}
 Monster::Monster(Monster &&) noexcept = default;
 Monster & Monster::operator=(Monster &&) noexcept = default;
 Monster::~Monster() = default;

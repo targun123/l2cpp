@@ -73,24 +73,35 @@ auto Gear::GearImpl::equipItem(Item & item) -> GearTransaction
 {
     GearTransaction transaction {.target = item};
 
-    auto const slot = item.tmplate.bodyPart;
+    auto const slot = item.tmplate.gearSlot;
     if (slot == GearSlot::None) // Unequippable item
     {
         transaction.succeeded = false;
         return transaction;
     }
 
+    if (item.tmplate.id == 1345 /* AND weapon type is matching grade bow*/) // FIXME: if is arrows of matching grade
+    {
+        gear[GearSlot::LeftHand] = item;
+        item.equipped = true;
+        transaction.curItem = item;
+        return transaction;
+    }
+
     // TODO: verify whether conditions are met to avoid unequipping when equipping is not possible
 
-    if (auto const & curItem = itemAt(slot))
+    if (auto const & curItemRef = itemAt(slot))
     {
+        // If current item is arrows, unequip the bow instead
+        Ref<Item> const curItem = curItemRef->get().tmplate.id == 1345 ? *itemAt(GearSlot::RightHand) : *curItemRef;
+
         // First, unequip all slots used by the item currently located where we want to equip.
         // This is needed in case the new item uses fewer slots than the current item.
         // E.g.: putting on gloves (1 slot) should remove Formal Wear (4 slots).
-        applyToDependentSlots(curItem->get().tmplate.bodyPart, [this, &transaction] (OptionalRef<Item> const & itemSlot)
+        applyToDependentSlots(curItem.get().tmplate.gearSlot, [this, &transaction] (OptionalRef<Item> const & itemSlot)
         {
-            if (itemSlot.has_value())
-                unequipItem(itemSlot->get(), transaction);
+            if (itemSlot)
+                unequipItem(*itemSlot, transaction);
         });
     }
 
@@ -99,8 +110,8 @@ auto Gear::GearImpl::equipItem(Item & item) -> GearTransaction
     // E.g.: Formal Wear occupying multiple armor slots.
     applyToDependentSlots(slot, [this, &transaction] (OptionalRef<Item> const & itemSlot)
     {
-        if (itemSlot.has_value())
-            unequipItem(itemSlot->get(), transaction);
+        if (itemSlot)
+            unequipItem(*itemSlot, transaction);
     });
 
     if (transaction.succeeded)
@@ -108,10 +119,13 @@ auto Gear::GearImpl::equipItem(Item & item) -> GearTransaction
         // Everything went right. Now truly unequip old items
         for (auto const & itemRef : transaction.oldItems | std::views::values)
         {
-            applyToDependentSlots(itemRef.get().tmplate.bodyPart, [] (OptionalRef<Item> & itemSlot)
+            applyToDependentSlots(itemRef.get().tmplate.gearSlot, [] (OptionalRef<Item> & itemSlot)
             {
-                itemSlot->get().equipped = false;
-                itemSlot.reset();
+                if (itemSlot)
+                {
+                    itemSlot->get().equipped = false;
+                    itemSlot.reset();
+                }
             });
         }
 
@@ -131,7 +145,7 @@ auto Gear::GearImpl::unequipItem(Item & item, OptionalRef<GearTransaction> const
     auto & transaction = curTransaction ? curTransaction->get() : t;
 
     // First, verify that provided item is the one that's currently equipped
-    auto const   slot    = item.tmplate.bodyPart;
+    auto const   slot    = item.tmplate.gearSlot;
     auto const & curItem = itemAt(slot);
     transaction.succeeded = transaction.succeeded // Do not proceed if current transaction has already failed
                             && curItem && curItem->get().id() == item.id();
@@ -143,7 +157,7 @@ auto Gear::GearImpl::unequipItem(Item & item, OptionalRef<GearTransaction> const
 
     applyToDependentSlots(slot, [&transaction] (OptionalRef<Item> const & itemSlot)
     {
-        if (itemSlot.has_value())
+        if (itemSlot)
             transaction.oldItems.try_emplace(itemSlot->get().id(), *itemSlot);
     });
 
@@ -152,10 +166,13 @@ auto Gear::GearImpl::unequipItem(Item & item, OptionalRef<GearTransaction> const
     {
         for (auto const & itemRef : transaction.oldItems | std::views::values)
         {
-            applyToDependentSlots(itemRef.get().tmplate.bodyPart, [] (OptionalRef<Item> & itemSlot)
+            applyToDependentSlots(itemRef.get().tmplate.gearSlot, [] (OptionalRef<Item> & itemSlot)
             {
-                itemSlot->get().equipped = false;
-                itemSlot.reset();
+                if (itemSlot)
+                {
+                    itemSlot->get().equipped = false;
+                    itemSlot.reset();
+                }
             });
         }
     }

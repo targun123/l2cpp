@@ -17,5 +17,5 @@ struct ItemTemplate
     std::string  name;
     ItemCategory category = ItemCategory::Unknown;
     ItemGrade    grade    = ItemGrade::None;
-    GearSlot     bodyPart = GearSlot::None;
+    GearSlot     gearSlot = GearSlot::None;
 };

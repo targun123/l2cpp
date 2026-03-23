@@ -9,6 +9,7 @@
 #include "../../../../game/actor/Character.hpp"
 #include "../../../../game/components/CharacterStatus.hpp"
 #include "../../../../game/components/Stats.hpp"
+#include "../../../../game/components/Position.hpp"
 #include "../../../../game/components/PlayerAppearance.hpp"
 #include "../../../../game/components/Gear.hpp"
 #include "../../../../game/inventory/ItemStorage.hpp"
@@ -19,6 +20,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     : Packet(0x04)
 {
     using enum GearSlot;
+
+    auto const weapon = c.gear().weapon();
 
     *this
         << c.position().x
@@ -54,13 +57,13 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.gear().itemId(LeftFinger)
         << c.gear().itemId(Head)
         << c.gear().itemId(RightHand)
-        << c.gear().itemId(LeftHand)
+        << (weapon && weapon->get().tmplate.gearSlot == Hands ? 0 : c.gear().itemId(LeftHand))
         << c.gear().itemId(Gloves)
         << c.gear().itemId(Chest)
         << c.gear().itemId(Legs)
         << c.gear().itemId(Feet)
         << c.gear().itemId(Back)
-        << 0 // c.gear().itemId(LeftHand)
+        << c.gear().itemId(RightHand)
         << c.gear().itemId(Hair)
         << c.gear().itemTemplateId(Underwear)
         << c.gear().itemTemplateId(RightEar)
@@ -70,13 +73,13 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.gear().itemTemplateId(RightFinger)
         << c.gear().itemTemplateId(Head)
         << c.gear().itemTemplateId(RightHand)
-        << c.gear().itemTemplateId(LeftHand)
+        << (weapon && weapon->get().tmplate.gearSlot == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
         << c.gear().itemTemplateId(Gloves)
         << c.gear().itemTemplateId(Chest)
         << c.gear().itemTemplateId(Legs)
         << c.gear().itemTemplateId(Feet)
         << c.gear().itemTemplateId(Back)
-        << 0 // c.gear().itemTemplateId(LeftHand)
+        << c.gear().itemTemplateId(RightHand)
         << c.gear().itemTemplateId(Hair)
         << c.stats().pAtk
         << c.stats().pAtkSpeed
@@ -143,12 +146,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << 0 // special effects? circles around player...
         << static_cast<u32>(c.status().cp.max)
         << static_cast<u32>(c.status().cp.current)
-    ;
-
-    auto const weapon = c.gear().weapon();
-    *this << (weapon ? weapon->get().enchantLevel : 0_u8);
-
-    *this
+        << (weapon ? weapon->get().enchantLevel : 0_u8)
         << c.team()
         << 0 // clan crest large id
         << c.status().isNoble // noble symbol in status window

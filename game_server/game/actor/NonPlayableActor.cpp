@@ -7,7 +7,8 @@
 #include "../components/ActorStatus.hpp"
 #include "../components/NpcAppearance.hpp"
 
-NonPlayableActor::NonPlayableActor()
+NonPlayableActor::NonPlayableActor(ActorType const type)
+    : Actor(type)
 {
     addComponent<ActorStatus>();
     addComponent<NpcAppearance>();

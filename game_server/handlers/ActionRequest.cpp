@@ -4,9 +4,11 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/World.hpp"
+#include "../game/actions/Attack.hpp"
 #include "../game/actor/Character.hpp"
-#include "../game/constants/ItemGrade.hpp"
 #include "../game/components/Gear.hpp"
+#include "../game/components/Position.hpp"
+#include "../game/components/Stats.hpp"
 #include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
 #include "../network/packets/server/target/TargetSelectPacket.hpp"
 
@@ -40,28 +42,6 @@ DEFINE_PACKET_HANDLER(ActionRequest)
     else // second request on target, launch attack!
     {
         character.state = ActorState::Attacking;
-        character.setNextAction<AttackAction>();
-
-        // Attack once, use soulshots if a weapon is equipped
-        auto flags = 0_u8;
-        if (auto const weapon = character.gear().weapon(); weapon)
-            flags |= 0x10 | std::to_underlying(weapon->get().tmplate.grade);
-
-        Packet p(0x05);
-        p
-            << character.id()
-            // Hit
-            << targetId
-            << 10 // dmg
-            << flags // flags: 0x10=use_ss 0x20=crit_sound 0x40=shield_sound 0x80=miss_sound
-            << character.position().x
-            << character.position().y
-            << character.position().z
-            << u16(0) // other hits (e.g. polearm)
-            << character.target()->get().position().x
-            << character.target()->get().position().y
-            << character.target()->get().position().z
-        ;
-        player.connection().send(p);
+        character.setNextAction<AttackAction>(character.stats().pAtkSpeed);
     }
 }

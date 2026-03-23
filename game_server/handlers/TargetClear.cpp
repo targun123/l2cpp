@@ -4,6 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/components/Position.hpp"
 
 DEFINE_PACKET_HANDLER(TargetClear)
 {

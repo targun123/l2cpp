@@ -14,19 +14,22 @@
 
 struct Actor::ActorImpl
 {
+    ActorType type;
     Team team = Team::None;
     bool isInCombatStance = false;
 
     OptionalRef<Actor const> target;
-    std::deque<std::unique_ptr<Action>>            actionQueue;
+    std::unique_ptr<Action> currentAction, nextAction;
 };
 
 template class Pimpl<Actor::ActorImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Actor::Actor()
+Actor::Actor(ActorType const type)
 {
+    _impl->type = type;
+
     addComponent<ActorIdentity>();
     addComponent<Gear>();
     addComponent<Position>();
@@ -62,6 +65,7 @@ Actor::Actor(Actor &&) noexcept = default;
 Actor & Actor::operator=(Actor &&) noexcept = default;
 Actor::~Actor() = default;
 
+auto Actor::type()     const -> ActorType         { return _impl->type;                      }
 auto Actor::name()     const -> std::wstring_view { return component<ActorIdentity>().name;  }
 auto Actor::title()    const -> std::wstring_view { return component<ActorIdentity>().title; }
 auto Actor::position() const -> Position const &  { return component<Position>();            }
@@ -80,7 +84,25 @@ auto Actor::target() const -> OptionalRef<Actor const> { return _impl->target; }
 
 bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
-auto Actor::actions() -> std::deque<std::unique_ptr<Action>> & { return _impl->actionQueue; }
+auto Actor::currentAction() const -> OptionalRef<Action>
+{
+    OptionalRef<Action> action;
+
+    if (_impl->currentAction)
+        action = *_impl->currentAction;
+
+    return action;
+}
+
+auto Actor::nextAction() const -> OptionalRef<Action>
+{
+    OptionalRef<Action> action;
+
+    if (_impl->nextAction)
+        action = *_impl->nextAction;
+
+    return action;
+}
 
 void Actor::setName (std::wstring name)  { component<ActorIdentity>().name  = std::move(name);  }
 void Actor::setTitle(std::wstring title) { component<ActorIdentity>().title = std::move(title); }
@@ -105,3 +127,16 @@ void Actor::setPosZ(s32 const z) { component<Position>().z = z; }
 void Actor::setTeam(Team const team) { _impl->team = team; }
 
 void Actor::setTarget(OptionalRef<Actor const> actor) { _impl->target = std::move(actor); }
+
+auto Actor::setNextAction(std::unique_ptr<Action> action) -> Action &
+{
+    if (!_impl->currentAction)
+    {
+        _impl->currentAction = std::move(action);
+        _impl->currentAction->restart(); // action starts now
+    }
+    else
+        _impl->nextAction = std::move(action);
+
+    return _impl->nextAction ? *_impl->nextAction : *_impl->currentAction;
+}

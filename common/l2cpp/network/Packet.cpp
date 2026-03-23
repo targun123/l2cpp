@@ -4,11 +4,9 @@
 #include "Packet.hpp"
 
 // Project includes
-#include "../Exception.hpp"
 #include "../details/Pimpl.hpp"
 
 // C++ includes
-#include <mutex>
 #include <vector>
 
 using l2cpp::Network::Packet;
@@ -16,6 +14,7 @@ using l2cpp::Network::Packet;
 struct Packet::PacketImpl
 {
     std::vector<byte> buffer;
+    bool              isFinal = false;
 
     PacketImpl(PacketOpCode const opCode);
 
@@ -56,7 +55,9 @@ Packet::~Packet() = default;
 
 Packet & Packet::operator<<(std::span<byte const> span)
 {
-    _impl->buffer.append_range(span);
+    if (!_impl->isFinal)
+        _impl->buffer.append_range(span);
+
     return *this;
 }
 
@@ -103,4 +104,14 @@ auto Packet::body() const -> std::span<byte const>
 auto Packet::bodySize() const -> size_t
 {
     return _impl->buffer.size() - sizeof(PacketHeader);
+}
+
+void Packet::finalize()
+{
+    if (!_impl->isFinal)
+    {
+        finalizeImpl();
+        writeSize();
+        _impl->isFinal = true;
+    }
 }

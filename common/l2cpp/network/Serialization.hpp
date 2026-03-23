@@ -3,14 +3,17 @@
 
 #pragma once
 
-// Forward-declare for the macro to work
+// Forward-declare for the macros to work with no additional includes
 namespace l2cpp::Network { class Packet; class PacketReader; }
 
-#define DECLARE_PACKET_SERIALIZATION_OPERATOR(T) \
-    friend l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet &, T const &)
+#define DEFINE_PACKET_SERIALIZATION_OPERATOR(T, t) \
+    l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, T const & t)
 
-#define DECLARE_PACKET_DESERIALIZATION_OPERATOR(T) \
-    friend l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader &, T &)
+#define DEFINE_PACKET_DESERIALIZATION_OPERATOR(T, t) \
+    l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader & r, T & t)
+
+#define DECLARE_PACKET_SERIALIZATION_OPERATOR(T)   friend DEFINE_PACKET_SERIALIZATION_OPERATOR(T,)
+#define DECLARE_PACKET_DESERIALIZATION_OPERATOR(T) friend DEFINE_PACKET_DESERIALIZATION_OPERATOR(T,)
 
 #define DECLARE_PACKET_SERIALIZATION_OPERATORS(T) \
     DECLARE_PACKET_SERIALIZATION_OPERATOR(T);     \

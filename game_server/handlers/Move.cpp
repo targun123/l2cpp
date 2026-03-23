@@ -2,8 +2,10 @@
 /// @date      Created on 2026-02-24
 
 // Project includes
-#include "_Common.hpp"
+#include "../game/actions/Move.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/components/Position.hpp"
+#include "_Common.hpp"
 
 // Taken from Ruk33
 // ================

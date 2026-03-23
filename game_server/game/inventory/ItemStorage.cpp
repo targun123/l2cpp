@@ -4,14 +4,13 @@
 #include "ItemStorage.hpp"
 
 // Project includes
+#include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/details/Pimpl.hpp>
 
 // C++ includes
 #include <ranges>
 #include <unordered_map>
-
-#include "l2cpp/Exception.hpp"
 
 struct ItemStorage::ItemStorageImpl
 {
@@ -25,7 +24,7 @@ ItemStorage::ItemStorage(ItemStorage &&) noexcept = default;
 ItemStorage & ItemStorage::operator=(ItemStorage &&) noexcept = default;
 ItemStorage::~ItemStorage() = default;
 
-auto ItemStorage::item(GameObjectId uid) -> OptionalRef<Item>
+auto ItemStorage::item(GameObjectId const uid) -> OptionalRef<Item>
 {
     OptionalRef<Item> result;
 
@@ -43,6 +42,25 @@ auto ItemStorage::item(GameObjectId const uid) const -> OptionalRef<Item const>
         result.emplace(_impl->items.at(uid));
 
     return result;
+}
+
+auto ItemStorage::item(ItemTemplate const & tmplate) -> std::vector<Ref<Item>>
+{
+    std::vector<Ref<Item>> result;
+
+    for (auto & item : _impl->items | std::views::values)
+    {
+        if (item.tmplate.id == tmplate.id)
+            result.emplace_back(item);
+    }
+
+    return result;
+}
+
+auto ItemStorage::item(ItemTemplate const & tmplate) const -> std::vector<Ref<Item const>>
+{
+    auto const v = const_cast<ItemStorage &>(*this).item(tmplate);
+    return {v.cbegin(), v.cend()};
 }
 
 auto ItemStorage::items() const -> std::vector<Ref<Item const>>

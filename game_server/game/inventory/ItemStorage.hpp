@@ -21,10 +21,12 @@ public:
     virtual ~ItemStorage();
 
 public:
-    auto item(GameObjectId uid)       -> OptionalRef<Item>;
-    auto item(GameObjectId uid) const -> OptionalRef<Item const>;
-    auto items() const -> std::vector<Ref<Item const>>;
-    auto limit() const -> u16;
+    auto item(GameObjectId uid)           -> OptionalRef<Item>;
+    auto item(GameObjectId uid)     const -> OptionalRef<Item const>;
+    auto item(ItemTemplate const &)       -> std::vector<Ref<Item>>;
+    auto item(ItemTemplate const &) const -> std::vector<Ref<Item const>>;
+    auto items()                    const -> std::vector<Ref<Item const>>;
+    auto limit()                    const -> u16;
 
 public:
     auto add(Item && item) -> Item &;

@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../../../../game/actor/Character.hpp"
+#include "../../../../game/components/Position.hpp"
 
 using Network::Packet::Server::TargetSelectPacket;
 

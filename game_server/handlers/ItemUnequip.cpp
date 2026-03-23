@@ -10,6 +10,9 @@
 #include "../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
 #include "../network/packets/server/inventory/InventoryUpdatePacket.hpp"
 
+// C++ includes
+#include <ranges>
+
 DEFINE_PACKET_HANDLER(ItemUnequip)
 {
     L2CPP_B_ASSERT(player.currentCharacter(), "No current player, can't unequip item");
@@ -22,10 +25,15 @@ DEFINE_PACKET_HANDLER(ItemUnequip)
     auto & c = player.currentCharacter()->get();
     if (auto const item = c.gear().item(slot); item)
     {
-        if (auto const transaction = c.gear().unequipItem(item->get()); transaction.succeeded)
+        // FIXME: if any kind of arrow
+        Ref<Item> const finalitem = item->get().tmplate.id == 1345 ? *c.gear().item(GearSlot::RightHand) : *item;
+
+        if (auto const transaction = c.gear().unequipItem(finalitem); transaction.succeeded)
         {
             InventoryUpdatePacket p;
-            p.appendModifiedItem(item->get());
+
+            for (auto const & i : transaction.oldItems | std::views::values)
+                p.appendModifiedItem(i);
 
             player.connection().send(p);
             player.connection().send(CharacterStatusUpdatePacket(c));
