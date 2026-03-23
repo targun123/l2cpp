@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better state machine handling;
 - `World::update` CPU usage reduction.
 
+## [0.3.0] - 2026-03-23
+
+### Added
+
+- In-game time
+- Can trigger sunset/sunrise events
+
 ## [0.2.0] - 2026-03-23
 
 ### Added

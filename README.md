@@ -1,12 +1,10 @@
 # l2cpp
 
-[Lineage 2, Chronicle 4][4] C++23 emulation servers.
+[Lineage 2, Chronicle 4: Scions of Destiny][4] C++23 emulation servers.
 
 This is my latest passion project. I've been wanting to do this since I was 15, and here I am 16 years later with enough programming skills to do this on my own.
 
 Even though I never played C4 (began on Interlude), I'm targeting this one because the game is less big and the protocol is slightly easier. I'd love to support more protocols in the future.
-
-Last README update: `2026-03-19`.
 
 ## The goal
 
@@ -43,7 +41,8 @@ Unless explicitely specified, don't assume anything to be available. Here's what
 - [x] Chat (no restrictions);
 - [x] Can spawn any NPC with `//spawn <npc_id>` (collision is bugged);
 - [x] game loop to handle over-time actions and updates (regen, auto-attacks, DoTs…);
-- [x] Auto-attacking (infinite).
+- [x] Auto-attacking (infinite);
+- [x] In-game time.
 
 ## What's coming next
 
@@ -71,7 +70,7 @@ Build then start a login server, then a game server. Now log in with a game clie
 
 ## Credits
 
-[l2auth][1] (by [@Ruk33][2]) and [L2J-L2jMobius][3].
+[l2auth][1] (by [@Ruk33][2]) and [L2jMobius][3].
 
 [1]: https://github.com/Ruk33/l2auth
 [2]: https://github.com/Ruk33
