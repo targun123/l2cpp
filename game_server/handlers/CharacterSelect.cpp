@@ -3,11 +3,12 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterStatus.hpp"
-#include "../game/components/Stats.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/components/Position.hpp"
+#include "../game/components/Stats.hpp"
 
 DEFINE_PACKET_HANDLER(CharacterSelect)
 {
@@ -52,7 +53,11 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
         << c.baseStats().MEN
         << c.baseStats().DEX
         << c.baseStats().WIT
-        << std::array<u32, 53>{} // ?
+        << std::array<u32, 32>{} // ?
+        << World::inGameTime().count()
+        << 0
+        << c.profession()
+        << std::array<u32, 12>{} // ?
     ;
     player.connection().send(p);
 }

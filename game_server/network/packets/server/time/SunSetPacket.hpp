@@ -1,5 +1,5 @@
 /// @author    Chnossos
-/// @date      Created on 2026-03-07
+/// @date      Created on 2026-03-23
 
 #pragma once
 
@@ -8,5 +8,6 @@
 
 namespace Network::Packet::Server
 {
-    using ClientDisconnectPacket = l2cpp::Network::HeaderOnlyPacket<0x26>;
+    /// Sun sets at 1am IG.
+    using SunSetPacket = l2cpp::Network::HeaderOnlyPacket<0x1d>;
 }

@@ -33,6 +33,8 @@ public:
     static auto addMonster() -> Monster &;
     static void delMonster(GameObjectId id);
 
+    static auto inGameTime() -> std::chrono::minutes;
+
 private:
     static std::unordered_map<GameObjectId, Character> _characters;
     static std::unordered_map<GameObjectId, Monster>   _monsters;
