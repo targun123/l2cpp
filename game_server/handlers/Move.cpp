@@ -3,9 +3,8 @@
 
 // Project includes
 #include "../game/actions/Move.hpp"
-#include "../game/actor/Character.hpp"
-#include "../game/components/Position.hpp"
 #include "_Common.hpp"
+#include "../game/actor/Character.hpp"
 
 // Taken from Ruk33
 // ================
@@ -44,7 +43,6 @@ DEFINE_PACKET_HANDLER(Move)
     //              (action.input == *MoveAction::Input::Mouse ? "mouse" : "keyboard"));
     //
     auto & c = *player.currentCharacter();
-    c.setPosition(action.originX, action.originY, action.originZ);
     // float const distanceX = action.targetX - c.position().x;
     // float const distanceY = action.targetY - c.position().y;
     // float const distanceZ = action.targetZ - c.position().z;
@@ -56,14 +54,5 @@ DEFINE_PACKET_HANDLER(Move)
     // SPDLOG_TRACE("Character must travel through {} units. At a speed of {} units per 1s, it will take {:%Q%q}",
     //              action.totalDistance, c.stats().runSpeed, std::chrono::duration_cast<std::chrono::milliseconds>(totalDuration));
     //
-    // c.setNextAction<MoveAction>(action);
-    c.state = ActorState::Moving;
-
-    Packet p(0x01); // Make character start moving, position will be validated in MoveUpdate handler
-    p
-        << c.id()
-        << action.targetX << action.targetY << action.targetZ
-        << c.position().x << c.position().y << c.position().z
-    ;
-    player.connection().send(p);
+    c.doNext<MoveAction>(action);
 }

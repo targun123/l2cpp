@@ -42,6 +42,6 @@ DEFINE_PACKET_HANDLER(ActionRequest)
     else // second request on target, launch attack!
     {
         character.state = ActorState::Attacking;
-        character.setNextAction<AttackAction>(character.stats().pAtkSpeed);
+        character.doNext<AttackAction>(character.stats().pAtkSpeed);
     }
 }

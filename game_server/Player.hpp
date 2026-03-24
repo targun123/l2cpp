@@ -11,7 +11,6 @@
 #include <boost/asio/ip/tcp.hpp>
 
 // C++ includes
-#include <deque>
 #include <span>
 
 class Character;

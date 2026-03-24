@@ -50,8 +50,8 @@ public:
     auto target() const -> OptRef<Actor const>;
     bool isInCombatStance() const;
 
-    auto currentAction() const -> OptRef<Action>;
-    auto nextAction() const -> OptRef<Action>;
+    auto currentAction() -> OptRef<Action>;
+    auto nextAction() -> OptRef<Action>;
 
 public:
     void setName(std::wstring name);
@@ -64,12 +64,9 @@ public:
     void setTeam(Team team);
     void setTarget(OptRef<Actor const>);
 
-    auto setNextAction(std::unique_ptr<Action>) -> Action &;
+    void doNext(std::unique_ptr<Action>);
     template<typename A, typename... Args> requires std::is_base_of_v<Action, A>
-    auto setNextAction(Args &&... args) -> A &
-    {
-        return static_cast<A &>(setNextAction(std::make_unique<A>(std::forward<Args>(args)...)));
-    }
+    void doNext(Args &&... args) { doNext(std::make_unique<A>(std::forward<Args>(args)...)); }
 
 private:
     struct ActorImpl;

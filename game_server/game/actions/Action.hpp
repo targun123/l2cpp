@@ -6,6 +6,8 @@
 // Project includes
 #include <l2cpp/Typedefs.hpp>
 
+class Actor;
+
 class Action
 {
 public:
@@ -15,7 +17,7 @@ public:
     };
 
 public:
-    explicit Action(Type const type) noexcept: _type(type) {}
+    explicit Action(Type type) noexcept;
     Action(Action const &) noexcept = default;
     Action & operator=(Action const &) noexcept = default;
     Action(Action &&) noexcept = default;
@@ -23,15 +25,28 @@ public:
     virtual ~Action() noexcept = default;
 
 public:
-    Type type() const { return _type; }
-    auto startTime() const { return _startTime; }
-    auto lastUpdateTime() const { return _lastUpdateTime; }
+    auto type()           const -> Type;
+    auto isFinished()     const -> bool;
+    auto startTime()      const -> ClockTimePoint;
+    auto lastUpdateTime() const -> ClockTimePoint;
 
 public:
-    void restart() { _lastUpdateTime = ClockTimePoint{}; }
-    void update(ClockDuration const elapsed) { _lastUpdateTime += elapsed; }
+    virtual bool canBeInterrupted() const = 0;
+
+public:
+    void restart();
+    void update(ClockDuration elapsed, Actor &);
+
+protected:
+    void setFinished(bool finished);
+
+private:
+    virtual void onStarted(Actor &) {}
+    virtual void onFinished(Actor &) {}
+    virtual void updateImpl(ClockDuration, Actor &) = 0;
 
 private:
     Type _type;
+    bool _finished;
     ClockTimePoint _startTime, _lastUpdateTime;
 };
