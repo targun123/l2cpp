@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Inflict damage during auto-attacks;
 - Better state machine handling.
 
+## [0.4.0] - 2026-03-24
+
+### Added
+
+- Action system is more fleshed out: current/next action algorithm, queueing actions, interruptible…
+
 ## [0.3.1] - 2026-03-24
 
 ### Fixed
