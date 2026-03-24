@@ -13,10 +13,10 @@
 
 struct GearTransaction
 {
-    bool succeeded = true;               ///< Whether equip/unequip action has worked
-    OptionalRef<Item const> target;  ///< Item that the user wants to equip/unequip
-    OptionalRef<Item const> curItem; ///< Item that has been successfully equipped or nullopt if unequip successful
+    bool succeeded = true;      ///< Whether equip/unequip action has worked
+    OptRef<Item const> target;  ///< Item that the user wants to equip/unequip
+    OptRef<Item const> curItem; ///< Item that has been successfully equipped or nullopt if unequip successful
 
     /// Items that were in the slots prior to the transaction
-    std::unordered_map<GameObjectId, std::reference_wrapper<Item const>> oldItems;
+    std::unordered_map<GameObjectId, Ref<Item const>> oldItems;
 };

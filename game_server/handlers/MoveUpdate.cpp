@@ -10,7 +10,7 @@ DEFINE_PACKET_HANDLER(MoveUpdate)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    auto & c = player.currentCharacter()->get();
+    auto & c = *player.currentCharacter();
 
     s32 x, y, z;
     reader >> x >> y >> z >> c.appearance().headAngle;

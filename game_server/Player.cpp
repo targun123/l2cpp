@@ -21,8 +21,8 @@ struct Player::PlayerImpl
     std::wstring        accountName;
     u32                 playOk1;
 
-    std::vector<std::reference_wrapper<Character>> characters;
-    OptionalRef<Character>                         currentCharacter;
+    std::vector<Ref<Character>> characters;
+    OptRef<Character>           currentCharacter;
 
     explicit PlayerImpl(boost::asio::ip::tcp::socket && socket);
 };
@@ -51,7 +51,7 @@ auto Player::connection() const -> Network::Connection const & { return _impl->c
 
 auto Player::characters()       -> std::span<Ref<Character>>       { return _impl->characters;       }
 auto Player::characters() const -> std::span<Ref<Character> const> { return _impl->characters;       }
-auto Player::currentCharacter() -> OptionalRef<Character>          { return _impl->currentCharacter; }
+auto Player::currentCharacter() -> OptRef<Character>               { return _impl->currentCharacter; }
 
 auto Player::accountName() const -> std::wstring_view { return _impl->accountName; }
 auto Player::playOk1()     const -> u32               { return _impl->playOk1;     }

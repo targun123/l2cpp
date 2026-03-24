@@ -31,9 +31,9 @@ auto SkillDirectory::size() const -> size_t
     return _impl->skills.size();
 }
 
-auto SkillDirectory::skill(SkillId const id) -> OptionalRef<Skill>
+auto SkillDirectory::skill(SkillId const id) -> OptRef<Skill>
 {
-    OptionalRef<Skill> skill;
+    OptRef<Skill> skill;
 
     if (auto const it = _impl->skills.find(id); it != _impl->skills.end())
         skill = it->second;
@@ -41,15 +41,15 @@ auto SkillDirectory::skill(SkillId const id) -> OptionalRef<Skill>
     return skill;
 }
 
-auto SkillDirectory::skill(SkillId const id) const -> OptionalRef<Skill const>
+auto SkillDirectory::skill(SkillId const id) const -> OptRef<Skill const>
 {
-    return const_cast<SkillDirectory *>(this)->skill(id);
+    return *const_cast<SkillDirectory *>(this)->skill(id);
 }
 
 auto SkillDirectory::learn(SkillId const id, SkillLevel const level) -> Skill &
 {
     if (auto const s = skill(id); s)
-        s->get().setLevel(level);
+        s->setLevel(level);
     else
     {
         auto const tmpl = SkillTemplateDirectory::skill(id, level);

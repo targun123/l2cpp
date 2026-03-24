@@ -33,7 +33,7 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0 // ?
         << c.gear().itemTemplateId(Head)
         << c.gear().itemTemplateId(RightHand)
-        << (weapon && weapon->get().tmplate.gearSlot == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
+        << (weapon && weapon->tmplate.gearSlot == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
         << c.gear().itemTemplateId(Gloves)
         << c.gear().itemTemplateId(Chest)
         << c.gear().itemTemplateId(Legs)
@@ -89,7 +89,7 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << c.profession()
         << static_cast<u32>(c.status().cp.max)
         << static_cast<u32>(c.status().cp.current)
-        << (weapon ? weapon->get().enchantLevel : 0_u8)
+        << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan large crest id
         << c.status().isNoble

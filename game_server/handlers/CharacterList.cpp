@@ -49,7 +49,7 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.gear().itemId(RightFinger)
             << c.gear().itemId(Head)
             << c.gear().itemId(RightHand)
-            << (weapon && weapon->get().tmplate.gearSlot == Hands ? 0 : c.gear().itemId(LeftHand))
+            << (weapon && weapon->tmplate.gearSlot == Hands ? 0 : c.gear().itemId(LeftHand))
             << c.gear().itemId(Gloves)
             << c.gear().itemId(Chest)
             << c.gear().itemId(Legs)
@@ -65,7 +65,7 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.gear().itemTemplateId(RightFinger)
             << c.gear().itemTemplateId(Head)
             << c.gear().itemTemplateId(RightHand)
-            << (weapon && weapon->get().tmplate.gearSlot == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
+            << (weapon && weapon->tmplate.gearSlot == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
             << c.gear().itemTemplateId(Gloves)
             << c.gear().itemTemplateId(Chest)
             << c.gear().itemTemplateId(Legs)
@@ -81,7 +81,7 @@ DEFINE_PACKET_HANDLER(CharacterList)
             << c.deleteTime
             << c.profession()
             << c.selected
-            << (weapon ? weapon->get().enchantLevel : 0_u8)
+            << (weapon ? weapon->enchantLevel : 0_u8)
         ;
     }
 

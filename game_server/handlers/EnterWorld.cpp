@@ -10,7 +10,7 @@
 
 DEFINE_PACKET_HANDLER(EnterWorld)
 {
-    auto & c = player.currentCharacter()->get();
+    auto & c = *player.currentCharacter();
     player.connection().send(InventoryListPacket(false, c.inventory()));
 
     if (c.accessLevel > 0)

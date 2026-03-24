@@ -14,5 +14,5 @@ DEFINE_PACKET_HANDLER(ShortcutBarRemove)
     reader >> index;
     L2CPP_B_ASSERT(index < 120, "Trying to remove a shortcut outside the valid index range: {}", index);
 
-    player.currentCharacter()->get().delShortcut(index);
+    player.currentCharacter()->delShortcut(index);
 }

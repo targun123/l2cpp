@@ -16,7 +16,7 @@ DEFINE_PACKET_HANDLER(CharacterCancelDeletion)
     reader >> characterId;
 
     if (auto const c = World::character(characterId); c)
-        c->get().deleteTime = 0;
+        c->deleteTime = 0;
 
     handleCharacterList(player);
 }

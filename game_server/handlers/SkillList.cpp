@@ -9,5 +9,5 @@
 DEFINE_PACKET_HANDLER(SkillList)
 {
     L2CPP_B_ASSERT(player.currentCharacter(), "No character, can't send skill list");
-    player.connection().send(SkillListPacket(player.currentCharacter()->get().skills()));
+    player.connection().send(SkillListPacket(player.currentCharacter()->skills()));
 }

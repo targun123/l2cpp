@@ -64,5 +64,5 @@ NpcStatusUpdatePacket::NpcStatusUpdatePacket(NonPlayableActor const & actor)
     ;
 
     auto const weapon = actor.gear().weapon();
-    *this << (weapon ? weapon->get().enchantLevel : 0);
+    *this << (weapon ? weapon->enchantLevel : 0);
 }

@@ -32,9 +32,9 @@ auto World::monsters() -> std::unordered_map<GameObjectId, Monster> const &
     return _monsters;
 }
 
-auto World::character(GameObjectId const id) -> OptionalRef<Character>
+auto World::character(GameObjectId const id) -> OptRef<Character>
 {
-    OptionalRef<Character> result;
+    OptRef<Character> result;
 
     if (auto const it = _characters.find(id); it != _characters.end())
         result = it->second;
@@ -42,9 +42,9 @@ auto World::character(GameObjectId const id) -> OptionalRef<Character>
     return result;
 }
 
-auto World::monster(GameObjectId const id) -> OptionalRef<Monster>
+auto World::monster(GameObjectId const id) -> OptRef<Monster>
 {
-    OptionalRef<Monster> result;
+    OptRef<Monster> result;
 
     if (auto const it = _monsters.find(id); it != _monsters.end())
         result = it->second;
@@ -60,9 +60,9 @@ void World::update(ClockDuration const elapsed)
     {
         if (c.state == ActorState::Attacking)
         {
-            auto & player = c.player->get();
-            auto & target = c.target()->get();
-            auto & action = static_cast<AttackAction &>(c.currentAction()->get());
+            auto & player = *c.player;
+            auto & target = *c.target();
+            auto & action = static_cast<AttackAction &>(*c.currentAction());
 
             bool const isFirstTick = action.startTime() == action.lastUpdateTime();
             static bool impactDone = false;
@@ -73,7 +73,7 @@ void World::update(ClockDuration const elapsed)
                 // Use soulshots if a weapon is equipped
                 std::optional<ItemGrade> soulShotGrade;
                 if (auto const weapon = c.gear().weapon(); weapon)
-                    soulShotGrade = weapon->get().tmplate.grade;
+                    soulShotGrade = weapon->tmplate.grade;
 
                 player.connection().send(SM::AttackPacket(c, target, {target, 10, false, soulShotGrade}));
             }
@@ -100,7 +100,7 @@ void World::update(ClockDuration const elapsed)
     }
 }
 
-auto World::addCharacter(OptionalRef<Player> p) -> Character &
+auto World::addCharacter(OptRef<Player> p) -> Character &
 {
     Character character(std::move(p));
     auto const & [it, ok] = _characters.try_emplace(character.id(), std::move(character));
@@ -142,4 +142,3 @@ auto World::inGameTime() -> std::chrono::minutes
     return 60min * 10; // 10am because we want sunlight to see what we're doing
 #endif
 }
-

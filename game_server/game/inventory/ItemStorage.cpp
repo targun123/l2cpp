@@ -24,22 +24,22 @@ ItemStorage::ItemStorage(ItemStorage &&) noexcept = default;
 ItemStorage & ItemStorage::operator=(ItemStorage &&) noexcept = default;
 ItemStorage::~ItemStorage() = default;
 
-auto ItemStorage::item(GameObjectId const uid) -> OptionalRef<Item>
+auto ItemStorage::item(GameObjectId const uid) -> OptRef<Item>
 {
-    OptionalRef<Item> result;
+    OptRef<Item> result;
 
     if (_impl->items.contains(uid))
-        result.emplace(_impl->items.at(uid));
+        result = _impl->items.at(uid);
 
     return result;
 }
 
-auto ItemStorage::item(GameObjectId const uid) const -> OptionalRef<Item const>
+auto ItemStorage::item(GameObjectId const uid) const -> OptRef<Item const>
 {
-    OptionalRef<Item const> result;
+    OptRef<Item const> result;
 
     if (_impl->items.contains(uid))
-        result.emplace(_impl->items.at(uid));
+        result = _impl->items.at(uid);
 
     return result;
 }

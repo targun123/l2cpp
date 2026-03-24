@@ -20,8 +20,8 @@ public:
 
 public:
     static auto size() -> size_t;
-    static auto skill(SkillUid uid) -> OptionalRef<SkillTemplate>;
-    static auto skill(SkillId const id, SkillLevel const lvl) -> OptionalRef<SkillTemplate> { return skill({id, lvl}); }
+    static auto skill(SkillUid uid) -> OptRef<SkillTemplate>;
+    static auto skill(SkillId const id, SkillLevel const lvl) { return skill({id, lvl}); }
 
 private:
     static std::unordered_map<SkillUid, SkillTemplate> _templates;

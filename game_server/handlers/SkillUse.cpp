@@ -15,17 +15,17 @@ DEFINE_PACKET_HANDLER(SkillUse)
     bool shiftPressed;
     reader >> skillId >> ctrlPressed >> shiftPressed;
 
-    auto & c         = player.currentCharacter()->get();
+    auto & c         = *player.currentCharacter();
     auto const skill = c.skills().skill(static_cast<SkillId>(skillId));
     L2CPP_B_ASSERT(skill, "Character does not possess skill id '{}'", skillId);
 
     Packet p(0x48);
     p
         << c.id()  // caster
-        << (c.target() ? c.target()->get().id() : c.id())
-        << static_cast<u32>(skill->get().tmplate().id())
-        << static_cast<u32>(skill->get().tmplate().level())
-        << static_cast<u32>(skill->get().tmplate().castDuration().count())
+        << (c.target() ? c.target()->id() : c.id())
+        << static_cast<u32>(skill->tmplate().id())
+        << static_cast<u32>(skill->tmplate().level())
+        << static_cast<u32>(skill->tmplate().castDuration().count())
         << 1000 // reuse delay (in ms)
         << c.position().x
         << c.position().y

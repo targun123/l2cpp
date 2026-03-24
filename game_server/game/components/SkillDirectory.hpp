@@ -20,8 +20,8 @@ public:
 
 public:
     auto size() const -> size_t;
-    auto skill(SkillId id) -> OptionalRef<Skill>;
-    auto skill(SkillId id) const -> OptionalRef<Skill const>;
+    auto skill(SkillId id) -> OptRef<Skill>;
+    auto skill(SkillId id) const -> OptRef<Skill const>;
 
 public:
     auto learn(SkillId id, SkillLevel level) -> Skill &;

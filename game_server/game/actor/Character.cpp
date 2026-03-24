@@ -32,7 +32,7 @@ template class Pimpl<Character::CharacterImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Character::Character(OptionalRef<Player> p)
+Character::Character(OptRef<Player> p)
     : Actor(ActorType::Character)
     , player(std::move(p))
 {
@@ -157,7 +157,7 @@ auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
     if (shortcut.type() == ShortcutType::Skill)
     {
         if (auto const skill = skills().skill(static_cast<SkillId>(shortcut.targetId())); skill)
-            shortcut.setSkillLevel(skill->get().tmplate().level());
+            shortcut.setSkillLevel(skill->tmplate().level());
     }
 
     _impl->shortcuts[index] = std::move(shortcut);

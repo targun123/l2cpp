@@ -22,7 +22,7 @@ DEFINE_PACKET_HANDLER(ChatSay)
     SPDLOG_DEBUG(L"Player said ('{}'){}: “{}”",
                  std::to_underlying(type), recipient.empty() ? L"" : std::format(L" (to '{}')", recipient), msg);
 
-    auto const & c = player.currentCharacter()->get();
+    auto const & c = *player.currentCharacter();
     if (recipient.empty())
         player.connection().send(ChatSayPacket(c.id(), c.name(), type, msg));
     else

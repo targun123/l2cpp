@@ -22,10 +22,10 @@ struct CharacterStatus;
 class Character : public Actor
 {
 public:
-    OptionalRef<Player> player;
+    OptRef<Player> player;
 
 public:
-    explicit Character(OptionalRef<Player> = {});
+    explicit Character(OptRef<Player> = {});
     Character(Character &&) noexcept;
     Character & operator=(Character &&) noexcept;
     ~Character() override;

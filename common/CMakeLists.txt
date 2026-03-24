@@ -20,6 +20,7 @@ target_sources(${PROJECT_NAME} PUBLIC
     FILES
         l2cpp/Exception.hpp
         l2cpp/Misc.hpp
+        l2cpp/OptRef.hpp
         l2cpp/Pimpl.hpp
         l2cpp/Typedefs.hpp
         l2cpp/utils/Enum.hpp

@@ -23,20 +23,20 @@ DEFINE_PACKET_HANDLER(ActionRequest)
     u8 actionId; // 0=click 1=shift+click
     reader >> targetId >> originX >> originY >> originZ >> actionId;
 
-    auto & character = player.currentCharacter()->get();
+    auto & character = *player.currentCharacter();
 
     // No current target or current target is different?
-    if (!character.target() || character.target()->get().id() != targetId)
+    if (!character.target() || character.target()->id() != targetId)
     {
         /**/ if (auto const c = World::character(targetId); c)
         {
-            character.setTarget(c->get());
-            player.connection().send(TargetSelectPacket(character, c->get()));
+            character.setTarget(*c);
+            player.connection().send(TargetSelectPacket(character, *c));
         }
         else if (auto const m = World::monster(targetId); m)
         {
-            character.setTarget(m->get());
-            player.connection().send(TargetMonsterSelectPacket(character, m->get()));
+            character.setTarget(*m);
+            player.connection().send(TargetMonsterSelectPacket(character, *m));
         }
     }
     else // second request on target, launch attack!

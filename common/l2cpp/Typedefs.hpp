@@ -3,10 +3,15 @@
 
 #pragma once
 
+// Project includes
+// ReSharper disable once CppUnusedIncludeDirective
+#include "OptRef.hpp"
+
 // C++ includes
-#include <cstdint>
 #include <chrono>
-#include <optional>
+#include <cstdint>
+
+using namespace std::literals;
 
 using byte = std::uint8_t;
 using u8   = std::uint8_t;
@@ -23,13 +28,9 @@ using Sec            = std::chrono::seconds;
 using MSec           = std::chrono::milliseconds;
 using ClockDuration  = std::chrono::steady_clock::duration;
 using ClockTimePoint = std::chrono::steady_clock::time_point;
-using namespace std::chrono_literals;
 
 template<typename T>
 using Ref = std::reference_wrapper<T>;
-
-template<typename T>
-using OptionalRef = std::optional<std::reference_wrapper<T>>;
 
 template<typename T>
 using PairOf = std::pair<T, T>;
@@ -44,7 +45,7 @@ using SkillLevel = u16;
 constexpr u8  operator""_u8 (u64 const nbr) { return static_cast<u8> (nbr); }
 constexpr u16 operator""_u16(u64 const nbr) { return static_cast<u16>(nbr); }
 constexpr u32 operator""_u32(u64 const nbr) { return static_cast<u32>(nbr); }
-constexpr u64 operator""_u64(u64 const nbr) { return nbr; }
+constexpr u64 operator""_u64(u64 const nbr) { return nbr;                   }
 
 constexpr s8  operator""_s8 (u64 const nbr) { return static_cast<s8> (nbr); }
 constexpr s16 operator""_s16(u64 const nbr) { return static_cast<s16>(nbr); }
