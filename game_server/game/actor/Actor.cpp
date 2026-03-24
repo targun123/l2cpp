@@ -10,6 +10,7 @@
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
 
+// ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
 
 struct Actor::ActorImpl
@@ -84,9 +85,12 @@ auto Actor::target() const -> OptRef<Actor const> { return _impl->target; }
 
 bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
-auto Actor::currentAction() const -> OptRef<Action>
+auto Actor::currentAction() -> OptRef<Action>
 {
     OptRef<Action> action;
+
+    if (_impl->currentAction && _impl->currentAction->isFinished())
+        _impl->currentAction = std::move(_impl->nextAction);
 
     if (_impl->currentAction)
         action = *_impl->currentAction;
@@ -94,31 +98,16 @@ auto Actor::currentAction() const -> OptRef<Action>
     return action;
 }
 
-auto Actor::nextAction() const -> OptRef<Action>
+auto Actor::nextAction() -> OptRef<Action>
 {
-    OptRef<Action> action;
-
-    if (_impl->nextAction)
-        action = *_impl->nextAction;
-
-    return action;
+    return _impl->nextAction ? OptRef(*_impl->nextAction) : std::nullopt;
 }
 
 void Actor::setName (std::wstring name)  { component<ActorIdentity>().name  = std::move(name);  }
 void Actor::setTitle(std::wstring title) { component<ActorIdentity>().title = std::move(title); }
 
-void Actor::setPosition(Position const & position)
-{
-    component<Position>() = position;
-}
-
-void Actor::setPosition(s32 const x, s32 const y, s32 const z)
-{
-    auto & pos = component<Position>();
-    pos.x = x;
-    pos.y = y;
-    pos.z = z;
-}
+void Actor::setPosition(Position const & position)             { component<Position>() = position; }
+void Actor::setPosition(s32 const x, s32 const y, s32 const z) { setPosition(Position{x, y, z});   }
 
 void Actor::setPosX(s32 const x) { component<Position>().x = x; }
 void Actor::setPosY(s32 const y) { component<Position>().y = y; }
@@ -128,15 +117,20 @@ void Actor::setTeam(Team const team) { _impl->team = team; }
 
 void Actor::setTarget(OptRef<Actor const> actor) { _impl->target = std::move(actor); }
 
-auto Actor::setNextAction(std::unique_ptr<Action> action) -> Action &
+void Actor::doNext(std::unique_ptr<Action> action)
 {
-    if (!_impl->currentAction)
+    if (!action)
     {
-        _impl->currentAction = std::move(action);
-        _impl->currentAction->restart(); // action starts now
+        _impl->currentAction.reset();
+        _impl->nextAction.reset();
     }
-    else
+    else if (!_impl->currentAction)                    // no action: set new action
+        _impl->currentAction = std::move(action);
+    else if (_impl->currentAction->canBeInterrupted()) // interruptible current action: replace with new action
+    {
+        doNext(nullptr);
+        _impl->currentAction = std::move(action);
+    }
+    else                                               // uninterruptible current action: replace next / queue action
         _impl->nextAction = std::move(action);
-
-    return _impl->nextAction ? *_impl->nextAction : *_impl->currentAction;
 }

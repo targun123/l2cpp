@@ -3,21 +3,8 @@
 
 #include "World.hpp"
 
-// Project includes
-#include "../Player.hpp"
-#include "../network/Connection.hpp"
-#include "../network/packets/server/chat/ChatNpcSayPacket.hpp"
-#include "../network/packets/server/combat/AttackPacket.hpp"
-#include "../network/packets/server/combat/AttackStanceTogglePacket.hpp"
-#include "actions/Attack.hpp"
-#include "components/Gear.hpp"
-
-#include <l2cpp/network/Packet.hpp>
-
 // C++ includes
 #include <ranges>
-
-namespace SM = Network::Packet::Server;
 
 std::unordered_map<GameObjectId, Character> World::_characters;
 std::unordered_map<GameObjectId, Monster>   World::_monsters;
@@ -58,45 +45,8 @@ void World::update(ClockDuration const elapsed)
 
     for (auto & c : _characters | std::views::values)
     {
-        if (c.state == ActorState::Attacking)
-        {
-            auto & player = *c.player;
-            auto & target = *c.target();
-            auto & action = static_cast<AttackAction &>(*c.currentAction());
-
-            bool const isFirstTick = action.startTime() == action.lastUpdateTime();
-            static bool impactDone = false;
-
-            action.update(elapsed);
-            if (isFirstTick) // Start a physical attack
-            {
-                // Use soulshots if a weapon is equipped
-                std::optional<ItemGrade> soulShotGrade;
-                if (auto const weapon = c.gear().weapon(); weapon)
-                    soulShotGrade = weapon->tmplate.grade;
-
-                player.connection().send(SM::AttackPacket(c, target, {target, 10, false, soulShotGrade}));
-            }
-            else if (action.lastUpdateTime() >= action.impactTimePoint && !impactDone)
-            {
-                // Enable attack stance on opponents
-                player.connection().send(SM::AttackStanceTogglePacket(true, c));
-                player.connection().send(SM::AttackStanceTogglePacket(true, target));
-
-                // Make the target go Ouch!
-                static bool toggle;
-                player.connection().send(SM::ChatNpcSayPacket(target, ChatType::General, toggle ? L"Ouch!" : L"Waah!"));
-                toggle = !toggle;
-
-                impactDone = true;
-            }
-            else if (action.lastUpdateTime() >= action.startTime() + action.hitDuration)
-            {
-                // Continue attacking once the animation is complete
-                action.restart();
-                impactDone = false;
-            }
-        }
+        if (auto const action = c.currentAction(); action)
+            action->update(elapsed, c);
     }
 }
 
