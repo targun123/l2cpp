@@ -89,7 +89,7 @@ bool Application::ApplicationImpl::run()
     SPDLOG_INFO("Listening for clients on {}:{}", ip, port);
 
     SPDLOG_INFO("Server running. Input CTRL+C to initiate shutdown…");
-    Clock worldClock, ioClock;
+    Clock loopClock, worldClock, ioClock;
     while (!ioContext.stopped())
     {
         ioClock.restart();
@@ -100,6 +100,8 @@ bool Application::ApplicationImpl::run()
         }
 
         World::update(worldClock.restart());
+
+        std::this_thread::sleep_for(100ms - loopClock.restart());
     }
 
     SPDLOG_INFO("Goodbye.");
