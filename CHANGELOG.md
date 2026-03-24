@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better state machine handling;
 - `World::update` CPU usage reduction.
 
+## [0.3.0.1] - 2026-03-24
+
+### Changed
+
+- Replace `OptionalRef = std::option<std::reference_wrapper<T>>` with my own `OptRef` implementation (to avoid writing the ugly `opt->get()` all the damn time)
+
 ## [0.3.0] - 2026-03-23
 
 ### Added
