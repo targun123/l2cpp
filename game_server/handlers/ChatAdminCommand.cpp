@@ -63,7 +63,7 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
     std::wstring text;
     reader >> text;
 
-    auto & c = player.currentCharacter()->get();
+    auto & c = *player.currentCharacter();
 
     boost::algorithm::trim_right(text);
     std::vector<std::wstring_view> args;

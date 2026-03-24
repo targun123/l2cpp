@@ -10,5 +10,5 @@
 
 DEFINE_PACKET_HANDLER(InventoryOpen)
 {
-    player.connection().send(InventoryListPacket(true, player.currentCharacter()->get().inventory()));
+    player.connection().send(InventoryListPacket(true, player.currentCharacter()->inventory()));
 }

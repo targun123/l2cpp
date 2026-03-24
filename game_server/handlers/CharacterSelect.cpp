@@ -24,7 +24,7 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
     }
 
     player.setCurrentCharacter(index);
-    auto const & c = player.currentCharacter()->get();
+    auto const & c = *player.currentCharacter();
     Packet p(0x15);
     p
         << c.name()

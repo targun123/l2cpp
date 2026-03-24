@@ -41,9 +41,9 @@ DEFINE_PACKET_HANDLER(Move)
 
     // SPDLOG_TRACE("Moving requested to {{x={}, y={}, z={}}} (input: {})",
     //              action.targetX, action.targetY, action.targetZ,
-    //              (action.input == MoveAction::Input::Mouse ? "mouse" : "keyboard"));
+    //              (action.input == *MoveAction::Input::Mouse ? "mouse" : "keyboard"));
     //
-    auto & c = player.currentCharacter()->get();
+    auto & c = *player.currentCharacter();
     c.setPosition(action.originX, action.originY, action.originZ);
     // float const distanceX = action.targetX - c.position().x;
     // float const distanceY = action.targetY - c.position().y;

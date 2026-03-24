@@ -22,11 +22,11 @@ DEFINE_PACKET_HANDLER(ItemUnequip)
     GearSlot slot;
     reader >> slot;
 
-    auto & c = player.currentCharacter()->get();
+    auto & c = *player.currentCharacter();
     if (auto const item = c.gear().item(slot); item)
     {
         // FIXME: if any kind of arrow
-        Ref<Item> const finalitem = item->get().tmplate.id == 1345 ? *c.gear().item(GearSlot::RightHand) : *item;
+        Ref const finalitem = item->tmplate.id == 1345 ? *c.gear().item(GearSlot::RightHand) : *item;
 
         if (auto const transaction = c.gear().unequipItem(finalitem); transaction.succeeded)
         {

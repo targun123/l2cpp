@@ -100,9 +100,9 @@ auto SkillTemplateDirectory::size() -> size_t
     return _templates.size();
 }
 
-auto SkillTemplateDirectory::skill(SkillUid const uid) -> OptionalRef<SkillTemplate>
+auto SkillTemplateDirectory::skill(SkillUid const uid) -> OptRef<SkillTemplate>
 {
-    OptionalRef<SkillTemplate> skill;
+    OptRef<SkillTemplate> skill;
 
     if (auto const it = _templates.find(uid); it != _templates.end())
         skill = it->second;

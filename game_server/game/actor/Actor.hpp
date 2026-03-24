@@ -47,11 +47,11 @@ public:
     auto skills()       -> SkillDirectory &;
     auto skills() const -> SkillDirectory const &;
 
-    auto target() const -> OptionalRef<Actor const>;
+    auto target() const -> OptRef<Actor const>;
     bool isInCombatStance() const;
 
-    auto currentAction() const -> OptionalRef<Action>;
-    auto nextAction() const -> OptionalRef<Action>;
+    auto currentAction() const -> OptRef<Action>;
+    auto nextAction() const -> OptRef<Action>;
 
 public:
     void setName(std::wstring name);
@@ -62,7 +62,7 @@ public:
     void setPosY(s32 y);
     void setPosZ(s32 z);
     void setTeam(Team team);
-    void setTarget(OptionalRef<Actor const>);
+    void setTarget(OptRef<Actor const>);
 
     auto setNextAction(std::unique_ptr<Action>) -> Action &;
     template<typename A, typename... Args> requires std::is_base_of_v<Action, A>

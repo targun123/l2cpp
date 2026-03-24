@@ -21,13 +21,13 @@ public:
     static auto characters() -> std::unordered_map<GameObjectId, Character> const &;
     static auto monsters()   -> std::unordered_map<GameObjectId, Monster>   const &;
 
-    static auto character(GameObjectId) -> OptionalRef<Character>;
-    static auto monster(GameObjectId)   -> OptionalRef<Monster>;
+    static auto character(GameObjectId) -> OptRef<Character>;
+    static auto monster(GameObjectId)   -> OptRef<Monster>;
 
 public:
     static void update(ClockDuration elapsed);
 
-    static auto addCharacter(OptionalRef<Player> = {}) -> Character &;
+    static auto addCharacter(OptRef<Player> = {}) -> Character &;
     static void delCharacter(GameObjectId id);
 
     static auto addMonster() -> Monster &;

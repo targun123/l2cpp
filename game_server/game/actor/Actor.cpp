@@ -18,7 +18,7 @@ struct Actor::ActorImpl
     Team team = Team::None;
     bool isInCombatStance = false;
 
-    OptionalRef<Actor const> target;
+    OptRef<Actor const> target;
     std::unique_ptr<Action> currentAction, nextAction;
 };
 
@@ -80,13 +80,13 @@ auto Actor::gear() const -> Gear const & { return component<Gear>(); }
 auto Actor::skills()       -> SkillDirectory       & { return component<SkillDirectory>(); }
 auto Actor::skills() const -> SkillDirectory const & { return component<SkillDirectory>(); }
 
-auto Actor::target() const -> OptionalRef<Actor const> { return _impl->target; }
+auto Actor::target() const -> OptRef<Actor const> { return _impl->target; }
 
 bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
-auto Actor::currentAction() const -> OptionalRef<Action>
+auto Actor::currentAction() const -> OptRef<Action>
 {
-    OptionalRef<Action> action;
+    OptRef<Action> action;
 
     if (_impl->currentAction)
         action = *_impl->currentAction;
@@ -94,9 +94,9 @@ auto Actor::currentAction() const -> OptionalRef<Action>
     return action;
 }
 
-auto Actor::nextAction() const -> OptionalRef<Action>
+auto Actor::nextAction() const -> OptRef<Action>
 {
-    OptionalRef<Action> action;
+    OptRef<Action> action;
 
     if (_impl->nextAction)
         action = *_impl->nextAction;
@@ -126,7 +126,7 @@ void Actor::setPosZ(s32 const z) { component<Position>().z = z; }
 
 void Actor::setTeam(Team const team) { _impl->team = team; }
 
-void Actor::setTarget(OptionalRef<Actor const> actor) { _impl->target = std::move(actor); }
+void Actor::setTarget(OptRef<Actor const> actor) { _impl->target = std::move(actor); }
 
 auto Actor::setNextAction(std::unique_ptr<Action> action) -> Action &
 {

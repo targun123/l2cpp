@@ -22,12 +22,12 @@ DEFINE_PACKET_HANDLER(ItemUse)
     bool ctrlPressed;
     reader >> uid >> ctrlPressed;
 
-    auto & character = player.currentCharacter()->get();
+    auto & character = *player.currentCharacter();
     auto const item  = character.inventory().item(uid);
     if (!item)
         return;
 
-    switch (item->get().tmplate.category)
+    switch (item->tmplate.category)
     {
         case ItemCategory::Weapon:
         case ItemCategory::Armor:
@@ -45,7 +45,7 @@ DEFINE_PACKET_HANDLER(ItemUse)
                 if (transaction.curItem)
                     p.appendModifiedItem(*transaction.curItem);
 
-                if (item->get().tmplate.id == 6619) // FIXME: if any bow, find matching arrows to equip in left hand
+                if (item->tmplate.id == 6619) // FIXME: if any bow, find matching arrows to equip in left hand
                 {
                     if (auto const matchingArrows = character.inventory().item({.id = 1345}); !matchingArrows.empty())
                     {

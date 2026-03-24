@@ -21,8 +21,8 @@ public:
     virtual ~ItemStorage();
 
 public:
-    auto item(GameObjectId uid)           -> OptionalRef<Item>;
-    auto item(GameObjectId uid)     const -> OptionalRef<Item const>;
+    auto item(GameObjectId uid)           -> OptRef<Item>;
+    auto item(GameObjectId uid)     const -> OptRef<Item const>;
     auto item(ItemTemplate const &)       -> std::vector<Ref<Item>>;
     auto item(ItemTemplate const &) const -> std::vector<Ref<Item const>>;
     auto items()                    const -> std::vector<Ref<Item const>>;

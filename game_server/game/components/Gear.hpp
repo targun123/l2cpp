@@ -19,14 +19,14 @@ public:
     ~Gear() override;
 
 public:
-    auto item(GearSlot slot)       -> OptionalRef<Item>;
-    auto item(GearSlot slot) const -> OptionalRef<Item const>;
+    auto item(GearSlot slot)       -> OptRef<Item>;
+    auto item(GearSlot slot) const -> OptRef<Item const>;
 
     auto itemId        (GearSlot slot) const -> u32;
     auto itemTemplateId(GearSlot slot) const -> u32;
 
     bool hasActiveWeapon() const;
-    auto weapon() const -> OptionalRef<Item const>;
+    auto weapon() const -> OptRef<Item const>;
 
 public:
     auto equipItem  (Item & item) -> GearTransaction;

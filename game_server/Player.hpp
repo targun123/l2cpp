@@ -29,7 +29,7 @@ public:
 
     auto characters()       -> std::span<Ref<Character>>;
     auto characters() const -> std::span<Ref<Character> const>;
-    auto currentCharacter() -> OptionalRef<Character>;
+    auto currentCharacter() -> OptRef<Character>;
 
     auto accountName()   const -> std::wstring_view;
     auto playOk1()       const -> u32;

@@ -13,6 +13,6 @@ DEFINE_PACKET_HANDLER(ShortcutBarAdd)
     Shortcut s;
     reader >> s;
 
-    auto const & slot = player.currentCharacter()->get().setShortcut(std::move(s));
+    auto const & slot = player.currentCharacter()->setShortcut(std::move(s));
     player.connection().send(Packet(0x44) << slot);
 }

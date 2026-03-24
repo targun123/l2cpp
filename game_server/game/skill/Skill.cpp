@@ -16,7 +16,7 @@ using namespace std::chrono;
 
 struct Skill::SkillImpl
 {
-    std::reference_wrapper<SkillTemplate const> tmplate;
+    Ref<SkillTemplate const> tmplate;
     system_clock::time_point lastUse{};
 };
 
