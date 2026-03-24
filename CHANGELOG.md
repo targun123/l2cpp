@@ -10,8 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Send target's status when targetting;
 - HP/MP/CP regeneration tick system;
 - Inflict damage during auto-attacks;
-- Better state machine handling;
-- `World::update` CPU usage reduction.
+- Better state machine handling.
+
+## [0.3.1] - 2026-03-24
+
+### Fixed
+
+- Game loop doesn't overuse the CPU when there's nothing much going on
 
 ## [0.3.0.1] - 2026-03-24
 
