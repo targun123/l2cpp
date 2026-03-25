@@ -6,6 +6,7 @@
 // Project includes
 #include "actor/Character.hpp"
 #include "actor/Monster.hpp"
+#include "ecs/System.hpp"
 
 #include <l2cpp/Typedefs.hpp>
 
@@ -14,8 +15,10 @@
 
 class World
 {
+    using SystemPtr = std::unique_ptr<System>;
+
 private:
-    World() noexcept = default;
+    World() noexcept = delete;
 
 public:
     static auto characters() -> std::unordered_map<GameObjectId, Character> const &;
@@ -25,7 +28,14 @@ public:
     static auto monster(GameObjectId)   -> OptRef<Monster>;
 
 public:
+    static void init();
     static void update(ClockDuration elapsed);
+
+    template<typename T, typename... Args> requires std::is_base_of_v<System, T>
+    static void registerSystem(Args &&... args)
+    {
+        _systems.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+    }
 
     static auto addCharacter(OptRef<Player> = {}) -> Character &;
     static void delCharacter(GameObjectId id);
@@ -36,6 +46,7 @@ public:
     static auto inGameTime() -> std::chrono::minutes;
 
 private:
+    static std::vector<std::unique_ptr<System>>        _systems;
     static std::unordered_map<GameObjectId, Character> _characters;
     static std::unordered_map<GameObjectId, Monster>   _monsters;
 };

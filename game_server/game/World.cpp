@@ -6,6 +6,7 @@
 // C++ includes
 #include <ranges>
 
+std::vector<std::unique_ptr<System>>        World::_systems;
 std::unordered_map<GameObjectId, Character> World::_characters;
 std::unordered_map<GameObjectId, Monster>   World::_monsters;
 
@@ -39,6 +40,10 @@ auto World::monster(GameObjectId const id) -> OptRef<Monster>
     return result;
 }
 
+void World::init()
+{
+}
+
 void World::update(ClockDuration const elapsed)
 {
     using namespace std::chrono;
@@ -47,6 +52,15 @@ void World::update(ClockDuration const elapsed)
     {
         if (auto const action = c.currentAction(); action)
             action->update(elapsed, c);
+    }
+
+    for (auto const & system : _systems)
+    {
+        for (auto & c : _characters | std::views::values)
+            system->update(elapsed, c);
+
+        for (auto & m : _monsters | std::views::values)
+            system->update(elapsed, m);
     }
 }
 
