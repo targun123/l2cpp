@@ -4,12 +4,11 @@
 #pragma once
 
 // Project includes
-#include "../utils/Traits.hpp"
 #include "../Pimpl.hpp"
 #include "../Typedefs.hpp"
+#include "../utils/Traits.hpp"
 
 // C++ includes
-#include <optional>
 #include <span>
 
 namespace l2cpp::Network { class Packet; template<u16> struct HeaderOnlyPacket; }
@@ -29,11 +28,34 @@ public:
     virtual ~Packet();
 
 public:
+    bool isFinalized() const;
+
+    /// @returns A read-only span of the whole buffer.
+    auto buffer() const -> std::span<byte const>;
+
+    /// @returns Size of the whole buffer.
+    auto size() const -> size_t;
+
+    /// @returns Opcode of the packet, if available.
+    auto opCode() const -> PacketOpCode;
+
+    /// @returns A span of the buffer minus the initial size (thus including the opCode).
+    auto body()       -> std::span<byte>;
+    auto body() const -> std::span<byte const>;
+
+    /// @returns Size of the body (buffer size minus the initial size).
+    auto bodySize() const -> size_t;
+
+public:
+    /// Writes the last bits of data into the packet, then writes the size of the packet at the very beginning.
+    /// @warning Calling more than once won't do anything.
+    void finalize();
+
     /// Appends a span of bytes to the packet.
     /// @warning Appending to a finalized packet won't work!
     Packet & operator<<(std::span<byte const> span);
 
-    template<typename T, size_t N>
+    template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
     Packet & operator<<(std::span<T, N> span) { return append(span.data(), span.size() * sizeof(T)); }
 
     /// Allows to append any "basic" type as bytes to the packet.
@@ -48,42 +70,9 @@ public:
 
     /// Appends a contiguous array of integrals to the packet.
     template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
-    Packet & operator<<(std::array<T, N> const & a)
-    {
-        return append(a.data(), a.size() * sizeof(T));
-    }
-
-    Packet & operator<<(std::string_view const str)
-    {
-        return append(str.data(), str.size() * sizeof(char)) << '\0';
-    }
-
-    Packet & operator<<(std::wstring_view const str)
-    {
-        return append(str.data(), str.size() * sizeof(wchar_t)) << L'\0';
-    }
-
-public:
-    /// @returns A read-only span of the whole buffer.
-    auto buffer() const -> std::span<byte const>;
-
-    /// @returns Size of the whole buffer.
-    auto size() const -> size_t;
-
-    /// @returns Opcode of the packet, if available.
-    auto opCode() const -> std::optional<PacketOpCode>;
-
-    /// @returns A span of the buffer minus the initial size (thus including the opCode).
-    auto body()       -> std::span<byte>;
-    auto body() const -> std::span<byte const>;
-
-    /// @returns Size of the body (buffer size minus the initial size).
-    auto bodySize() const -> size_t;
-
-public:
-    /// Writes the last bits of data into the packet, then writes the size of the packet at the very beginning.
-    /// @warning Calling more than once won't do anything.
-    void finalize();
+    Packet & operator<<(std::array<T, N> const & a)  {return append(a.data(),   a.size()   * sizeof(T));               }
+    Packet & operator<<(std::string_view const str)  {return append(str.data(), str.size() * sizeof(char))    <<  '\0';}
+    Packet & operator<<(std::wstring_view const str) {return append(str.data(), str.size() * sizeof(wchar_t)) << L'\0';}
 
 protected:
     virtual void finalizeImpl() {}

@@ -193,34 +193,31 @@ void Connection::send(l2cpp::Network::Packet & p)
     if (!isAlive())
         return;
 
-    L2CPP_B_ASSERT(p.opCode().has_value(), "Trying to send a packet without any opCode");
-    auto const opCode = p.opCode().value();
-
-    p.finalize();
+    bool const wasAlreadyFinalized = p.isFinalized();
+    if (!wasAlreadyFinalized)
+    {
+        p.finalize();
 
 #ifndef NDEBUG
-    SPDLOG_INFO("sent: 0x{:0{}x} ({} bytes)", opCode, opCode > 0xff ? 4 : 2, p.size());
-    std::cout << l2cpp::hexdump(p.body().data(), p.bodySize()) << std::endl;
+        SPDLOG_INFO("sent: 0x{:0{}x} ({} bytes)", p.opCode(), p.opCode() > 0xff ? 4 : 2, p.size());
+        std::cout << l2cpp::hexdump(p.body().data(), p.bodySize()) << std::endl;
 #endif
 
-    if (std::ranges::any_of(_impl->encryptionKey, [] (auto const c) { return c != 0x00; })) [[likely]]
-        _impl->encrypt(p.body());
-    else
-        _impl->encryptionKey = gEncryptionKey;
+        if (std::ranges::any_of(_impl->encryptionKey, [] (auto const c) { return c != 0x00; })) [[likely]]
+            _impl->encrypt(p.body());
+        else
+            _impl->encryptionKey = gEncryptionKey;
+    }
 
     boost::system::error_code ec;
     boost::asio::write(_impl->socket, boost::asio::buffer(p.buffer()), ec);
     if (ec)
         SPDLOG_ERROR("send error '{}' ({}): {}", ec.category().name(), ec.value(), ec.message());
-
-#ifdef NDEBUG
-    SPDLOG_INFO("sent: 0x{:0{}x} ({} bytes)", opCode, opCode > 0xff ? 4 : 2, p.size());
+    else
+#ifndef NDEBUG
+    if (wasAlreadyFinalized)
 #endif
-}
-
-void Connection::send(l2cpp::Network::Packet && p)
-{
-    send(p);
+        SPDLOG_INFO("sent: 0x{:0{}x} ({} bytes)", p.opCode(), p.opCode() > 0xff ? 4 : 2, p.size());
 }
 
 void Connection::close()

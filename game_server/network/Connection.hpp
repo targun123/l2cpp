@@ -28,7 +28,7 @@ public:
 public:
     void asyncReadNextPacket();
     void send(l2cpp::Network::Packet & p);
-    void send(l2cpp::Network::Packet && p);
+    void send(l2cpp::Network::Packet && p) { send(p); }
     void close();
 
     void setOnPacketReceivedHandler(PacketReceivedHandler handler);
