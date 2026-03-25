@@ -44,7 +44,7 @@ Character::Character(OptRef<Player> p)
 
     addComponent<CharacterStatus>();
 
-    auto & gear = component<Gear>();
+    auto & gear = *component<Gear>();
 
     Item formalWear;
     formalWear.tmplate.id       = 6408;
@@ -131,8 +131,8 @@ void Character::computeStats()
 {
     // First update race stats from gear & buffs
 
-    auto const & baseStats = component<Stats>();
-    auto       & stats     = component<ComputedStats>();
+    auto const & baseStats = *component<Stats>();
+    auto       & stats     = *component<ComputedStats>();
 
     // Then update dependent stats
     assign(stats.pAtkSpeedMultiplier, 1. + (stats.DEX - 20) / 100.);

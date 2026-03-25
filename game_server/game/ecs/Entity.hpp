@@ -7,6 +7,7 @@
 #include "Component.hpp"
 
 #include <l2cpp/Exception.hpp>
+#include <l2cpp/OptRef.hpp>
 
 // C++ includes
 #include <memory>
@@ -24,6 +25,21 @@ public:
     virtual ~Entity() = default;
 
 public:
+    template<typename T> requires std::is_base_of_v<Component, T>
+    auto component() -> OptRef<T>
+    {
+        auto const it = _components.find(typeid(T));
+        return it != _components.end() ? OptRef<T>(static_cast<T &>(*it->second)) : std::nullopt;
+    }
+
+    template<typename T> requires std::is_base_of_v<Component, T>
+    auto component() const -> OptRef<T const>
+    {
+        auto const it = _components.find(typeid(T));
+        return it != _components.cend() ? OptRef<T const>(static_cast<T const &>(*it->second)) : std::nullopt;
+    }
+
+public:
     template<typename T, typename... Args> requires std::is_base_of_v<Component, T>
     auto addComponent(Args &&... args) -> T &
     {
@@ -32,11 +48,15 @@ public:
         return static_cast<T &>(*it->second);
     }
 
-    template<typename T> requires std::is_base_of_v<Component, T>
-    auto component() -> T & { return static_cast<T &>(*_components.at(typeid(T))); }
+    template<typename T, typename... Args> requires std::is_base_of_v<Component, T>
+    auto getOrAddComponent(Args &&... args) -> T &
+    {
+        auto it = _components.find(typeid(T));
+        if (it == _components.end())
+            it  = _components.try_emplace(typeid(T), std::make_unique<T>(std::forward<Args>(args)...)).first;
 
-    template<typename T> requires std::is_base_of_v<Component, T>
-    auto component() const -> T const & { return static_cast<T const &>(*_components.at(typeid(T))); }
+        return static_cast<T &>(*it->second);
+    }
 
     template<typename T> requires std::is_base_of_v<Component, T>
     auto delComponent() -> std::unique_ptr<T>
