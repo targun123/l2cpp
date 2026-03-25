@@ -3,6 +3,9 @@
 
 #include "World.hpp"
 
+// Project includes
+#include "systems/ActorAttackStanceTimerSystem.hpp"
+
 // C++ includes
 #include <ranges>
 
@@ -42,6 +45,7 @@ auto World::monster(GameObjectId const id) -> OptRef<Monster>
 
 void World::init()
 {
+    registerSystem<ActorAttackStanceTimerSystem>();
 }
 
 void World::update(ClockDuration const elapsed)
