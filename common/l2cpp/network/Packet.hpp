@@ -24,6 +24,8 @@ public:
     requires std::is_enum_v<E> && Utils::Traits::isAnyOf<std::underlying_type_t<E>, byte, PacketOpCode>
     explicit Packet(E e): Packet(std::to_underlying(e)) {}
 
+    Packet(Packet &&) noexcept = default;
+    Packet & operator=(Packet &&) noexcept = default;
     virtual ~Packet();
 
 public:
