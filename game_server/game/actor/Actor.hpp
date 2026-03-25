@@ -47,7 +47,7 @@ public:
     auto skills()       -> SkillDirectory &;
     auto skills() const -> SkillDirectory const &;
 
-    auto target() const -> OptRef<Actor const>;
+    auto target() const -> OptRef<Actor>;
     bool isInCombatStance() const;
 
     auto currentAction() -> OptRef<Action>;
@@ -62,7 +62,7 @@ public:
     void setPosY(s32 y);
     void setPosZ(s32 z);
     void setTeam(Team team);
-    void setTarget(OptRef<Actor const>);
+    void setTarget(OptRef<Actor>);
 
     void doNext(std::unique_ptr<Action>);
     template<typename A, typename... Args> requires std::is_base_of_v<Action, A>
