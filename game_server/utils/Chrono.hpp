@@ -8,17 +8,17 @@
 
 namespace Utils::Chrono
 {
-    constexpr bool thresholdCrossed(ClockTimePoint const pointInTime,
-                                    ClockDuration  const elapsed,
-                                    ClockTimePoint const threshold)
+    constexpr bool thresholdCrossed(ClockDuration const totalElapsed,
+                                    ClockDuration const elapsed,
+                                    ClockDuration const elapsedThreshold)
     {
-        return pointInTime < threshold && pointInTime + elapsed >= threshold;
+        return totalElapsed < elapsedThreshold && totalElapsed + elapsed >= elapsedThreshold;
     }
 
-    constexpr bool thresholdCrossed(ClockTimePoint const pointInTime,
+    constexpr bool thresholdCrossed(ClockTimePoint const currentTimePoint,
                                     ClockDuration  const elapsed,
-                                    ClockDuration  const thresholdDuration)
+                                    ClockTimePoint const thresholdTimePoint)
     {
-        return thresholdCrossed(pointInTime, elapsed, pointInTime + thresholdDuration);
+        return currentTimePoint < thresholdTimePoint && currentTimePoint + elapsed >= thresholdTimePoint;
     }
 }
