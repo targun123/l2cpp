@@ -22,7 +22,7 @@ void ActorAttackStanceTimerSystem::updateImpl(ClockDuration const elapsed, Actor
 {
     if (OptRef const timer = actor.component<AttackStanceTimer>())
     {
-        if (Utils::Chrono::thresholdCrossed(timer->startTime, timer->elapsedSinceStart, attackStanceTimeout))
+        if (Utils::Chrono::thresholdCrossed(timer->elapsedSinceStart, elapsed, attackStanceTimeout))
         {
             if (actor.state == ActorState::CombatIdle)
                 actor.state = ActorState::Idle;
@@ -35,7 +35,6 @@ void ActorAttackStanceTimerSystem::updateImpl(ClockDuration const elapsed, Actor
             else
                 SPDLOG_DEBUG(L"Actor '{}' attack stance off", actor.name()); // broadcast around
         }
-        else
-            timer->elapsedSinceStart += elapsed;
+        timer->elapsedSinceStart += elapsed;
     }
 }
