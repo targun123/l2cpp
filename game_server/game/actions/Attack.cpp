@@ -9,6 +9,7 @@
 #include "../../network/packets/server/chat/ChatNpcSayPacket.hpp"
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
+#include "../../utils/Chrono.hpp"
 #include "../actor/Character.hpp"
 #include "../components/Gear.hpp"
 
@@ -65,10 +66,10 @@ void AttackAction::updateImpl(ClockDuration const elapsed, Actor & actor)
     if (!target)
         return setFinished(true);
 
-    auto const & c = static_cast<Character &>(actor);
-
-    if (lastUpdateTime() >= impactTimePoint && lastUpdateTime() - elapsed < impactTimePoint) // threshold just crossed
+    if (Utils::Chrono::thresholdCrossed(lastUpdateTime(), elapsed, impactTimePoint))
     {
+        auto const & c = static_cast<Character &>(actor);
+
         // Enable attack stance on opponents
         c.player->connection().send(SM::AttackStanceTogglePacket(true, c));
         c.player->connection().send(SM::AttackStanceTogglePacket(true, target));
