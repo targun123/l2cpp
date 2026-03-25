@@ -4,7 +4,11 @@
 #include "World.hpp"
 
 // Project includes
+#include "../Player.hpp"
+#include "../network/Connection.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
+
+#include <l2cpp/network/Packet.hpp>
 
 // C++ includes
 #include <ranges>
@@ -109,4 +113,19 @@ auto World::inGameTime() -> std::chrono::minutes
 #else
     return 60min * 10; // 10am because we want sunlight to see what we're doing
 #endif
+}
+
+void World::broadcast(l2cpp::Network::Packet && p)
+{
+    for (auto const & c : _characters | std::views::values)
+        c.player->connection().send(p);
+}
+
+void World::broadcastAround(Actor const & emitter, l2cpp::Network::Packet && p, bool const includeEmitter)
+{
+    for (auto const & c : _characters | std::views::values)
+    {
+        if (c.id() != emitter.id() || includeEmitter)
+            c.player->connection().send(p);
+    }
 }
