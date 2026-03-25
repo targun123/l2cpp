@@ -7,10 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Remove character from World when player disconnects;
+- Simple broadcasting to all online characters in a short distance from emitter;
 - Send target's status when targetting;
 - HP/MP/CP regeneration tick system;
 - Inflict damage during auto-attacks;
 - Better state machine handling.
+
+## [0.5.0] - 2026-03-25
+
+### Added
+
+- First ECS systems implementation 
+- Characters' attack stance toggles off after 5s
 
 ## [0.4.0] - 2026-03-24
 

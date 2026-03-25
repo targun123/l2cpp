@@ -19,7 +19,7 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
     Profession profession;
 
     auto & c         = player.addCharacter();
-    auto & baseStats = c.component<Stats>();
+    auto & baseStats = *c.component<Stats>();
 
     reader
         >> name

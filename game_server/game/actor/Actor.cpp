@@ -66,20 +66,20 @@ Actor::Actor(Actor &&) noexcept = default;
 Actor & Actor::operator=(Actor &&) noexcept = default;
 Actor::~Actor() = default;
 
-auto Actor::type()     const -> ActorType         { return _impl->type;                      }
-auto Actor::name()     const -> std::wstring_view { return component<ActorIdentity>().name;  }
-auto Actor::title()    const -> std::wstring_view { return component<ActorIdentity>().title; }
-auto Actor::position() const -> Position const &  { return component<Position>();            }
-auto Actor::team()     const -> Team              { return _impl->team;                      }
+auto Actor::type()     const -> ActorType         { return _impl->type;                       }
+auto Actor::name()     const -> std::wstring_view { return component<ActorIdentity>()->name;  }
+auto Actor::title()    const -> std::wstring_view { return component<ActorIdentity>()->title; }
+auto Actor::position() const -> Position const &  { return component<Position>();             }
+auto Actor::team()     const -> Team              { return _impl->team;                       }
 
-auto Actor::baseStats()  const -> Stats         const & { return component<Stats>();         }
-auto Actor::stats()      const -> ComputedStats const & { return component<ComputedStats>(); }
+auto Actor::baseStats()  const -> Stats         const & { return *component<Stats>();         }
+auto Actor::stats()      const -> ComputedStats const & { return *component<ComputedStats>(); }
 
-auto Actor::gear()       -> Gear       & { return component<Gear>(); }
-auto Actor::gear() const -> Gear const & { return component<Gear>(); }
+auto Actor::gear()       -> Gear       & { return *component<Gear>(); }
+auto Actor::gear() const -> Gear const & { return *component<Gear>(); }
 
-auto Actor::skills()       -> SkillDirectory       & { return component<SkillDirectory>(); }
-auto Actor::skills() const -> SkillDirectory const & { return component<SkillDirectory>(); }
+auto Actor::skills()       -> SkillDirectory       & { return *component<SkillDirectory>(); }
+auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDirectory>(); }
 
 auto Actor::target() const -> OptRef<Actor const> { return _impl->target; }
 
@@ -98,20 +98,17 @@ auto Actor::currentAction() -> OptRef<Action>
     return action;
 }
 
-auto Actor::nextAction() -> OptRef<Action>
-{
-    return _impl->nextAction ? OptRef(*_impl->nextAction) : std::nullopt;
-}
+auto Actor::nextAction() -> OptRef<Action> { return _impl->nextAction ? OptRef(*_impl->nextAction) : std::nullopt; }
 
-void Actor::setName (std::wstring name)  { component<ActorIdentity>().name  = std::move(name);  }
-void Actor::setTitle(std::wstring title) { component<ActorIdentity>().title = std::move(title); }
+void Actor::setName (std::wstring name)  { component<ActorIdentity>()->name  = std::move(name);  }
+void Actor::setTitle(std::wstring title) { component<ActorIdentity>()->title = std::move(title); }
 
-void Actor::setPosition(Position const & position)             { component<Position>() = position; }
-void Actor::setPosition(s32 const x, s32 const y, s32 const z) { setPosition(Position{x, y, z});   }
+void Actor::setPosition(Position const & position)             { *component<Position>() = position; }
+void Actor::setPosition(s32 const x, s32 const y, s32 const z) { setPosition(Position{x, y, z});    }
 
-void Actor::setPosX(s32 const x) { component<Position>().x = x; }
-void Actor::setPosY(s32 const y) { component<Position>().y = y; }
-void Actor::setPosZ(s32 const z) { component<Position>().z = z; }
+void Actor::setPosX(s32 const x) { component<Position>()->x = x; }
+void Actor::setPosY(s32 const y) { component<Position>()->y = y; }
+void Actor::setPosZ(s32 const z) { component<Position>()->z = z; }
 
 void Actor::setTeam(Team const team) { _impl->team = team; }
 
@@ -128,8 +125,8 @@ void Actor::doNext(std::unique_ptr<Action> action)
         _impl->currentAction = std::move(action);
     else if (_impl->currentAction->canBeInterrupted()) // interruptible current action: replace with new action
     {
-        doNext(nullptr);
         _impl->currentAction = std::move(action);
+        _impl->nextAction    = nullptr;
     }
     else                                               // uninterruptible current action: replace next / queue action
         _impl->nextAction = std::move(action);

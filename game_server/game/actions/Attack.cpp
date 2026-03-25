@@ -9,7 +9,9 @@
 #include "../../network/packets/server/chat/ChatNpcSayPacket.hpp"
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
+#include "../../utils/Chrono.hpp"
 #include "../actor/Character.hpp"
+#include "../components/AttackStanceTimer.hpp"
 #include "../components/Gear.hpp"
 
 #include <l2cpp/network/Packet.hpp>
@@ -40,14 +42,15 @@ void AttackAction::onStarted(Actor & actor)
 {
     auto & c = static_cast<Character &>(actor);
 
-    c.state = ActorState::Attacking;
-
     // Use soulshots if a weapon is equipped
     std::optional<ItemGrade> soulShotGrade;
     if (auto const weapon = c.gear().weapon(); weapon)
         soulShotGrade = weapon->tmplate.grade;
 
     c.player->connection().send(SM::AttackPacket(c, c.target(), {c.target(), 10, false, soulShotGrade}));
+
+    c.state = ActorState::Attacking;
+    c.getOrAddComponent<AttackStanceTimer>().restart();
 }
 
 void AttackAction::onFinished(Actor & actor)
@@ -55,8 +58,6 @@ void AttackAction::onFinished(Actor & actor)
     // Physical attacks never finish unless another action was queued (e.g. player moves) or target dies / is canceled
     if (!actor.nextAction() && actor.target())
         restart();
-    else
-        actor.state = ActorState::CombatIdle;
 }
 
 void AttackAction::updateImpl(ClockDuration const elapsed, Actor & actor)
@@ -65,10 +66,10 @@ void AttackAction::updateImpl(ClockDuration const elapsed, Actor & actor)
     if (!target)
         return setFinished(true);
 
-    auto const & c = static_cast<Character &>(actor);
-
-    if (lastUpdateTime() >= impactTimePoint && lastUpdateTime() - elapsed < impactTimePoint) // threshold just crossed
+    if (Utils::Chrono::thresholdCrossed(lastUpdateTime(), elapsed, impactTimePoint))
     {
+        auto const & c = static_cast<Character &>(actor);
+
         // Enable attack stance on opponents
         c.player->connection().send(SM::AttackStanceTogglePacket(true, c));
         c.player->connection().send(SM::AttackStanceTogglePacket(true, target));

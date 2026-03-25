@@ -57,6 +57,9 @@ bool Application::ApplicationImpl::load() try
     SkillTemplateDirectory::load("data/skillname-e.txt", "data/skillgrp.txt");
     SPDLOG_INFO("Registered {} unique skill variants", SkillTemplateDirectory::size());
 
+    SPDLOG_INFO("Loading ECS systems");
+    World::init();
+
     return true;
 }
 catch (l2cpp::Exception const & e)
