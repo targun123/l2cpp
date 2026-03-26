@@ -27,7 +27,7 @@ constexpr byte gBlowfishToken[] = "_;5.]94-31==-%xT!^[$"; // trailing zero is in
 
 namespace
 {
-    u32 calculateChecksum(std::span<byte const> data)
+    u64 calculateChecksum(std::span<byte const> const data)
     {
         L2CPP_B_ASSERT(data.size() >= sizeof(u32), "Cannot calculate checksum: size < sizeof(u32)");
 
@@ -36,10 +36,20 @@ namespace
         for (size_t i = 0; i < data.size(); i += sizeof(u32))
             checksum ^= *reinterpret_cast<u32 const *>(data.data() + i);
 
-        return checksum;
+        return checksum; // pad to 8 bytes, required by Blowfish
     }
 
-    // TODO: verifyChecksum
+    bool verifyChecksum(std::span<byte const> const data)
+    {
+        auto       start = reinterpret_cast<u32 const *>(data.data());
+        auto const end   = reinterpret_cast<u32 const *>(data.data() + data.size() - sizeof(u64));
+
+        u32 checksum = 0;
+        while (start < end)
+            checksum ^= *start++;
+
+        return checksum == *start;
+    }
 }
 
 struct Connection
@@ -76,33 +86,15 @@ struct Connection
             p << 0_u8;
 
         p << calculateChecksum({p.body().data(), p.bodySize()});
-        p << 0_u32; // Align to 8 bytes with zeroes, required by Blowfish
-
         p.finalize();
-
-        // Save the value before it gets blowfished
-        auto const type = p.opCode().has_value() ? std::format("0x{:02x}", p.opCode().value())
-                                                 : "<unknown>";
 
         if (encryptPacket)
             blowfish.encrypt(p.body());
 
         socket.send(boost::asio::buffer(p.buffer()));
-        SPDLOG_INFO("sent: {} ({} bytes)", type, p.size());
+        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.opCode(), p.size());
     }
 };
-
-static bool verifyChecksum(std::span<byte const> const data)
-{
-    auto       start = reinterpret_cast<u32 const *>(data.data());
-    auto const end   = reinterpret_cast<u32 const *>(data.data() + data.size() - sizeof(u64));
-
-    u32 checksum = 0;
-    while (start < end)
-        checksum ^= *start++;
-
-    return checksum == *start;
-}
 
 static void sendInitPacket(Connection & conn)
 {

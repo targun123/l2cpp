@@ -6,6 +6,7 @@
 // Project includes
 #include "../../Player.hpp"
 #include "../../network/Connection.hpp"
+#include "../World.hpp"
 #include "../actor/Character.hpp"
 
 #include <l2cpp/network/Packet.hpp>
@@ -32,7 +33,7 @@ void MoveAction::onStarted(Actor & actor)
         << targetX << targetY << targetZ
         << originX << originY << originZ
     ;
-    c.player->connection().send(p);
+    World::broadcastAround(c, std::move(p), true);
 }
 
 void MoveAction::updateImpl(ClockDuration, Actor &)

@@ -14,9 +14,10 @@ using l2cpp::Network::Packet;
 struct Packet::PacketImpl
 {
     std::vector<byte> buffer;
-    bool              isFinal = false;
+    bool              isFinalized = false;
+    PacketOpCode      opCode;
 
-    PacketImpl(PacketOpCode const opCode);
+    explicit PacketImpl(PacketOpCode opCode_);
 
     template<typename T> requires(std::integral<T> || std::floating_point<T>)
     PacketImpl & append(T t)
@@ -34,7 +35,8 @@ struct Packet::PacketImpl
 
 template class Pimpl<Packet::PacketImpl>;
 
-Packet::PacketImpl::PacketImpl(PacketOpCode const opCode)
+Packet::PacketImpl::PacketImpl(PacketOpCode const opCode_)
+    : opCode(opCode_)
 {
     buffer.reserve(256);
     append<u16>(0); // placeholder for final packet size
@@ -53,9 +55,28 @@ Packet::Packet(PacketOpCode const opCode)
 
 Packet::~Packet() = default;
 
+bool Packet::isFinalized() const                          { return _impl->isFinalized;   }
+auto Packet::buffer()      const -> std::span<byte const> { return _impl->buffer;        }
+auto Packet::size()        const -> size_t                { return _impl->buffer.size(); }
+auto Packet::opCode()      const -> PacketOpCode          { return _impl->opCode;        }
+
+auto Packet::body()       -> std::span<byte>       { return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()}; }
+auto Packet::body() const -> std::span<byte const> { return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()}; }
+auto Packet::bodySize() const -> size_t            { return  _impl->buffer.size() - sizeof(PacketHeader);              }
+
+void Packet::finalize()
+{
+    if (!_impl->isFinalized)
+    {
+        finalizeImpl();
+        writeSize();
+        _impl->isFinalized = true;
+    }
+}
+
 Packet & Packet::operator<<(std::span<byte const> span)
 {
-    if (!_impl->isFinal)
+    if (!_impl->isFinalized)
         _impl->buffer.append_range(span);
 
     return *this;
@@ -65,53 +86,4 @@ void Packet::writeSize()
 {
     // Write total size on the first two bytes of the buffer
     *reinterpret_cast<PacketHeader *>(_impl->buffer.data()) = static_cast<PacketHeader>(_impl->buffer.size());
-}
-
-auto Packet::buffer() const -> std::span<byte const>
-{
-    return _impl->buffer;
-}
-
-auto Packet::size() const -> size_t
-{
-    return _impl->buffer.size();
-}
-
-auto Packet::opCode() const -> std::optional<PacketOpCode>
-{
-    std::optional<PacketOpCode> type;
-
-    if (_impl->buffer.size() > sizeof(PacketHeader))
-    {
-        type = _impl->buffer[sizeof(PacketHeader)];
-        if (type == 0xfe)
-            type = *reinterpret_cast<PacketOpCode const *>(_impl->buffer.data() + sizeof(PacketHeader));
-    }
-
-    return type;
-}
-
-auto Packet::body() -> std::span<byte>
-{
-    return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()};
-}
-
-auto Packet::body() const -> std::span<byte const>
-{
-    return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()};
-}
-
-auto Packet::bodySize() const -> size_t
-{
-    return _impl->buffer.size() - sizeof(PacketHeader);
-}
-
-void Packet::finalize()
-{
-    if (!_impl->isFinal)
-    {
-        finalizeImpl();
-        writeSize();
-        _impl->isFinal = true;
-    }
 }

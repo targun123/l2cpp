@@ -19,7 +19,7 @@ struct Actor::ActorImpl
     Team team = Team::None;
     bool isInCombatStance = false;
 
-    OptRef<Actor const> target;
+    OptRef<Actor> target;
     std::unique_ptr<Action> currentAction, nextAction;
 };
 
@@ -81,7 +81,7 @@ auto Actor::gear() const -> Gear const & { return *component<Gear>(); }
 auto Actor::skills()       -> SkillDirectory       & { return *component<SkillDirectory>(); }
 auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDirectory>(); }
 
-auto Actor::target() const -> OptRef<Actor const> { return _impl->target; }
+auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
 bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
@@ -112,7 +112,7 @@ void Actor::setPosZ(s32 const z) { component<Position>()->z = z; }
 
 void Actor::setTeam(Team const team) { _impl->team = team; }
 
-void Actor::setTarget(OptRef<Actor const> actor) { _impl->target = std::move(actor); }
+void Actor::setTarget(OptRef<Actor> actor) { _impl->target = std::move(actor); }
 
 void Actor::doNext(std::unique_ptr<Action> action)
 {

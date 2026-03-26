@@ -3,12 +3,15 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/SkillDirectory.hpp"
+#include "../network/packets/server/ClientDisconnect.hpp"
 #include "../network/packets/server/inventory/InventoryListPacket.hpp"
+#include "../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
 
-DEFINE_PACKET_HANDLER(EnterWorld)
+DEFINE_PACKET_HANDLER(EnterWorld) try
 {
     auto & c = *player.currentCharacter();
     player.connection().send(InventoryListPacket(false, c.inventory()));
@@ -18,4 +21,12 @@ DEFINE_PACKET_HANDLER(EnterWorld)
 
     c.computeStats();
     player.connection().send(CharacterStatusUpdatePacket(c));
+    World::broadcastAround(c, CharacterStatusUpdateBroadcastPacket(c));
+}
+catch (...)
+{
+    // Any exception would get the client stuck during the login screen; disconnect him instead.
+    player.connection().send(ClientDisconnectPacket());
+    player.connection().close();
+    throw;
 }

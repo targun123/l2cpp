@@ -19,24 +19,27 @@ namespace Network { class Connection; }
 class Network::Connection
 {
 public:
-    using PacketReceivedHandler = std::function<void(std::span<byte const>)>;
+    using ConnectionClosedHandler = std::function<void()>;
+    using PacketReceivedHandler   = std::function<void(std::span<byte const>)>;
 
 public:
     explicit Connection(boost::asio::ip::tcp::socket && socket);
     ~Connection();
 
 public:
-    void asyncReadNextPacket();
-    void send(l2cpp::Network::Packet & p);
-    void send(l2cpp::Network::Packet && p);
-    void close();
-
-    void setOnPacketReceivedHandler(PacketReceivedHandler handler);
-
-public:
+    auto id()            const -> u64;
     bool isAlive()       const;
     auto readBuffer()    const -> std::span<byte const>;
     auto encryptionKey() const -> std::span<byte const>;
+
+public:
+    void asyncReadNextPacket();
+    void send(l2cpp::Network::Packet & p);
+    void send(l2cpp::Network::Packet && p) { send(p); }
+    void close();
+
+    void setOnConnectionClosed(ConnectionClosedHandler);
+    void setOnPacketReceivedHandler(PacketReceivedHandler);
 
 private:
     struct ConnectionImpl;

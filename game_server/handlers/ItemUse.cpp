@@ -5,6 +5,7 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/Gear.hpp"
 #include "../game/inventory/ItemStorage.hpp"
@@ -55,7 +56,7 @@ DEFINE_PACKET_HANDLER(ItemUse)
                 }
 
                 player.connection().send(p);
-                player.connection().send(CharacterStatusUpdatePacket(character));
+                World::broadcastAround(character, CharacterStatusUpdatePacket(character), true);
             }
             break;
         }

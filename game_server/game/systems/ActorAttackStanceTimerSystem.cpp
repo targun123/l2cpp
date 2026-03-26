@@ -4,14 +4,10 @@
 #include "ActorAttackStanceTimerSystem.hpp"
 
 // Project includes
-#include "../../Player.hpp"
-#include "../../network/Connection.hpp"
+#include "../World.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
 #include "../../utils/Chrono.hpp"
-#include "../actor/Character.hpp"
 #include "../components/AttackStanceTimer.hpp"
-
-#include <spdlog/spdlog.h>
 
 namespace
 {
@@ -27,13 +23,7 @@ void ActorAttackStanceTimerSystem::updateImpl(ClockDuration const elapsed, Actor
             if (actor.state == ActorState::CombatIdle)
                 actor.state = ActorState::Idle;
 
-            if (actor.type() == ActorType::Character)
-            {
-                auto const & c = static_cast<Character const &>(actor);
-                c.player->connection().send(Network::Packet::Server::AttackStanceTogglePacket(false, c));
-            }
-            else
-                SPDLOG_DEBUG(L"Actor '{}' attack stance off", actor.name()); // broadcast around
+            World::broadcastAround(actor, Network::Packet::Server::AttackStanceTogglePacket(false, actor), true);
         }
         timer->elapsedSinceStart += elapsed;
     }

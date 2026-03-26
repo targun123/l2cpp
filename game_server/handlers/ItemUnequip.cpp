@@ -5,6 +5,7 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/Gear.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
@@ -36,7 +37,7 @@ DEFINE_PACKET_HANDLER(ItemUnequip)
                 p.appendModifiedItem(i);
 
             player.connection().send(p);
-            player.connection().send(CharacterStatusUpdatePacket(c));
+            World::broadcastAround(c, CharacterStatusUpdatePacket(c), true);
         }
     }
 }

@@ -40,7 +40,7 @@ Player::Player(boost::asio::ip::tcp::socket && socket)
     : _impl(std::move(socket))
 {
     auto & c = _impl->characters.emplace_back(World::addCharacter(*this)).get();
-    c.setName(L"test");
+    c.setName(L"test" + std::to_wstring(c.id()));
     c.setTitle(L"{l2cpp}");
 }
 
