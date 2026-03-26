@@ -88,7 +88,7 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         npc.appearance().collisionHeight = 15;
         npc.appearance().collisionRadius = 10;
 
-        player.connection().send(NpcStatusUpdatePacket(npc));
+        World::broadcastAround(c, NpcStatusUpdatePacket(npc), true);
     }
     else if (args[0] == L"learn")
     {
@@ -113,6 +113,6 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         d.appearance().collisionHeight = 23;
         d.appearance().collisionRadius = 7.5;
         d.setProfession(Profession::ElvenMystic);
-        player.connection().send(CharacterStatusUpdateBroadcastPacket(d));
+        World::broadcastAround(d, CharacterStatusUpdateBroadcastPacket(d));
     }
 }

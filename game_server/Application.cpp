@@ -172,7 +172,7 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
             hexdump(body);
             try { (*handler)(player); } catch (l2cpp::Exception const & e)
             {
-                SPDLOG_ERROR("Handler failed:\n{}", l2cpp::formatExceptionStack(e));
+                SPDLOG_ERROR("Packet {} handler failed:\n{}", handlerName, l2cpp::formatExceptionStack(e));
             }
         }
         else

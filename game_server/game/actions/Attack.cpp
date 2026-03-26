@@ -4,6 +4,7 @@
 #include "Attack.hpp"
 
 // Project includes
+#include "../World.hpp"
 #include "../../Player.hpp"
 #include "../../network/Connection.hpp"
 #include "../../network/packets/server/chat/ChatNpcSayPacket.hpp"
@@ -47,7 +48,7 @@ void AttackAction::onStarted(Actor & actor)
     if (auto const weapon = c.gear().weapon(); weapon)
         soulShotGrade = weapon->tmplate.grade;
 
-    c.player->connection().send(SM::AttackPacket(c, c.target(), {c.target(), 10, false, soulShotGrade}));
+    World::broadcastAround(c, SM::AttackPacket(c, c.target(), {c.target(), 10, false, soulShotGrade}), true);
 
     c.state = ActorState::Attacking;
     c.getOrAddComponent<AttackStanceTimer>().restart();
@@ -71,13 +72,18 @@ void AttackAction::updateImpl(ClockDuration const elapsed, Actor & actor)
         auto const & c = static_cast<Character &>(actor);
 
         // Enable attack stance on opponents
-        c.player->connection().send(SM::AttackStanceTogglePacket(true, c));
-        c.player->connection().send(SM::AttackStanceTogglePacket(true, target));
+        World::broadcastAround(c,      SM::AttackStanceTogglePacket(true, c),      true);
+        World::broadcastAround(target, SM::AttackStanceTogglePacket(true, target), true);
 
-        // Make the target go Ouch!
-        static bool toggle;
-        c.player->connection().send(SM::ChatNpcSayPacket(target, ChatType::General, toggle ? L"Ouch!" : L"Waah!"));
-        toggle = !toggle;
+        target->getOrAddComponent<AttackStanceTimer>().restart();
+
+        if (target->type() != ActorType::Character)
+        {
+            // Make the target go Ouch!
+            static bool toggle;
+            World::broadcastAround(target, SM::ChatNpcSayPacket(target, ChatType::General, toggle ? L"Ouch!" : L"Waah!"));
+            toggle = !toggle;
+        }
     }
 
     setFinished(lastUpdateTime() >= startTime() + hitDuration);
