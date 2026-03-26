@@ -48,10 +48,10 @@ public:
     static auto inGameTime() -> std::chrono::minutes;
 
     /// @warning This broadcasts given packet to ALL online players, regardless of distance!
-    static void broadcast(l2cpp::Network::Packet && p);
+    static void broadcast(l2cpp::Network::Packet &&);
 
     /// Broadcasts given packet to all online players around emitter, including the emitter if needed
-    static void broadcastAround(Actor const & emitter, l2cpp::Network::Packet && p, bool includeEmitter = false);
+    static void broadcastAround(Actor const & emitter, l2cpp::Network::Packet &&, bool includeEmitter = false);
 
 private:
     static std::vector<std::unique_ptr<System>>        _systems;

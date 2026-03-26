@@ -13,6 +13,8 @@
 // C++ includes
 #include <ranges>
 
+using l2cpp::Network::Packet;
+
 std::vector<std::unique_ptr<System>>        World::_systems;
 std::unordered_map<GameObjectId, Character> World::_characters;
 std::unordered_map<GameObjectId, Monster>   World::_monsters;
@@ -115,17 +117,23 @@ auto World::inGameTime() -> std::chrono::minutes
 #endif
 }
 
-void World::broadcast(l2cpp::Network::Packet && p)
+void World::broadcast(Packet && packet)
 {
+    packet.finalize();
+    auto const & p = packet;
+
     for (auto const & c : _characters | std::views::values)
-        c.player->connection().send(p);
+        c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
 }
 
-void World::broadcastAround(Actor const & emitter, l2cpp::Network::Packet && p, bool const includeEmitter)
+void World::broadcastAround(Actor const & emitter, Packet && packet, bool const includeEmitter)
 {
+    packet.finalize();
+    auto const & p = packet;
+
     for (auto const & c : _characters | std::views::values)
     {
         if (c.id() != emitter.id() || includeEmitter)
-            c.player->connection().send(p);
+            c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
     }
 }

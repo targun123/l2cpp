@@ -40,7 +40,9 @@ public:
     auto opCode() const -> PacketOpCode;
 
     /// @returns A span of the buffer minus the initial size (thus including the opCode).
-    auto body()       -> std::span<byte>;
+    auto body() -> std::span<byte>;
+
+    /// @returns A const view of the buffer minus the initial size (thus including the opCode).
     auto body() const -> std::span<byte const>;
 
     /// @returns Size of the body (buffer size minus the initial size).
