@@ -7,12 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Remove character from World when player disconnects;
 - Simple broadcasting to all online characters in a short distance from emitter;
 - Send target's status when targetting;
 - HP/MP/CP regeneration tick system;
 - Inflict damage during auto-attacks;
 - Better state machine handling.
+
+## [0.6.0] - 2026-03-26
+
+### Added
+
+- Simple packet broadcasting to all characters
+- Remove player and its characters from World on connection closed
+
+### Changed
+
+- Automatic test character now gets a unique name on creation
+- Packet logs indicate to/from which session they are related to
 
 ## [0.5.0] - 2026-03-25
 
