@@ -32,6 +32,7 @@ struct Connection::ConnectionImpl
     boost::asio::ip::tcp::socket socket;
     std::vector<byte> readBuffer;
     EncryptionKey encryptionKey{}, decryptionKey{};
+    ConnectionClosedHandler closedHandler;
     PacketReceivedHandler packetHandler;
 
     explicit ConnectionImpl(boost::asio::ip::tcp::socket && socket);
@@ -113,9 +114,11 @@ void Connection::ConnectionImpl::close()
         if (socket.shutdown(socket.shutdown_both, ec))
             SPDLOG_ERROR("shutdown error '{}' ({}): {}", ec.category().name(), ec.value(), ec.message());
 
-        ec.clear();
         if (socket.close(ec))
             SPDLOG_ERROR("close error '{}' ({}): {}", ec.category().name(), ec.value(), ec.message());
+
+        if (closedHandler)
+            closedHandler();
     }
 }
 
@@ -162,15 +165,16 @@ bool Connection::ConnectionImpl::handleReadError(boost::system::error_code const
 
         case no_such_file_or_directory: // EOF
             SPDLOG_INFO("Client disconnected");
-            return false;
+            break;
 
         default:
         {
             SPDLOG_ERROR("Failed to read next packet {} (code {}): {}", source, code, ec.message());
-            close();
-            return false;
+            break;
         }
     }
+    close();
+    return false;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -234,7 +238,5 @@ void Connection::close()
     _impl->close();
 }
 
-void Connection::setOnPacketReceivedHandler(PacketReceivedHandler handler)
-{
-    _impl->packetHandler = std::move(handler);
-}
+void Connection::setOnConnectionClosed(ConnectionClosedHandler h)    { _impl->closedHandler = std::move(h); }
+void Connection::setOnPacketReceivedHandler(PacketReceivedHandler h) { _impl->packetHandler = std::move(h); }

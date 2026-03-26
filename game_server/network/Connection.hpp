@@ -19,7 +19,8 @@ namespace Network { class Connection; }
 class Network::Connection
 {
 public:
-    using PacketReceivedHandler = std::function<void(std::span<byte const>)>;
+    using ConnectionClosedHandler = std::function<void()>;
+    using PacketReceivedHandler   = std::function<void(std::span<byte const>)>;
 
 public:
     explicit Connection(boost::asio::ip::tcp::socket && socket);
@@ -37,8 +38,8 @@ public:
     void send(l2cpp::Network::Packet && p) { send(p); }
     void close();
 
-    void setOnPacketReceivedHandler(PacketReceivedHandler handler);
-
+    void setOnConnectionClosed(ConnectionClosedHandler);
+    void setOnPacketReceivedHandler(PacketReceivedHandler);
 
 private:
     struct ConnectionImpl;

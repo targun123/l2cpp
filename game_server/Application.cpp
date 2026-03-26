@@ -163,6 +163,16 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
     }
 
     auto & player = players.emplace_back(std::move(socket));
+
+    auto onConnectionClosed = [this, &player]
+    {
+        SPDLOG_DEBUG(L"Player '{}' disconnected, removing its characters from World", player.accountName());
+        for (auto c : player.characters())
+            World::delCharacter(c.get().id());
+
+        players.remove_if([&player] (Player const & p) { return p.accountName() == player.accountName(); });
+    };
+
     auto onPacketReceived = [&player] (std::span<byte const> const buffer)
     {
         auto const size   = *reinterpret_cast<PacketHeader const *>(buffer.data());
@@ -193,9 +203,14 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
             player.connection().asyncReadNextPacket();
     };
 
+    player.connection().setOnConnectionClosed([this, onConnectionClosed] {
+        boost::asio::post(ioContext, onConnectionClosed);
+    });
+
     player.connection().setOnPacketReceivedHandler([this, onPacketReceived] (std::span<byte const> buffer) {
         boost::asio::post(ioContext, std::bind(onPacketReceived, buffer));
     });
+
     player.connection().asyncReadNextPacket();
 }
 catch (l2cpp::Exception const & e)
