@@ -4,6 +4,7 @@
 #include "Application.hpp"
 
 // Project includes
+#include "CompileTimeConfig.hpp"
 #include "Player.hpp"
 #include "game/World.hpp"
 #include "game/skill/SkillTemplateDirectory.hpp"
@@ -150,13 +151,16 @@ void Application::ApplicationImpl::onSignal(boost::system::error_code const & ec
 
 void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket socket) try
 {
-    static auto hexdump = [] (std::span<byte const> const buffer)
+    static std::function<void(std::span<byte const>)> hexdump;
+
+    if constexpr (Config::hexdumpPackets)
     {
-#ifndef NDEBUG
-        if (!buffer.empty())
-            std::cout << l2cpp::hexdump(buffer.data(), buffer.size()) << std::endl;
-#endif
-    };
+        hexdump = [] (std::span<byte const> const buffer)
+        {
+            if (!buffer.empty())
+                std::cout << l2cpp::hexdump(buffer.data(), buffer.size()) << std::endl;
+        };
+    }
 
     auto & player = players.emplace_back(std::move(socket));
     auto onPacketReceived = [&player] (std::span<byte const> const buffer)
@@ -168,8 +172,11 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
         if (auto const it = gPacketHandlers.find(opCode); it != gPacketHandlers.end())
         {
             auto const & [handler, handlerName] = it->second;
-            SPDLOG_INFO("recv: {} (0x{:02x}) ({} bytes)", handlerName, opCode, size);
-            hexdump(body);
+
+            SPDLOG_INFO("'{}' → {} (0x{:02x}) ({} bytes)", player.connection().id(), handlerName, opCode, size);
+            if (hexdump)
+                hexdump(body);
+
             try { (*handler)(player); } catch (l2cpp::Exception const & e)
             {
                 SPDLOG_ERROR("Packet {} handler failed:\n{}", handlerName, l2cpp::formatExceptionStack(e));
@@ -177,8 +184,9 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
         }
         else
         {
-            SPDLOG_WARN("Unsupported packet 0x{:02x} ({} bytes)", opCode, size);
-            hexdump(body);
+            SPDLOG_WARN("'{}': unsupported packet 0x{:02x} ({} bytes)", player.connection().id(), opCode, size);
+            if (hexdump)
+                hexdump(body);
         }
 
         if (player.connection().isAlive())

@@ -26,6 +26,12 @@ public:
     ~Connection();
 
 public:
+    auto id()            const -> u64;
+    bool isAlive()       const;
+    auto readBuffer()    const -> std::span<byte const>;
+    auto encryptionKey() const -> std::span<byte const>;
+
+public:
     void asyncReadNextPacket();
     void send(l2cpp::Network::Packet & p);
     void send(l2cpp::Network::Packet && p) { send(p); }
@@ -33,10 +39,6 @@ public:
 
     void setOnPacketReceivedHandler(PacketReceivedHandler handler);
 
-public:
-    bool isAlive()       const;
-    auto readBuffer()    const -> std::span<byte const>;
-    auto encryptionKey() const -> std::span<byte const>;
 
 private:
     struct ConnectionImpl;
