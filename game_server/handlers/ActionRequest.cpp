@@ -7,7 +7,6 @@
 #include "../game/actions/Attack.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/Gear.hpp"
-#include "../game/components/Position.hpp"
 #include "../game/components/Stats.hpp"
 #include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
 #include "../network/packets/server/target/TargetSelectPacket.hpp"
@@ -25,7 +24,7 @@ DEFINE_PACKET_HANDLER(ActionRequest)
 
     auto & character = *player.currentCharacter();
 
-    // No current target or current target is different?
+    // No current target or current target is different from requested?
     if (!character.target() || character.target()->id() != targetId)
     {
         /**/ if (auto const c = World::character(targetId); c)
@@ -42,6 +41,6 @@ DEFINE_PACKET_HANDLER(ActionRequest)
     else // second request on target, launch attack!
     {
         character.state = ActorState::Attacking;
-        character.doNext<AttackAction>(character.stats().pAtkSpeed);
+        character.doNext<AttackAction>(*character.target(), character.stats().pAtkSpeed);
     }
 }

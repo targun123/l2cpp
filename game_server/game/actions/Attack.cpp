@@ -5,7 +5,6 @@
 
 // Project includes
 #include "../World.hpp"
-#include "../../Player.hpp"
 #include "../../network/Connection.hpp"
 #include "../../network/packets/server/chat/ChatNpcSayPacket.hpp"
 #include "../../network/packets/server/combat/AttackPacket.hpp"
@@ -14,6 +13,7 @@
 #include "../actor/Character.hpp"
 #include "../components/AttackStanceTimer.hpp"
 #include "../components/Gear.hpp"
+#include "../components/Stats.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 
@@ -28,10 +28,11 @@ namespace
     }
 }
 
-AttackAction::AttackAction(u32 const pAtkSpeed) noexcept
+AttackAction::AttackAction(Actor & target, u32 const pAtkSpeed) noexcept
     : Action(Type::Attack)
-    , hitDuration(toClockDuration(1s / (pAtkSpeed / 500.)))
-    , impactTimePoint(toClockDuration(hitDuration * 0.55))
+    , _target(target)
+    , _hitDuration(toClockDuration(1s / (pAtkSpeed / 500.)))
+    , _impactTimePoint(toClockDuration(_hitDuration * 0.55)) // Timing for 1h-sword
 {}
 
 bool AttackAction::canBeInterrupted() const
@@ -48,7 +49,7 @@ void AttackAction::onStarted(Actor & actor)
     if (auto const weapon = c.gear().weapon(); weapon)
         soulShotGrade = weapon->tmplate.grade;
 
-    World::broadcastAround(c, SM::AttackPacket(c, c.target(), {c.target(), 10, false, soulShotGrade}), true);
+    World::broadcastAround(c, SM::AttackPacket(c, _target, {_target, 10, false, soulShotGrade}), true);
 
     c.state = ActorState::Attacking;
     c.getOrAddComponent<AttackStanceTimer>().restart();
@@ -56,35 +57,27 @@ void AttackAction::onStarted(Actor & actor)
 
 void AttackAction::onFinished(Actor & actor)
 {
-    // Physical attacks never finish unless another action was queued (e.g. player moves) or target dies / is canceled
-    if (!actor.nextAction() && actor.target())
+    // Physical attacking never stops unless another action is requested (e.g. player moves) or target dies
+    if (!actor.nextAction())
         restart();
 }
 
-void AttackAction::updateImpl(ClockDuration const elapsed, Actor & actor)
+void AttackAction::updateImpl(ClockDuration const elapsed, Actor &)
 {
-    auto const target = actor.target();
-    if (!target)
-        return setFinished(true);
-
-    if (Utils::Chrono::thresholdCrossed(lastUpdateTime(), elapsed, impactTimePoint))
+    if (Utils::Chrono::thresholdCrossed(lastUpdateTime(), elapsed, _impactTimePoint))
     {
-        auto const & c = static_cast<Character &>(actor);
+        // Enable attack stance on target once it gets hit
+        World::broadcastAround(_target, SM::AttackStanceTogglePacket(true, _target), true);
+        _target.getOrAddComponent<AttackStanceTimer>().restart();
 
-        // Enable attack stance on opponents
-        World::broadcastAround(c,      SM::AttackStanceTogglePacket(true, c),      true);
-        World::broadcastAround(target, SM::AttackStanceTogglePacket(true, target), true);
-
-        target->getOrAddComponent<AttackStanceTimer>().restart();
-
-        if (target->type() != ActorType::Character)
+        if (_target.type() != ActorType::Character)
         {
             // Make the target go Ouch!
             static bool toggle;
-            World::broadcastAround(target, SM::ChatNpcSayPacket(target, ChatType::General, toggle ? L"Ouch!" : L"Waah!"));
+            World::broadcastAround(_target, SM::ChatNpcSayPacket(_target, ChatType::General, toggle ? L"Ouch!" : L"Waah!"));
             toggle = !toggle;
         }
     }
 
-    setFinished(lastUpdateTime() >= startTime() + hitDuration);
+    setFinished(lastUpdateTime() >= startTime() + _hitDuration);
 }

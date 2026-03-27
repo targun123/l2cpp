@@ -6,16 +6,21 @@
 // Project includes
 #include "Action.hpp"
 
-struct AttackAction : public Action
+class AttackAction : public Action
 {
-    explicit AttackAction(u32 pAtkSpeed) noexcept;
+public:
+    AttackAction(Actor & target, u32 pAtkSpeed) noexcept;
 
+public:
     bool canBeInterrupted() const override;
 
+private:
     void onStarted(Actor &) override;
     void onFinished(Actor &) override;
     void updateImpl(ClockDuration, Actor &) override;
 
-    ClockDuration  hitDuration;
-    ClockTimePoint impactTimePoint;
+private:
+    Actor &        _target;
+    ClockDuration  _hitDuration;
+    ClockTimePoint _impactTimePoint;
 };
