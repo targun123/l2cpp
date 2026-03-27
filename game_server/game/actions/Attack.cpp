@@ -6,7 +6,6 @@
 // Project includes
 #include "../World.hpp"
 #include "../../network/Connection.hpp"
-#include "../../network/packets/server/chat/ChatNpcSayPacket.hpp"
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
 #include "../../utils/Chrono.hpp"
@@ -70,13 +69,7 @@ void AttackAction::updateImpl(ClockDuration const elapsed, Actor &)
         World::broadcastAround(_target, SM::AttackStanceTogglePacket(true, _target), true);
         _target.getOrAddComponent<AttackStanceTimer>().restart();
 
-        if (_target.type() != ActorType::Character)
-        {
-            // Make the target go Ouch!
-            static bool toggle;
-            World::broadcastAround(_target, SM::ChatNpcSayPacket(_target, ChatType::General, toggle ? L"Ouch!" : L"Waah!"));
-            toggle = !toggle;
-        }
+        // TODO: inflict damage
     }
 
     setFinished(lastUpdateTime() >= startTime() + _hitDuration);
