@@ -59,7 +59,7 @@ void AttackAction::onFinished(Actor & actor)
 {
     // Physical attacking never stops unless another action is requested (e.g. player moves) or target dies
     if (!actor.nextAction())
-        restart();
+        actor.doNext<AttackAction>(_target, actor.stats().pAtkSpeed);
 }
 
 void AttackAction::updateImpl(ClockDuration const elapsed, Actor &)

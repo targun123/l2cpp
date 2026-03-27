@@ -34,7 +34,6 @@ public:
     virtual bool canBeInterrupted() const = 0;
 
 public:
-    void restart();
     void update(ClockDuration elapsed, Actor &);
 
 protected:

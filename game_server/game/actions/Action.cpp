@@ -13,12 +13,6 @@ auto Action::isFinished()     const -> bool           { return _finished;       
 auto Action::startTime()      const -> ClockTimePoint { return _startTime;      }
 auto Action::lastUpdateTime() const -> ClockTimePoint { return _lastUpdateTime; }
 
-void Action::restart()
-{
-    _startTime = _lastUpdateTime = std::chrono::steady_clock::now();
-    setFinished(false);
-}
-
 void Action::update(ClockDuration const elapsed, Actor & a)
 {
     bool const firstTick = _lastUpdateTime == _startTime;
