@@ -12,7 +12,7 @@
 #include <l2cpp/network/Packet.hpp>
 
 MoveAction::MoveAction() noexcept
-    : Action(Type::Move)
+    : Action(ActionType::Move)
 {}
 
 bool MoveAction::canBeInterrupted() const

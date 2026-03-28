@@ -3,12 +3,12 @@
 
 #include "Action.hpp"
 
-Action::Action(Type const type) noexcept
+Action::Action(ActionType const type) noexcept
     : _type(type)
     , _finished(false)
 {}
 
-auto Action::type()           const -> Type           { return _type;           }
+auto Action::type()           const -> ActionType     { return _type;           }
 auto Action::isFinished()     const -> bool           { return _finished;       }
 auto Action::startTime()      const -> ClockTimePoint { return _startTime;      }
 auto Action::lastUpdateTime() const -> ClockTimePoint { return _lastUpdateTime; }

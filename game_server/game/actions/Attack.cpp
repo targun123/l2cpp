@@ -28,7 +28,7 @@ namespace
 }
 
 AttackAction::AttackAction(Actor & target, u32 const pAtkSpeed) noexcept
-    : Action(Type::Attack)
+    : Action(ActionType::Attack)
     , _target(target)
     , _hitDuration(toClockDuration(1s / (pAtkSpeed / 500.)))
     , _impactTimePoint(toClockDuration(_hitDuration * 0.55)) // Timing for 1h-sword
