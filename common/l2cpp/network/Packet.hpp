@@ -76,9 +76,6 @@ public:
     Packet & operator<<(std::string_view const str)  {return append(str.data(), str.size() * sizeof(char))    <<  '\0';}
     Packet & operator<<(std::wstring_view const str) {return append(str.data(), str.size() * sizeof(wchar_t)) << L'\0';}
 
-protected:
-    virtual void finalizeImpl() {}
-
 private:
     template<typename T>
     Packet & append(T const * ptr, size_t const sz)
@@ -88,6 +85,8 @@ private:
 
     /// Writes the total size at the beginning.
     void writeSize();
+
+    virtual void finalizeImpl() {}
 
 private:
     struct PacketImpl;
