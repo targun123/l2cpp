@@ -7,29 +7,20 @@
 #include "../World.hpp"
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
+#include "../../utils/Chrono.hpp"
 #include "../actor/Character.hpp"
 #include "../components/AttackStanceTimer.hpp"
 #include "../components/Gear.hpp"
 #include "../components/Stats.hpp"
 
 #include <l2cpp/network/Packet.hpp>
-#include <spdlog/spdlog.h>
 
 namespace SM = Network::Packet::Server;
-
-namespace
-{
-    template<typename Rep, typename Period>
-    auto toClockDuration(std::chrono::duration<Rep, Period> duration) -> std::chrono::steady_clock::duration
-    {
-        return std::chrono::duration_cast<std::chrono::steady_clock::duration>(duration);
-    }
-}
 
 AttackAction::AttackAction(Actor & target, u32 const pAtkSpeed) noexcept
     : Action(ActionType::Attack)
     , _target(target)
-    , _hitDuration(toClockDuration(1s / (pAtkSpeed / 500.)))
+    , _hitDuration(Utils::Chrono::Clock::toDuration(1s / (pAtkSpeed / 500.)))
 {}
 
 bool AttackAction::canBeInterrupted() const
