@@ -5,16 +5,15 @@
 
 // Project includes
 #include "../World.hpp"
-#include "../../network/Connection.hpp"
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
-#include "../../utils/Chrono.hpp"
 #include "../actor/Character.hpp"
 #include "../components/AttackStanceTimer.hpp"
 #include "../components/Gear.hpp"
 #include "../components/Stats.hpp"
 
 #include <l2cpp/network/Packet.hpp>
+#include <spdlog/spdlog.h>
 
 namespace SM = Network::Packet::Server;
 
@@ -31,7 +30,6 @@ AttackAction::AttackAction(Actor & target, u32 const pAtkSpeed) noexcept
     : Action(ActionType::Attack)
     , _target(target)
     , _hitDuration(toClockDuration(1s / (pAtkSpeed / 500.)))
-    , _impactTimePoint(toClockDuration(_hitDuration * 0.55)) // Timing for 1h-sword
 {}
 
 bool AttackAction::canBeInterrupted() const
@@ -41,36 +39,56 @@ bool AttackAction::canBeInterrupted() const
 
 void AttackAction::onStarted(Actor & actor)
 {
-    auto & c = static_cast<Character &>(actor);
+    SM::AttackPacket p(actor, _target);
 
-    // Use soulshots if a weapon is equipped
+    u8 hitCount = 1;
+
     std::optional<ItemGrade> soulShotGrade;
-    if (auto const weapon = c.gear().weapon(); weapon)
-        soulShotGrade = weapon->tmplate.grade;
+    if (actor.type() == ActorType::Character)
+    {
+        auto & c = static_cast<Character &>(actor);
 
-    World::broadcastAround(c, SM::AttackPacket(c, _target, {_target, 10, false, soulShotGrade}), true);
+        if (auto const weapon = c.gear().weapon())
+        {
+            // Use soulshots if a weapon is equipped
+            soulShotGrade = weapon->tmplate.grade;
 
-    c.state = ActorState::Attacking;
-    c.getOrAddComponent<AttackStanceTimer>().restart();
+            // Dual weapon means same item in both hands
+            if (auto const id = c.gear().itemId(GearSlot::LeftHand); id && weapon->id() == id)
+                ++hitCount;
+        }
+        else if (!c.gear().item(GearSlot::LeftHand))
+            ++hitCount; // bare fists have two hits when not carrying a shield
+    }
+
+    for (decltype(hitCount) i = 0; i < hitCount; ++i) // split dual hits damage
+        p.addHit({_target, 50u / hitCount, false, soulShotGrade});
+
+    World::broadcastAround(actor, std::move(p), true);
+
+    actor.state = ActorState::Attacking;
+}
+
+void AttackAction::updateImpl(ClockDuration const, Actor &)
+{
+    setFinished(lastUpdateTime() >= startTime() + _hitDuration);
 }
 
 void AttackAction::onFinished(Actor & actor)
 {
-    // Physical attacking never stops unless another action is requested (e.g. player moves) or target dies
+    // Enable attack stance on target once it gets hit
+    World::broadcastAround(_target, SM::AttackStanceTogglePacket(true, _target), true);
+
+    actor.getOrAddComponent<AttackStanceTimer>().restart();
+    _target.getOrAddComponent<AttackStanceTimer>().restart();
+
+    if (_target.state == ActorState::Idle)
+        _target.state = ActorState::CombatIdle;
+
+    // TODO: inflict actual damage here
+    // TODO: consume the soulshot charge here (not before because could have been canceled with stun/para/…)
+
+    // Physical attacking never stops unless another action is requested (e.g. actor moves) or target dies
     if (!actor.nextAction())
         actor.doNext<AttackAction>(_target, actor.stats().pAtkSpeed);
-}
-
-void AttackAction::updateImpl(ClockDuration const elapsed, Actor &)
-{
-    if (Utils::Chrono::thresholdCrossed(lastUpdateTime(), elapsed, _impactTimePoint))
-    {
-        // Enable attack stance on target once it gets hit
-        World::broadcastAround(_target, SM::AttackStanceTogglePacket(true, _target), true);
-        _target.getOrAddComponent<AttackStanceTimer>().restart();
-
-        // TODO: inflict damage
-    }
-
-    setFinished(lastUpdateTime() >= startTime() + _hitDuration);
 }

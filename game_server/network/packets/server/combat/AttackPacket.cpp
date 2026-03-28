@@ -10,13 +10,11 @@
 
 using Network::Packet::Server::AttackPacket;
 
-AttackPacket::AttackPacket(Actor const & attacker, Actor const & mainTarget, Hit hit)
+AttackPacket::AttackPacket(Actor const & attacker, Actor const & mainTarget)
     : Packet(0x05)
     , _attacker(attacker)
     , _mainTarget(mainTarget)
 {
-    addHit(std::move(hit));
-
     *this
         << attacker.id()
     ;

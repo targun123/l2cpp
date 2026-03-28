@@ -16,11 +16,10 @@ public:
 
 private:
     void onStarted(Actor &) override;
-    void onFinished(Actor &) override;
     void updateImpl(ClockDuration, Actor &) override;
+    void onFinished(Actor &) override;
 
 private:
     Actor &        _target;
     ClockDuration  _hitDuration;
-    ClockTimePoint _impactTimePoint;
 };
