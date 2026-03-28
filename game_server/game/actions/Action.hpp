@@ -4,6 +4,8 @@
 #pragma once
 
 // Project includes
+#include "../constants/ActionType.hpp"
+
 #include <l2cpp/Typedefs.hpp>
 
 class Actor;
@@ -11,13 +13,7 @@ class Actor;
 class Action
 {
 public:
-    enum class Type
-    {
-        Move, Attack
-    };
-
-public:
-    explicit Action(Type type) noexcept;
+    explicit Action(ActionType type) noexcept;
     Action(Action const &) noexcept = default;
     Action & operator=(Action const &) noexcept = default;
     Action(Action &&) noexcept = default;
@@ -25,7 +21,7 @@ public:
     virtual ~Action() noexcept = default;
 
 public:
-    auto type()           const -> Type;
+    auto type()           const -> ActionType;
     auto isFinished()     const -> bool;
     auto startTime()      const -> ClockTimePoint;
     auto lastUpdateTime() const -> ClockTimePoint;
@@ -34,7 +30,6 @@ public:
     virtual bool canBeInterrupted() const = 0;
 
 public:
-    void restart();
     void update(ClockDuration elapsed, Actor &);
 
 protected:
@@ -42,11 +37,11 @@ protected:
 
 private:
     virtual void onStarted(Actor &) {}
-    virtual void onFinished(Actor &) {}
     virtual void updateImpl(ClockDuration, Actor &) = 0;
+    virtual void onFinished(Actor &) {}
 
 private:
-    Type _type;
+    ActionType _type;
     bool _finished;
     ClockTimePoint _startTime, _lastUpdateTime;
 };

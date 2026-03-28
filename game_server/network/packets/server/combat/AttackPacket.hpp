@@ -15,7 +15,7 @@ namespace Network::Packet::Server { class AttackPacket; }
 class Network::Packet::Server::AttackPacket final : public l2cpp::Network::Packet
 {
 public:
-    explicit AttackPacket(Actor const & attacker, Actor const & mainTarget, Hit hit);
+    explicit AttackPacket(Actor const & attacker, Actor const & mainTarget);
 
 public:
     void addHit(Hit hit);

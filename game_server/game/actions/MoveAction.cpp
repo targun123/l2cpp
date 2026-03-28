@@ -1,7 +1,7 @@
 /// @author    Chnossos
 /// @date      Created on 2026-03-24
 
-#include "Move.hpp"
+#include "MoveAction.hpp"
 
 // Project includes
 #include "../../Player.hpp"
@@ -12,7 +12,7 @@
 #include <l2cpp/network/Packet.hpp>
 
 MoveAction::MoveAction() noexcept
-    : Action(Type::Move)
+    : Action(ActionType::Move)
 {}
 
 bool MoveAction::canBeInterrupted() const

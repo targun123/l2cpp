@@ -120,18 +120,16 @@ auto World::inGameTime() -> std::chrono::minutes
 void World::broadcast(Packet && packet)
 {
     packet.finalize();
-    auto const & p = packet;
 
-    for (auto const & c : _characters | std::views::values)
+    for (auto const & p = packet; auto const & c : _characters | std::views::values)
         c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
 }
 
 void World::broadcastAround(Actor const & emitter, Packet && packet, bool const includeEmitter)
 {
     packet.finalize();
-    auto const & p = packet;
 
-    for (auto const & c : _characters | std::views::values)
+    for (auto const & p = packet; auto const & c : _characters | std::views::values)
     {
         if (c.id() != emitter.id() || includeEmitter)
             c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));

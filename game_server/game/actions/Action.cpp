@@ -3,33 +3,29 @@
 
 #include "Action.hpp"
 
-Action::Action(Type const type) noexcept
+Action::Action(ActionType const type) noexcept
     : _type(type)
     , _finished(false)
+    , _lastUpdateTime(ClockTimePoint::min())
 {}
 
-auto Action::type()           const -> Type           { return _type;           }
+auto Action::type()           const -> ActionType     { return _type;           }
 auto Action::isFinished()     const -> bool           { return _finished;       }
 auto Action::startTime()      const -> ClockTimePoint { return _startTime;      }
 auto Action::lastUpdateTime() const -> ClockTimePoint { return _lastUpdateTime; }
 
-void Action::restart()
-{
-    _startTime = _lastUpdateTime = std::chrono::steady_clock::now();
-    setFinished(false);
-}
-
 void Action::update(ClockDuration const elapsed, Actor & a)
 {
-    bool const firstTick = _lastUpdateTime == _startTime;
-
-    if (firstTick)
+    if (_lastUpdateTime == ClockTimePoint::min()) [[unlikely]]
+    {
+        _startTime = _lastUpdateTime = std::chrono::steady_clock::now();
         onStarted(a);
-
-    _lastUpdateTime += elapsed;
-
-    if (!firstTick) [[likely]]
+    }
+    else
+    {
+        _lastUpdateTime += elapsed;
         updateImpl(elapsed, a);
+    }
 
     if (_finished)
         onFinished(a);

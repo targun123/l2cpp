@@ -10,8 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simple broadcasting to all online characters in a short distance from emitter;
 - Send target's status when targetting;
 - HP/MP/CP regeneration tick system;
-- Inflict damage during auto-attacks;
-- Better state machine handling.
+- Inflict damage during auto-attacks.
+
+## [0.7.0] - 2026-03-28
+
+### Added
+
+- Dual weapons (swords, fists and bare fists) now inflict two hits as per their animation
+
+### Changed
+
+- AttackAction keep track of the initial target so that the action completes even if player changes target
+- AttackAction is more generic around the attacker type (Character vs. NPC/Monster)
+
+### Removed
+
+- NPC doesn't scream anymore when hit
 
 ## [0.6.0] - 2026-03-26
 
