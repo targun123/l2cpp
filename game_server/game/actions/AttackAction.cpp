@@ -1,7 +1,7 @@
 /// @author    Chnossos
 /// @date      Created on 2026-03-24
 
-#include "Attack.hpp"
+#include "AttackAction.hpp"
 
 // Project includes
 #include "../World.hpp"

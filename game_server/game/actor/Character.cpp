@@ -14,6 +14,7 @@
 #include "../skill/SkillTemplateDirectory.hpp"
 
 #include <l2cpp/Exception.hpp>
+// ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
 #include <l2cpp/utils/Enum.hpp>
 

@@ -4,7 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/World.hpp"
-#include "../game/actions/Attack.hpp"
+#include "../game/actions/AttackAction.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/Gear.hpp"
 #include "../game/components/Stats.hpp"
