@@ -28,9 +28,7 @@ CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encr
         << c.appearance().race()
         << c.profession()
         << 1 // active (?)
-        << c.position().x
-        << c.position().y
-        << c.position().z
+        << c.position()
         << c.status().hp.current
         << c.status().mp.current
         << c.status().sp

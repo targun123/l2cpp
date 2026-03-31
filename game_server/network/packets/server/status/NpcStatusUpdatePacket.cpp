@@ -19,9 +19,7 @@ NpcStatusUpdatePacket::NpcStatusUpdatePacket(NonPlayableActor const & actor)
         << actor.id()
         << actor.appearance().id()
         << (actor.isAttackable() ? 1 : 0)
-        << actor.position().x
-        << actor.position().y
-        << actor.position().z
+        << actor.position()
         << actor.appearance().headAngle
         << 0 // ?
         << actor.stats().mAtkSpeed

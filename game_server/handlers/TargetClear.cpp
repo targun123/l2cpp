@@ -12,5 +12,5 @@ DEFINE_PACKET_HANDLER(TargetClear)
 
     auto & c = *player.currentCharacter();
     c.setTarget(std::nullopt);
-    player.connection().send(Packet(0x2a) << c.id() << c.position().x << c.position().y << c.position().z);
+    player.connection().send(Packet(0x2a) << c.id() << c.position());
 }

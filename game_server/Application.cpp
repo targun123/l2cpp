@@ -10,6 +10,7 @@
 #include "game/skill/SkillTemplateDirectory.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
+#include "network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "network/packets/server/client/ClientForceDisconnectPacket.hpp"
 #include "utils/Chrono.hpp"
 
@@ -111,12 +112,10 @@ void Application::ApplicationImpl::shutdown()
     SPDLOG_INFO("Kicking players out…");
     for (auto & player : players)
     {
-        if (player.connection().isAlive())
-        {
-            // This packet displays the disconnected message box, but doesn't close the connection until OK is clicked
-            player.connection().send(Network::Packet::Server::ClientForceDisconnectPacket());
-            player.connection().close();
-        }
+        auto & conn = player.connection();
+        conn.send(Network::Packet::Server::ChatSystemSayPacket(0)); // You have been disconnected from the server.
+        conn.send(Network::Packet::Server::ClientForceDisconnectPacket());
+        conn.close();
     }
 
     boost::asio::post(ioContext, [] { SPDLOG_INFO("Shutting down sequence done."); });
@@ -156,8 +155,6 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
 
     auto onConnectionClosed = [this, &player]
     {
-        SPDLOG_DEBUG(L"Player '{}' closed connection", player.accountName());
-
         if (auto const c = player.currentCharacter())
             World::moveCharacterBackToPreviews(c);
 
@@ -174,7 +171,7 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
         {
             auto const & [handler, handlerName] = it->second;
 
-            SPDLOG_INFO("'{}' → {} (0x{:02x}) ({} bytes)", player.connection().id(), handlerName, opCode, size);
+            SPDLOG_INFO("'{}' → 0x{:02x} ({}) ({} bytes)", player.connection().id(), opCode, handlerName, size);
             if (hexdump)
                 hexdump(body);
 

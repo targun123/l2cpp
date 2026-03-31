@@ -5,9 +5,12 @@
 
 // Project includes
 #include <l2cpp/Typedefs.hpp>
+#include <l2cpp/network/Serialization.hpp>
 
 class SkillUid
 {
+    DECLARE_PACKET_SERIALIZATION_OPERATOR(SkillUid);
+
 public:
     SkillUid(SkillId const id, SkillLevel const level) noexcept: _uid(id | level << 24) {}
 
@@ -16,6 +19,7 @@ public:
     auto level() const -> SkillLevel { return static_cast<SkillLevel>(_uid >> 24 & 0xFF); }
 
 public:
+    // ReSharper disable once CppNonExplicitConversionOperator
     operator u32() const { return _uid; }
 
 private:

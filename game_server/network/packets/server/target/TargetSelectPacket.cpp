@@ -15,8 +15,6 @@ TargetSelectPacket::TargetSelectPacket(Character const & source, Actor const & t
     *this
         << source.id()
         << target.id()
-        << source.position().x
-        << source.position().y
-        << source.position().z
+        << source.position()
     ;
 }

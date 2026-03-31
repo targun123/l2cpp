@@ -24,9 +24,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
     auto const weapon = c.gear().weapon();
 
     *this
-        << c.position().x
-        << c.position().y
-        << c.position().z
+        << c.position()
         << c.appearance().headAngle
         << c.id()
         << c.name()

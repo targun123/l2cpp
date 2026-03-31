@@ -21,9 +21,7 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
     auto const weapon = c.gear().weapon();
 
     *this
-        << c.position().x
-        << c.position().y
-        << c.position().z
+        << c.position()
         << 0 // vehicleId
         << c.id()
         << c.name()
