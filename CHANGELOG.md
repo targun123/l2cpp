@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HP/MP/CP regeneration tick system;
 - Inflict damage during auto-attacks.
 
+## [0.9.0] - 2026-03-31
+
+### Added
+
+- Can now send system messages to player, with argument support
+- Player is greeted upon entering the world
+
 ## [0.8.0] - 2026-03-31
 
 ### Added
