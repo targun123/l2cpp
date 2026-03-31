@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HP/MP/CP regeneration tick system;
 - Inflict damage during auto-attacks.
 
+## [0.8.0] - 2026-03-31
+
+### Added
+
+- Characters created are restored as long as the server doesn't stop
+
+### Changed
+
+- Moved code related to character previews into World
+- Some packets have been moved to their own implementation file
+
 ## [0.7.0] - 2026-03-28
 
 ### Added
@@ -20,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- AttackAction keep track of the initial target so that the action completes even if player changes target
+- AttackAction keeps track of the initial target so that the action completes even if player changes target
 - AttackAction is more generic around the attacker type (Character vs. NPC/Monster)
 
 ### Removed
