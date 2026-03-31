@@ -4,6 +4,7 @@
 #include "World.hpp"
 
 // Project includes
+#include "../CompileTimeConfig.hpp"
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
@@ -14,20 +15,6 @@
 #include <ranges>
 
 using l2cpp::Network::Packet;
-
-std::vector<std::unique_ptr<System>>        World::_systems;
-std::unordered_map<GameObjectId, Character> World::_characters;
-std::unordered_map<GameObjectId, Monster>   World::_monsters;
-
-auto World::characters() -> std::unordered_map<GameObjectId, Character> const &
-{
-    return _characters;
-}
-
-auto World::monsters() -> std::unordered_map<GameObjectId, Monster> const &
-{
-    return _monsters;
-}
 
 auto World::character(GameObjectId const id) -> OptRef<Character>
 {
@@ -52,6 +39,10 @@ auto World::monster(GameObjectId const id) -> OptRef<Monster>
 void World::init()
 {
     registerSystem<ActorAttackStanceTimerSystem>();
+
+    auto & c = addCharacterPreview(L"Admin");
+    c.setName(L"test" + std::to_wstring(c.id()));
+    c.setTitle(L"{l2cpp}");
 }
 
 void World::update(ClockDuration const elapsed)
@@ -74,25 +65,54 @@ void World::update(ClockDuration const elapsed)
     }
 }
 
-auto World::addCharacter(OptRef<Player> p) -> Character &
+auto World::getCharacterPreviews(std::wstring_view const playerAccount) -> std::vector<Ref<Character>>
 {
-    Character character(std::move(p));
-    auto const & [it, ok] = _characters.try_emplace(character.id(), std::move(character));
-    L2CPP_B_ASSERT(ok, "Failed to add a new Character to the world");
-    return it->second;
+    std::vector<Ref<Character>> result;
+
+    auto const & index = _characterPreviewsIndex[playerAccount];
+    for (result.reserve(index.size()); auto const id : index)
+        result.emplace_back(_characterPreviews.at(id));
+
+    return result;
 }
 
-void World::delCharacter(GameObjectId const id)
+auto World::addCharacterPreview(std::wstring_view const playerAccount) -> Character &
 {
+    L2CPP_B_ASSERT(!playerAccount.empty(), "Player account name unknown, cannot create character preview");
+
+    Character  c;
+    auto const id = c.id();
+    _characterPreviewsIndex[playerAccount].emplace_back(id);
+    return _characterPreviews.try_emplace(id, std::move(c)).first->second;
+}
+
+auto World::loadCharacterFromPreview(Character & c) -> Character &
+{
+    auto const id  = c.id();
+    auto &     ref = _characters.try_emplace(id, std::move(c)).first->second;
+    _characterPreviews.erase(id);
+    return ref;
+}
+
+void World::moveCharacterBackToPreviews(Character & c)
+{
+    auto const id = c.id();
+    _characterPreviews.try_emplace(id, std::move(c));
     _characters.erase(id);
+}
+
+auto World::addCharacter(OptRef<Player> p) -> Character &
+{
+    Character c(std::move(p));
+    auto const id = c.id();
+    return _characters.try_emplace(id, std::move(c)).first->second;
 }
 
 auto World::addMonster() -> Monster &
 {
-    Monster monster;
-    auto const & [it, ok] = _monsters.try_emplace(monster.id(), std::move(monster));
-    L2CPP_B_ASSERT(ok, "Failed to add a new Character to the world");
-    return it->second;
+    Monster m;
+    auto const id = m.id();
+    return _monsters.try_emplace(id, std::move(m)).first->second;
 }
 
 void World::delMonster(GameObjectId const id)
@@ -102,8 +122,10 @@ void World::delMonster(GameObjectId const id)
 
 auto World::inGameTime() -> std::chrono::minutes
 {
-#ifdef NDEBUG
-    constexpr u32 inGameTimeAcceleration = 6; // means 1 in-game day equals 4 hours IRL
+    if constexpr (Config::isDebugMode)
+        return 60min * 10; // 10am because we want sunlight to see what we're doing
+
+    constexpr u32                  inGameTimeAcceleration = 6; // means 1 in-game day equals 4 hours IRL
     constexpr std::chrono::minutes irlDayInMinutes{60min * 24};
     constexpr std::chrono::minutes inGameDayInMinutes{irlDayInMinutes / inGameTimeAcceleration};
 
@@ -112,9 +134,6 @@ auto World::inGameTime() -> std::chrono::minutes
     auto const minutesOfDay = std::chrono::floor<std::chrono::minutes>(irlTimeOfDay);
     auto const percentOfDay = static_cast<double>(minutesOfDay.count()) / irlDayInMinutes.count();
     return std::chrono::floor<std::chrono::minutes>(inGameDayInMinutes * percentOfDay);
-#else
-    return 60min * 10; // 10am because we want sunlight to see what we're doing
-#endif
 }
 
 void World::broadcast(Packet && packet)
@@ -122,7 +141,10 @@ void World::broadcast(Packet && packet)
     packet.finalize();
 
     for (auto const & p = packet; auto const & c : _characters | std::views::values)
-        c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
+    {
+        if (c.player)
+            c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
+    }
 }
 
 void World::broadcastAround(Actor const & emitter, Packet && packet, bool const includeEmitter)
@@ -131,7 +153,13 @@ void World::broadcastAround(Actor const & emitter, Packet && packet, bool const 
 
     for (auto const & p = packet; auto const & c : _characters | std::views::values)
     {
-        if (c.id() != emitter.id() || includeEmitter)
+        if (c.player && (c.id() != emitter.id() || includeEmitter))
             c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
     }
 }
+
+std::vector<std::unique_ptr<System>>                             World::_systems;
+std::unordered_map<std::wstring_view, std::vector<GameObjectId>> World::_characterPreviewsIndex;
+std::unordered_map<GameObjectId, Character>                      World::_characterPreviews;
+std::unordered_map<GameObjectId, Character>                      World::_characters;
+std::unordered_map<GameObjectId, Monster>                        World::_monsters;

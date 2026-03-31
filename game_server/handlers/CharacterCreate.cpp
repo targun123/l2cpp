@@ -3,6 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/Stats.hpp"
 #include "../game/components/PlayerAppearance.hpp"
@@ -18,7 +19,7 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
     Sex sex;
     Profession profession;
 
-    auto & c         = player.addCharacter();
+    auto & c         = World::addCharacterPreview(player.accountName());
     auto & baseStats = *c.component<Stats>();
 
     reader
@@ -40,8 +41,8 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
     c.setName(std::move(name));
     c.appearance().setRace(race);
     c.appearance().sex = sex;
-    c.selected = 1;
     c.setProfession(profession);
+    c.selected = 1;
 
     player.connection().send(Packet(0x19) << 1);
     handleCharacterList(player);

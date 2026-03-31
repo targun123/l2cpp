@@ -17,14 +17,13 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
     u32 index;
     reader >> index;
 
-    if (index >= player.characters().size())
-    {
-        SPDLOG_ERROR("Invalid character selection index: {}", index);
-        index = 0;
-    }
+    auto const characterPreviews = World::getCharacterPreviews(player.accountName());
+    L2CPP_B_ASSERT(index < characterPreviews.size(),
+                   "Invalid character index '{}': should be less than {}", index, characterPreviews.size());
 
-    player.setCurrentCharacter(index);
+    player.setCurrentCharacter(World::loadCharacterFromPreview(characterPreviews[index]));
     auto const & c = *player.currentCharacter();
+
     Packet p(0x15);
     p
         << c.name()

@@ -3,6 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterStatus.hpp"
 #include "../game/components/Gear.hpp"
@@ -11,13 +12,16 @@
 
 DEFINE_PACKET_HANDLER(CharacterList)
 {
-    Packet p(0x13);
-    p << static_cast<u32>(player.characters().size());
+    auto const characterPreviews = World::getCharacterPreviews(player.accountName());
 
-    using enum GearSlot;
-    for (auto const & ref : player.characters())
+    Packet p(0x13);
+    p << static_cast<u32>(characterPreviews.size());
+
+    // ReSharper disable once CppRangeBasedForIncompatibleReference
+    for (Character const & c : characterPreviews)
     {
-        auto const & c    = ref.get();
+        using enum GearSlot;
+
         auto const weapon = c.gear().weapon();
 
         p

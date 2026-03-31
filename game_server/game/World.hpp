@@ -12,6 +12,7 @@
 
 // C++ includes
 #include <unordered_map>
+#include <vector>
 
 namespace l2cpp::Network { class Packet; }
 
@@ -23,9 +24,6 @@ private:
     World() noexcept = delete;
 
 public:
-    static auto characters() -> std::unordered_map<GameObjectId, Character> const &;
-    static auto monsters()   -> std::unordered_map<GameObjectId, Monster>   const &;
-
     static auto character(GameObjectId) -> OptRef<Character>;
     static auto monster(GameObjectId)   -> OptRef<Monster>;
 
@@ -34,13 +32,16 @@ public:
     static void update(ClockDuration elapsed);
 
     template<typename T, typename... Args> requires std::is_base_of_v<System, T>
-    static void registerSystem(Args &&... args)
-    {
+    static void registerSystem(Args &&... args) {
         _systems.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
-    static auto addCharacter(OptRef<Player> = {}) -> Character &;
-    static void delCharacter(GameObjectId id);
+    static auto getCharacterPreviews(std::wstring_view playerAccount) -> std::vector<Ref<Character>>;
+    static auto addCharacterPreview(std::wstring_view playerAccount) -> Character &;
+    static auto loadCharacterFromPreview(Character &) -> Character &;
+    static void moveCharacterBackToPreviews(Character &);
+
+    static auto addCharacter(OptRef<Player> = std::nullopt) -> Character &;
 
     static auto addMonster() -> Monster &;
     static void delMonster(GameObjectId id);
@@ -54,7 +55,11 @@ public:
     static void broadcastAround(Actor const & emitter, l2cpp::Network::Packet &&, bool includeEmitter = false);
 
 private:
-    static std::vector<std::unique_ptr<System>>        _systems;
+    static std::vector<SystemPtr> _systems;
+
+    static std::unordered_map<std::wstring_view, std::vector<GameObjectId>> _characterPreviewsIndex;
+
+    static std::unordered_map<GameObjectId, Character> _characterPreviews;
     static std::unordered_map<GameObjectId, Character> _characters;
     static std::unordered_map<GameObjectId, Monster>   _monsters;
 };

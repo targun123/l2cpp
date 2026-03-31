@@ -25,7 +25,7 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
 }
 catch (...)
 {
-    // Any exception would get the client stuck during the login screen; disconnect him instead.
+    // Any exception would get the client stuck during the login screen; force disconnect him instead.
     player.connection().send(ClientDisconnectPacket());
     player.connection().close();
     throw;
