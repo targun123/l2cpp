@@ -10,7 +10,7 @@
 #include "game/skill/SkillTemplateDirectory.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
-#include "network/packets/server/ClientDisconnect.hpp"
+#include "network/packets/server/client/ClientForceDisconnectPacket.hpp"
 #include "utils/Chrono.hpp"
 
 #include <l2cpp/Exception.hpp>
@@ -114,7 +114,7 @@ void Application::ApplicationImpl::shutdown()
         if (player.connection().isAlive())
         {
             // This packet displays the disconnected message box, but doesn't close the connection until OK is clicked
-            player.connection().send(Network::Packet::Server::ClientDisconnectPacket());
+            player.connection().send(Network::Packet::Server::ClientForceDisconnectPacket());
             player.connection().close();
         }
     }

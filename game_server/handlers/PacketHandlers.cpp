@@ -17,12 +17,12 @@ namespace Handler
     HANDLER(CharacterShowCreationScreen)
     HANDLER(ChatAdminCommand)
     HANDLER(ChatSay)
+    HANDLER(ClientRestart)
     HANDLER(ConnectionClosing)
     HANDLER(EnterWorld)
     HANDLER(InventoryOpen)
     HANDLER(ItemUnequip)
     HANDLER(ItemUse)
-    HANDLER(LeaveWorld)
     HANDLER(ManorList)
     HANDLER(MiniMapShow)
     HANDLER(Move)
@@ -48,12 +48,12 @@ std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHand
     HANDLER(CharacterShowCreationScreen),
     HANDLER(ChatAdminCommand),
     HANDLER(ChatSay),
+    HANDLER(ClientRestart),
     HANDLER(ConnectionClosing),
     HANDLER(EnterWorld),
     HANDLER(InventoryOpen),
     HANDLER(ItemUnequip),
     HANDLER(ItemUse),
-    HANDLER(LeaveWorld),
     HANDLER(ManorList),
     HANDLER(MiniMapShow),
     HANDLER(Move),
