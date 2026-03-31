@@ -10,9 +10,6 @@
 // Third-party includes
 #include <boost/asio/ip/tcp.hpp>
 
-// C++ includes
-#include <span>
-
 class Character;
 namespace Network { class Connection; }
 

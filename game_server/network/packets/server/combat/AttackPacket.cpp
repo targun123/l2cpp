@@ -32,9 +32,7 @@ void AttackPacket::finalizeImpl()
 
     *this
         << *mainTarget
-        << _attacker.position().x
-        << _attacker.position().y
-        << _attacker.position().z
+        << _attacker.position()
         << static_cast<u16>(_hits.size() - 1)
     ;
 
@@ -42,8 +40,6 @@ void AttackPacket::finalizeImpl()
         *this << *it;
 
     *this
-        << _mainTarget.position().x
-        << _mainTarget.position().y
-        << _mainTarget.position().z
+        << _mainTarget.position()
     ;
 }

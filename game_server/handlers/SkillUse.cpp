@@ -27,13 +27,9 @@ DEFINE_PACKET_HANDLER(SkillUse)
         << static_cast<u32>(skill->tmplate().level())
         << static_cast<u32>(skill->tmplate().castDuration().count())
         << 1000 // reuse delay (in ms)
-        << c.position().x
-        << c.position().y
-        << c.position().z
+        << c.position()
         << 0 // critical
-        << c.position().x
-        << c.position().y
-        << c.position().z
+        << c.position()
     ;
     player.connection().send(p);
 }
