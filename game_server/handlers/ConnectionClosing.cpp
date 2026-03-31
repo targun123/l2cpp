@@ -3,11 +3,12 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../network/packets/server/client/ClientExitGamePacket.hpp"
 
 DEFINE_PACKET_HANDLER(ConnectionClosing)
 {
-    if (!player.characters().empty())
-        player.connection().send(Packet(0x7e));
+    if (player.currentCharacter()) // Client doesn't wait for an answer during character selection
+        player.connection().send(ClientExitGamePacket());
 
     player.connection().close();
 }

@@ -26,8 +26,6 @@ public:
     auto connection()       -> Network::Connection &;
     auto connection() const -> Network::Connection const &;
 
-    auto characters()       -> std::span<Ref<Character>>;
-    auto characters() const -> std::span<Ref<Character> const>;
     auto currentCharacter() -> OptRef<Character>;
 
     auto accountName()   const -> std::wstring_view;
@@ -36,8 +34,9 @@ public:
 public:
     void setAccountName(std::wstring userName);
     void setPlayOk1(u32 playOk1);
-    auto addCharacter() -> Character &;
-    void setCurrentCharacter(size_t index);
+
+    void setCurrentCharacter(Character &);
+    void unsetCurrentCharacter();
 
 private:
     struct PlayerImpl;

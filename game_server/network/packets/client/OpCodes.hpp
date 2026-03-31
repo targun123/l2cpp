@@ -28,7 +28,7 @@ namespace Network
         TargetClear                 = 0x37,
         ChatSay                     = 0x38,
         SkillList                   = 0x3f,
-        LeaveWorld                  = 0x46,
+        ClientRestart               = 0x46,
         MoveUpdate                  = 0x48,
         ChatAdminCommand            = 0x5b,
         CharacterCancelDeletion     = 0x62,

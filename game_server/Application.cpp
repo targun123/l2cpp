@@ -10,7 +10,7 @@
 #include "game/skill/SkillTemplateDirectory.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
-#include "network/packets/server/ClientDisconnect.hpp"
+#include "network/packets/server/client/ClientForceDisconnectPacket.hpp"
 #include "utils/Chrono.hpp"
 
 #include <l2cpp/Exception.hpp>
@@ -114,7 +114,7 @@ void Application::ApplicationImpl::shutdown()
         if (player.connection().isAlive())
         {
             // This packet displays the disconnected message box, but doesn't close the connection until OK is clicked
-            player.connection().send(Network::Packet::Server::ClientDisconnectPacket());
+            player.connection().send(Network::Packet::Server::ClientForceDisconnectPacket());
             player.connection().close();
         }
     }
@@ -152,12 +152,14 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
     }
 
     auto & player = players.emplace_back(std::move(socket));
+    auto & conn   = player.connection();
 
     auto onConnectionClosed = [this, &player]
     {
-        SPDLOG_DEBUG(L"Player '{}' disconnected, removing its characters from World", player.accountName());
-        for (auto c : player.characters())
-            World::delCharacter(c.get().id());
+        SPDLOG_DEBUG(L"Player '{}' closed connection", player.accountName());
+
+        if (auto const c = player.currentCharacter())
+            World::moveCharacterBackToPreviews(c);
 
         players.remove_if([&player] (Player const & p) { return p.accountName() == player.accountName(); });
     };
@@ -192,15 +194,15 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
             player.connection().asyncReadNextPacket();
     };
 
-    player.connection().setOnConnectionClosed([this, onConnectionClosed] {
+    conn.setOnConnectionClosed([this, onConnectionClosed] {
         boost::asio::post(ioContext, onConnectionClosed);
     });
 
-    player.connection().setOnPacketReceivedHandler([this, onPacketReceived] (std::span<byte const> buffer) {
+    conn.setOnPacketReceivedHandler([this, onPacketReceived] (std::span<byte const> buffer) {
         boost::asio::post(ioContext, std::bind(onPacketReceived, buffer));
     });
 
-    player.connection().asyncReadNextPacket();
+    conn.asyncReadNextPacket();
 }
 catch (l2cpp::Exception const & e)
 {

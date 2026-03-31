@@ -6,7 +6,7 @@
 #include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/SkillDirectory.hpp"
-#include "../network/packets/server/ClientDisconnect.hpp"
+#include "../network/packets/server/client/ClientForceDisconnectPacket.hpp"
 #include "../network/packets/server/inventory/InventoryListPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
@@ -25,8 +25,8 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
 }
 catch (...)
 {
-    // Any exception would get the client stuck during the login screen; disconnect him instead.
-    player.connection().send(ClientDisconnectPacket());
+    // Any exception would get the client stuck during the login screen; force disconnect him instead.
+    player.connection().send(ClientForceDisconnectPacket());
     player.connection().close();
     throw;
 }
