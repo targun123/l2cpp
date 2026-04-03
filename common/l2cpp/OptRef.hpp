@@ -27,6 +27,9 @@ public:
     constexpr OptRef(OptRef && other) noexcept : _ref(std::exchange(other._ref, nullptr)) {}
     constexpr OptRef & operator=(OptRef && other) noexcept { return assign(std::exchange(other._ref, nullptr)); }
 
+    template<typename U> requires std::is_base_of_v<T, U>
+    constexpr OptRef(OptRef<U> const & other) noexcept: _ref(other ? &*other : nullptr) {}
+
 public:
     constexpr void reset()                       { _ref = nullptr;         }
     constexpr OptRef & operator=(std::nullopt_t) { return assign(nullptr); }

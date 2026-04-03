@@ -3,6 +3,7 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/Position.hpp"
 
@@ -11,6 +12,10 @@ DEFINE_PACKET_HANDLER(TargetClear)
     L2CPP_B_ASSERT(player.currentCharacter(), "Cannot clear target, no current character");
 
     auto & c = *player.currentCharacter();
-    c.setTarget(std::nullopt);
-    player.connection().send(Packet(0x2a) << c.id() << c.position());
+    if (auto const target = c.target())
+    {
+        player.connection().send(Packet(0x2a) << target->id() << target->position());
+        World::unsubscribeFromTarget(target, c);
+        c.setTarget(std::nullopt);
+    }
 }

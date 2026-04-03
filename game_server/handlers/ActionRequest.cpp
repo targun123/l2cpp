@@ -27,15 +27,17 @@ DEFINE_PACKET_HANDLER(ActionRequest)
     // No current target or current target is different from requested?
     if (!character.target() || character.target()->id() != targetId)
     {
-        /**/ if (auto const c = World::character(targetId); c)
+        /**/ if (auto const c = World::character(targetId))
         {
             character.setTarget(*c);
-            player.connection().send(TargetSelectPacket(character, *c));
+            player.connection().send(TargetSelectPacket(character, c));
         }
-        else if (auto const m = World::monster(targetId); m)
+        else if (auto const m = World::monster(targetId))
         {
-            character.setTarget(*m);
-            player.connection().send(TargetMonsterSelectPacket(character, *m));
+            character.setTarget(m);
+            player.connection().send(TargetMonsterSelectPacket(character, m));
+
+            World::subscribeToTarget(m, character);
         }
     }
     else // second request on target, launch attack!
