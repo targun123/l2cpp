@@ -4,14 +4,12 @@
 #include "CharacterStatusUpdatePacket.hpp"
 
 // Project includes
-#include <spdlog/spdlog.h>
-
 #include "../../../../game/actor/Character.hpp"
 #include "../../../../game/components/CharacterStatus.hpp"
-#include "../../../../game/components/Stats.hpp"
-#include "../../../../game/components/Position.hpp"
-#include "../../../../game/components/PlayerAppearance.hpp"
 #include "../../../../game/components/Gear.hpp"
+#include "../../../../game/components/PlayerAppearance.hpp"
+#include "../../../../game/components/Position.hpp"
+#include "../../../../game/components/Stats.hpp"
 #include "../../../../game/inventory/ItemStorage.hpp"
 
 using namespace Network::Packet::Server;
@@ -39,13 +37,13 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.stats().INT
         << c.stats().WIT
         << c.stats().MEN
-        << static_cast<u32>(c.status().hp.max)
-        << static_cast<u32>(c.status().hp.current)
-        << static_cast<u32>(c.status().mp.max)
-        << static_cast<u32>(c.status().mp.current)
+        << static_cast<u32>(c.stats().maxHp)
+        << static_cast<u32>(c.stats().curHp)
+        << static_cast<u32>(c.stats().maxMp)
+        << static_cast<u32>(c.stats().curMp)
         << c.status().sp
-        << c.status().weight.current
-        << c.status().weight.max
+        << c.stats().curWeight
+        << c.stats().maxWeight
         << (c.gear().hasActiveWeapon() ? 20 : 40)
         << c.gear().itemId(Underwear)
         << c.gear().itemId(RightEar)
@@ -142,8 +140,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.inventory().limit()
         << c.profession()
         << 0 // special effects? circles around player...
-        << static_cast<u32>(c.status().cp.max)
-        << static_cast<u32>(c.status().cp.current)
+        << static_cast<u32>(c.stats().maxCp)
+        << static_cast<u32>(c.stats().curCp)
         << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan crest large id

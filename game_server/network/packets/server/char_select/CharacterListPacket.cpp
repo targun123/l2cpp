@@ -10,6 +10,7 @@
 #include "../../../../game/components/Gear.hpp"
 #include "../../../../game/components/PlayerAppearance.hpp"
 #include "../../../../game/components/Position.hpp"
+#include "../../../../game/components/Stats.hpp"
 
 using Network::Packet::Server::CharacterListPacket;
 
@@ -37,8 +38,8 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << c.profession()
             << 1 // active (?)
             << c.position()
-            << c.status().hp.current
-            << c.status().mp.current
+            << c.stats().curHp
+            << c.stats().curMp
             << c.status().sp
             << c.status().xp
             << c.status().level()
@@ -79,8 +80,8 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << c.appearance().hairStyleId
             << c.appearance().hairColorId
             << c.appearance().faceId
-            << c.status().hp.max
-            << c.status().mp.max
+            << c.stats().maxHp
+            << c.stats().maxMp
             << c.deleteTime
             << c.profession()
             << c.selected

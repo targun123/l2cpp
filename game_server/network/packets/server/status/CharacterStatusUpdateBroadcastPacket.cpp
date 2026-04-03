@@ -85,8 +85,8 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << static_cast<u8>(c.evalAmount)
         << c.evalScore
         << c.profession()
-        << static_cast<u32>(c.status().cp.max)
-        << static_cast<u32>(c.status().cp.current)
+        << static_cast<u32>(c.stats().maxCp)
+        << static_cast<u32>(c.stats().curCp)
         << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan large crest id
