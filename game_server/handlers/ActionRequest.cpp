@@ -47,7 +47,7 @@ DEFINE_PACKET_HANDLER(ActionRequest)
             player.connection().send(p);
         }
     }
-    else // second request on target, launch attack!
+    else if (targetId != character.id()) // second request on target other than self, launch attack!
     {
         character.state = ActorState::Attacking;
         character.doNext<AttackAction>(*character.target(), character.stats().pAtkSpeed);
