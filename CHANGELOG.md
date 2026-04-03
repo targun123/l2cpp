@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Simple broadcasting to all online characters in a short distance from emitter;
-- Send target's status when targetting;
-- HP/MP/CP regeneration tick system;
-- Inflict damage during auto-attacks.
+- Get world actors when entering world;
+- Broadcast world actor deletion when leaving world;
+- Make corpses disappear after a few seconds;
+- Inflict damage with a magic skill;
+- HP/MP/CP regeneration tick system.
+
+## [0.11.0] - 2026-04-03
+
+### Added
+
+- Damage can be inflicted and actor status is broadcasted to listeners
+- The actor dies when HP reaches zero
+
+### Fixed
+
+- TargetClear was not working anymore
 
 ## [0.10.0] - 2026-04-03
 
