@@ -48,11 +48,16 @@ public:
 
     static auto inGameTime() -> std::chrono::minutes;
 
+    static void subscribeToTarget(Actor const & target, Actor const & listener);
+    static void unsubscribeFromTarget(Actor const & target, Actor const & listener);
+
     /// @warning This broadcasts given packet to ALL online players, regardless of distance!
     static void broadcast(l2cpp::Network::Packet &&);
 
     /// Broadcasts given packet to all online players around emitter, including the emitter if needed
     static void broadcastAround(Actor const & emitter, l2cpp::Network::Packet &&, bool includeEmitter = false);
+
+    static void broadcastToSubscribers(Actor const & emitter, l2cpp::Network::Packet &&, bool includeEmitter = false);
 
 private:
     static std::vector<SystemPtr> _systems;
@@ -62,4 +67,6 @@ private:
     static std::unordered_map<GameObjectId, Character> _characterPreviews;
     static std::unordered_map<GameObjectId, Character> _characters;
     static std::unordered_map<GameObjectId, Monster>   _monsters;
+
+    static std::unordered_map<GameObjectId, std::list<GameObjectId>> _targetSubscribers;
 };
