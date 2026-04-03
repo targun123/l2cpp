@@ -6,6 +6,7 @@
 // Project includes
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
+#include "../../network/packets/server/status/ActorDiePacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../../utils/Chrono.hpp"
 #include "../World.hpp"
@@ -24,14 +25,11 @@ AttackAction::AttackAction(Actor & target, u32 const pAtkSpeed) noexcept
     , _hitDuration(Utils::Chrono::Clock::toDuration(1s / (pAtkSpeed / 500.)))
 {}
 
-bool AttackAction::canBeInterrupted() const
-{
-    return false;
-}
+bool AttackAction::canBeInterrupted() const { return false; }
 
 void AttackAction::onStarted(Actor & actor)
 {
-    SM::AttackPacket p(actor, _target);
+    actor.state = ActorState::Attacking;
 
     u8 hitCount = 1;
 
@@ -53,12 +51,11 @@ void AttackAction::onStarted(Actor & actor)
             ++hitCount; // bare fists have two hits when not carrying a shield
     }
 
+    SM::AttackPacket p(actor, _target);
     for (decltype(hitCount) i = 0; i < hitCount; ++i) // split dual hits damage
         p.addHit({_target, 50u / hitCount, false, soulShotGrade});
 
     World::broadcastAround(actor, std::move(p), true);
-
-    actor.state = ActorState::Attacking;
 }
 
 void AttackAction::updateImpl(ClockDuration const, Actor &)
@@ -74,20 +71,25 @@ void AttackAction::onFinished(Actor & actor)
     actor.getOrAddComponent<AttackStanceTimer>().restart();
     _target.getOrAddComponent<AttackStanceTimer>().restart();
 
-    if (_target.state == ActorState::Idle)
-        _target.state = ActorState::CombatIdle;
+    bool targetIsDead = false;
 
     auto & stats = *_target.component<ComputedStats>();
-    if ((stats.curHp -= 100) < 0)
+    if ((stats.curHp -= 100) <= 0)
+    {
         stats.curHp = 0;
+        targetIsDead = true;
+    }
 
     Network::Packet::Server::StatsUpdatePacket p(_target);
     p.addStat(Stat::CurHp, static_cast<u32>(stats.curHp));
     World::broadcastToSubscribers(_target, std::move(p));
 
+    if (targetIsDead)
+        World::broadcastAround(_target, Network::Packet::Server::ActorDiePacket(_target), true);
+
     // TODO: consume the soulshot charge here (not before because could have been canceled with stun/para/…)
 
     // Physical attacking never stops unless another action is requested (e.g. actor moves) or target dies
-    if (!actor.nextAction())
+    if (!actor.nextAction() && !targetIsDead)
         actor.doNext<AttackAction>(_target, actor.stats().pAtkSpeed);
 }
