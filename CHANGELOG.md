@@ -12,6 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HP/MP/CP regeneration tick system;
 - Inflict damage during auto-attacks.
 
+## [0.10.0] - 2026-04-03
+
+### Added
+
+- Monster targets display correct HP bar
+- Groundwork for status broadcasting to listeners
+
+### Changed
+
+- Reworked HP/MP/CP/Weight from ActorStatus to Stats+ComputedStats
+
+### Fixed
+
+- Cannot attack oneself
+
 ## [0.9.0] - 2026-03-31
 
 ### Added
