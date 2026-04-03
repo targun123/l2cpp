@@ -6,8 +6,10 @@
 #include "../game/World.hpp"
 #include "../game/actions/AttackAction.hpp"
 #include "../game/actor/Character.hpp"
+#include "../game/components/ActorStatus.hpp"
 #include "../game/components/Gear.hpp"
 #include "../game/components/Stats.hpp"
+#include "../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
 #include "../network/packets/server/target/TargetSelectPacket.hpp"
 
@@ -38,6 +40,11 @@ DEFINE_PACKET_HANDLER(ActionRequest)
             player.connection().send(TargetMonsterSelectPacket(character, m));
 
             World::subscribeToTarget(m, character);
+
+            StatsUpdatePacket p(m);
+            p.addStat(Stat::MaxHp, static_cast<u32>(m->stats().maxHp));
+            p.addStat(Stat::CurHp, static_cast<u32>(m->stats().curHp));
+            player.connection().send(p);
         }
     }
     else // second request on target, launch attack!
