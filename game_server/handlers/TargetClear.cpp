@@ -14,8 +14,8 @@ DEFINE_PACKET_HANDLER(TargetClear)
     auto & c = *player.currentCharacter();
     if (auto const target = c.target())
     {
-        player.connection().send(Packet(0x2a) << target->id() << target->position());
         World::unsubscribeFromTarget(target, c);
         c.setTarget(std::nullopt);
+        player.connection().send(Packet(0x2a) << c.id() << c.position());
     }
 }
