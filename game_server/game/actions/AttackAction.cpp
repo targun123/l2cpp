@@ -4,10 +4,11 @@
 #include "AttackAction.hpp"
 
 // Project includes
-#include "../World.hpp"
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
+#include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../../utils/Chrono.hpp"
+#include "../World.hpp"
 #include "../actor/Character.hpp"
 #include "../components/AttackStanceTimer.hpp"
 #include "../components/Gear.hpp"
@@ -76,7 +77,14 @@ void AttackAction::onFinished(Actor & actor)
     if (_target.state == ActorState::Idle)
         _target.state = ActorState::CombatIdle;
 
-    // TODO: inflict actual damage here
+    auto & stats = *_target.component<ComputedStats>();
+    if ((stats.curHp -= 100) < 0)
+        stats.curHp = 0;
+
+    Network::Packet::Server::StatsUpdatePacket p(_target);
+    p.addStat(Stat::CurHp, static_cast<u32>(stats.curHp));
+    World::broadcastToSubscribers(_target, std::move(p));
+
     // TODO: consume the soulshot charge here (not before because could have been canceled with stun/para/…)
 
     // Physical attacking never stops unless another action is requested (e.g. actor moves) or target dies
