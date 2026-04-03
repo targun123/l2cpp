@@ -58,7 +58,7 @@ I develop with the following environment:
  - Ninja (latest as of 2026-03-08)
 
 ```shell
-git clone -b dev https://github.com/Chnossos/l2cpp.git && cd l2cpp
+git clone https://github.com/Chnossos/l2cpp.git && cd l2cpp
 conan install -b missing -c tools.cmake.cmaketoolchain:generator="Ninja Multi-Config"
 cmake --preset conan-default
 cmake --build build --preset conan-release # or conan-debug
@@ -66,13 +66,14 @@ cmake --build build --preset conan-release # or conan-debug
 
 ## How to run
 
-Build then start a login server, then a game server. Now log in with a game client supporting protocol 656 and voilà!
+Build, then start a login server, then a game server. Now log in with a game client supporting protocol 656 and voilà!
 
 ## Credits
 
-[l2auth][1] (by [@Ruk33][2]) and [L2jMobius][3].
+[l2auth][1], [L2jMobius][3] and [L2JLisvus][5].
 
 [1]: https://github.com/Ruk33/l2auth
 [2]: https://github.com/Ruk33
 [3]: https://gitlab.com/MobiusDevelopment/L2J_Mobius/
 [4]: https://legacy-lineage2.com/news/chronicle4_01.html
+[5]: https://gitlab.com/TheDnR/l2j-lisvus

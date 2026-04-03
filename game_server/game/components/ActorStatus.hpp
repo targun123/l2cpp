@@ -10,10 +10,6 @@
 class ActorStatus : public Component
 {
 public:
-    Gauge<double> hp{500};
-    double hpRegen = 1; ///< Per second.
-
-public:
     auto level() const -> u32 { return _level; }
     void setLevel(u32 const level)
     {

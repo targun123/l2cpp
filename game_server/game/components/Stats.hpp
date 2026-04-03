@@ -10,6 +10,11 @@
 
 struct Stats : public Component
 {
+    double maxCp   = 0, maxHp   = 0, maxMp   = 0;
+    double cpRegen = 0, hpRegen = 0, mpRegen = 0;
+
+    u32 maxWeight = 10'000;
+
     u32 STR = 0, DEX = 0, CON = 0;
     u32 INT = 0, WIT = 0, MEN = 0;
 
@@ -32,4 +37,8 @@ struct ComputedStats : public Stats
 
     double moveSpeedMultiplier = 1;
     double pAtkSpeedMultiplier = 1;
+
+    double curCp = 0, curHp = 0, curMp = 0;
+
+    u32 curWeight = 0;
 };

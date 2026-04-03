@@ -29,8 +29,8 @@ CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encr
         << c.profession()
         << 1 // active (?)
         << c.position()
-        << c.status().hp.current
-        << c.status().mp.current
+        << c.stats().curHp
+        << c.stats().curMp
         << c.status().sp
         << c.status().xp
         << c.status().level()

@@ -10,13 +10,6 @@
 
 struct CharacterStatus : public ActorStatus
 {
-    Gauge<double> cp{500};
-    Gauge<double> mp{500};
-    Gauge<u32>    weight{0, 10'000};
-
-    double cpRegen = 1; ///< Per second.
-    double mpRegen = 1; ///< Per second.
-
     u32 xp, sp;
     u32 pvpCount, pkCount, karma;
 

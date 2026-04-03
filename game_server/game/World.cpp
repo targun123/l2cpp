@@ -138,6 +138,17 @@ auto World::inGameTime() -> std::chrono::minutes
     }
 }
 
+void World::subscribeToTarget(Actor const & target, Actor const & listener)
+{
+    if (target.id() != listener.id())
+        _targetSubscribers[target.id()].emplace_back(listener.id());
+}
+
+void World::unsubscribeFromTarget(Actor const & target, Actor const & listener)
+{
+    _targetSubscribers[target.id()].remove(listener.id());
+}
+
 void World::broadcast(Packet && packet)
 {
     packet.finalize();
@@ -160,8 +171,29 @@ void World::broadcastAround(Actor const & emitter, Packet && packet, bool const 
     }
 }
 
+void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool const includeEmitter)
+{
+    packet.finalize();
+    auto const & p = packet;
+
+    for (auto const id : _targetSubscribers[emitter.id()])
+    {
+        // Ensure we find a player
+        if (auto const it = _characters.find(id); it != _characters.end() && it->second.player)
+            it->second.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
+    }
+
+    if (emitter.type() == ActorType::Character)
+    {
+        auto const & c = static_cast<Character const &>(emitter);
+        if (includeEmitter && c.player)
+            c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
+    }
+}
+
 std::vector<std::unique_ptr<System>>                             World::_systems;
 std::unordered_map<std::wstring_view, std::vector<GameObjectId>> World::_characterPreviewsIndex;
 std::unordered_map<GameObjectId, Character>                      World::_characterPreviews;
 std::unordered_map<GameObjectId, Character>                      World::_characters;
 std::unordered_map<GameObjectId, Monster>                        World::_monsters;
+std::unordered_map<GameObjectId, std::list<GameObjectId>>        World::_targetSubscribers;
