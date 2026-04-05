@@ -6,6 +6,7 @@
 #include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/Position.hpp"
+#include "../network/packets/server/target/TargetClearPacket.hpp"
 
 DEFINE_PACKET_HANDLER(TargetClear)
 {
@@ -16,6 +17,6 @@ DEFINE_PACKET_HANDLER(TargetClear)
     {
         World::unsubscribeFromTarget(target, c);
         c.setTarget(std::nullopt);
-        player.connection().send(Packet(0x2a) << c.id() << c.position());
+        player.connection().send(TargetClearPacket{c});
     }
 }
