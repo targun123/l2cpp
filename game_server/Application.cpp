@@ -172,7 +172,7 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
             auto const & [handler, handlerName] = it->second;
 
             SPDLOG_INFO("'{}' → 0x{:02x} ({}) ({} bytes)", player.connection().id(), opCode, handlerName, size);
-            if (hexdump)
+            if constexpr (Config::hexdumpPackets)
                 hexdump(body);
 
             try { (*handler)(player); } catch (l2cpp::Exception const & e)
@@ -182,8 +182,8 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
         }
         else
         {
-            SPDLOG_WARN("'{}': unsupported packet 0x{:02x} ({} bytes)", player.connection().id(), opCode, size);
-            if (hexdump)
+            SPDLOG_WARN("'{}' → 0x{:02x} (?) ({} bytes)", player.connection().id(), opCode, size);
+            if constexpr (Config::hexdumpPackets)
                 hexdump(body);
         }
 
