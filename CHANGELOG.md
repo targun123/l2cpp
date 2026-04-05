@@ -7,10 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Broadcast world actor deletion when leaving world;
 - Make corpses disappear after a few seconds;
 - Inflict damage with a magic skill;
 - HP/MP/CP regeneration tick system.
+
+## [0.13.0] - 2026-04-05
+
+### Added
+
+- GameObject deletion packet (makes objects disappear on screen)
+
+### Changed
+
+- Ensure character removal from world in all scenarios (restart, exit, connection severed)
+
+### Fixed
+
+- Player is correctly unset from character in all scenarios
 
 ## [0.12.0] - 2026-04-05
 
