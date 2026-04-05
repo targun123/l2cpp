@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Get world actors when entering world;
 - Broadcast world actor deletion when leaving world;
 - Make corpses disappear after a few seconds;
 - Inflict damage with a magic skill;
 - HP/MP/CP regeneration tick system.
+
+## [0.12.0] - 2026-04-05
+
+### Added
+
+- Utility to get distance between two positions/actors
+- Surrounding actors are sent to player entering world
+- Equality operator shortcut for Actors
+
+### Changed
+
+- `World::broadcastAround()` now checks distance around emitter
 
 ## [0.11.0] - 2026-04-03
 
