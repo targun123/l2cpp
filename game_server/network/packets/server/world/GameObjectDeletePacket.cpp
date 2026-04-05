@@ -1,0 +1,17 @@
+/// @author    Chnossos
+/// @date      Created on 2026-04-05
+
+#include "GameObjectDeletePacket.hpp"
+
+// Project includes
+#include "../../../../game/GameObject.hpp"
+
+using Network::Packet::Server::GameObjectDeletePacket;
+
+GameObjectDeletePacket::GameObjectDeletePacket(GameObject const & object)
+    : Packet(0x12)
+{
+    *this
+        << object.id()
+    ;
+}
