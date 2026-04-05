@@ -85,7 +85,12 @@ void AttackAction::onFinished(Actor & actor)
     World::broadcastToSubscribers(_target, std::move(p));
 
     if (targetIsDead)
+    {
         World::broadcastAround(_target, Network::Packet::Server::ActorDiePacket(_target), true);
+
+        if (_target.type() != ActorType::Character || !static_cast<Character &>(_target).player)
+            World::scheduleForDeletion(_target, 5s); // Corpse will disappear soon
+    }
 
     // TODO: consume the soulshot charge here (not before because could have been canceled with stun/para/…)
 

@@ -44,12 +44,14 @@ public:
     static auto addCharacter(OptRef<Player> = std::nullopt) -> Character &;
 
     static auto addMonster() -> Monster &;
-    static void delMonster(GameObjectId id);
+
+    static void scheduleForDeletion(Actor &, ClockDuration timeFromNow = ClockDuration::zero());
 
     static auto inGameTime() -> std::chrono::minutes;
 
     static void subscribeToTarget(Actor const & target, Actor const & listener);
     static void unsubscribeFromTarget(Actor const & target, Actor const & listener);
+    static void unsubscribeAllTargetListeners(Actor const & target);
 
     static void forEachActorAround(Actor const & source, std::function<void(Actor &)> const &);
 
@@ -64,6 +66,9 @@ public:
     static void broadcastToSubscribers(Actor const & emitter, l2cpp::Network::Packet &&, bool includeEmitter = false);
 
 private:
+    static void delActor(Actor & a);
+
+private:
     static std::vector<SystemPtr> _systems;
 
     static std::unordered_map<std::wstring_view, std::vector<GameObjectId>> _characterPreviewsIndex;
@@ -71,6 +76,8 @@ private:
     static std::unordered_map<GameObjectId, Character> _characterPreviews;
     static std::unordered_map<GameObjectId, Character> _characters;
     static std::unordered_map<GameObjectId, Monster>   _monsters;
+
+    static std::unordered_map<GameObjectId, Ref<Actor>> _scheduledForDeletion;
 
     static std::unordered_map<GameObjectId, std::list<GameObjectId>> _targetSubscribers;
 };
