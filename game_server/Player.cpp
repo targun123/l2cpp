@@ -57,5 +57,9 @@ void Player::setCurrentCharacter(Character & c)
 
 void Player::unsetCurrentCharacter()
 {
-    _impl->currentCharacter.reset();
+    if (_impl->currentCharacter)
+    {
+        _impl->currentCharacter->player.reset();
+        _impl->currentCharacter.reset();
+    }
 }
