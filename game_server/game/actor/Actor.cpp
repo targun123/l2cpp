@@ -73,6 +73,8 @@ Actor::Actor(Actor &&) noexcept = default;
 Actor & Actor::operator=(Actor &&) noexcept = default;
 Actor::~Actor() = default;
 
+bool Actor::operator==(Actor const & other) const { return id() == other.id(); }
+
 auto Actor::type()     const -> ActorType         { return _impl->type;                       }
 auto Actor::name()     const -> std::wstring_view { return component<ActorIdentity>()->name;  }
 auto Actor::title()    const -> std::wstring_view { return component<ActorIdentity>()->title; }

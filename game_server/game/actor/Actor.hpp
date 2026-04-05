@@ -32,6 +32,9 @@ public:
     ~Actor() override = 0;
 
 public:
+    bool operator==(Actor const &) const;
+
+public:
     auto type() const -> ActorType;
     auto name() const -> std::wstring_view;
     auto title() const -> std::wstring_view;
