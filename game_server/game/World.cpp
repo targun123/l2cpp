@@ -7,9 +7,12 @@
 #include "../CompileTimeConfig.hpp"
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
 #include "../utils/Maths.hpp"
+#include "components/DeletionTimer.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
+#include "systems/ActorDeletionTimerSystem.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 
@@ -43,6 +46,7 @@ auto World::monster(GameObjectId const id) -> OptRef<Monster>
 void World::init()
 {
     registerSystem<ActorAttackStanceTimerSystem>();
+    registerSystem<ActorDeletionTimerSystem>();
 
     auto & c = addCharacterPreview(L"Admin");
     c.setName(L"test" + std::to_wstring(c.id()));
@@ -67,6 +71,11 @@ void World::update(ClockDuration const elapsed)
         for (auto & m : _monsters | std::views::values)
             system->update(elapsed, m);
     }
+
+    for (Actor & a : _scheduledForDeletion | std::views::values)
+        delActor(a);
+
+    _scheduledForDeletion.clear();
 }
 
 auto World::getCharacterPreviews(std::wstring_view const playerAccount) -> std::vector<Ref<Character>>
@@ -100,17 +109,11 @@ auto World::loadCharacterFromPreview(Character & c) -> Character &
 
 void World::moveCharacterBackToPreviews(Character & c)
 {
-    forEachActorAround(c, [&c] (Actor & actor)
-    {
-        if (actor.type() == ActorType::Character)
-        {
-            auto const & character = static_cast<Character &>(actor);
-            if (character.player)
-                character.player->connection().send(SC::GameObjectDeletePacket{c});
-        }
-    });
+    unsubscribeAllTargetListeners(c);
+    broadcastAround(c, SC::GameObjectDeletePacket{c});
 
-    c.player->unsetCurrentCharacter();
+    if (c.player)
+        c.player->unsetCurrentCharacter();
 
     auto const id = c.id();
     _characterPreviews.try_emplace(id, std::move(c));
@@ -131,9 +134,16 @@ auto World::addMonster() -> Monster &
     return _monsters.try_emplace(id, std::move(m)).first->second;
 }
 
-void World::delMonster(GameObjectId const id)
+void World::scheduleForDeletion(Actor & a, ClockDuration const timeFromNow)
 {
-    _monsters.erase(id);
+    if (timeFromNow > ClockDuration::zero())
+    {
+        auto & timer = a.getOrAddComponent<DeletionTimer>();
+        timer.timeBeforeDeletion = timeFromNow;
+        timer.elapsedSinceDeath  = ClockDuration::zero();
+    }
+    else
+        _scheduledForDeletion.try_emplace(a.id(), a);
 }
 
 auto World::inGameTime() -> std::chrono::minutes
@@ -163,6 +173,22 @@ void World::subscribeToTarget(Actor const & target, Actor const & listener)
 void World::unsubscribeFromTarget(Actor const & target, Actor const & listener)
 {
     _targetSubscribers[target.id()].remove(listener.id());
+}
+
+void World::unsubscribeAllTargetListeners(Actor const & target)
+{
+    // ReSharper disable once CppLocalVariableMayBeConst
+    auto v = _targetSubscribers[target.id()]
+           | std::views::transform([] (GameObjectId const id) -> Ref<Character> { return character(id); })
+           | std::views::filter([] (Character const & c) { return c.player.has_value(); });
+
+    for (Character & c : v)
+    {
+        c.setTarget(std::nullopt);
+        c.player->connection().send(SC::TargetClearPacket{c});
+    }
+
+    _targetSubscribers[target.id()].clear();
 }
 
 void World::forEachActorAround(Actor const & source, std::function<void(Actor &)> const & f)
@@ -207,6 +233,7 @@ void World::broadcastAround(Actor const & emitter, Packet && packet, bool const 
     auto const emitterIfRequested = [&] (Character const & c) { return c != emitter || includeEmitter; };
 
     using namespace std::views;
+    // ReSharper disable once CppLocalVariableMayBeConst
     auto view = _characters | values | filter(charHasDriver) | filter(charIsInRange) | filter(emitterIfRequested);
 
     for (auto const & c : view)
@@ -233,9 +260,28 @@ void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool
     }
 }
 
+// PRIVATE -------------------------------------------------------------------------------------------------------------
+
+void World::delActor(Actor & a)
+{
+    if (a.type() == ActorType::Character)
+    {
+        auto & c = static_cast<Character &>(a);
+        L2CPP_B_ASSERT(!c.player, "Illegal attempt to delete player driven character (objId: '{}')", a.id());
+        moveCharacterBackToPreviews(c);
+    }
+    else
+    {
+        unsubscribeAllTargetListeners(a);
+        broadcastAround(a, SC::GameObjectDeletePacket{a});
+        _monsters.erase(a.id());
+    }
+}
+
 std::vector<std::unique_ptr<System>>                             World::_systems;
 std::unordered_map<std::wstring_view, std::vector<GameObjectId>> World::_characterPreviewsIndex;
 std::unordered_map<GameObjectId, Character>                      World::_characterPreviews;
 std::unordered_map<GameObjectId, Character>                      World::_characters;
 std::unordered_map<GameObjectId, Monster>                        World::_monsters;
+std::unordered_map<GameObjectId, Ref<Actor>>                     World::_scheduledForDeletion;
 std::unordered_map<GameObjectId, std::list<GameObjectId>>        World::_targetSubscribers;
