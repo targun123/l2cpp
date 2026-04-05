@@ -141,7 +141,7 @@ auto World::inGameTime() -> std::chrono::minutes
 
 void World::subscribeToTarget(Actor const & target, Actor const & listener)
 {
-    if (target.id() != listener.id())
+    if (target != listener)
         _targetSubscribers[target.id()].emplace_back(listener.id());
 }
 
@@ -155,20 +155,14 @@ void World::forEachActorAround(Actor const & source, std::function<void(Actor &)
     if (f)
     {
         auto const distancePred = [&] (Actor const & a) { return isInBroadcastRange(source, a); };
-        auto charactersInRange = _characters | std::views::values | std::views::filter(distancePred);
-        auto monstersInRange   = _monsters   | std::views::values | std::views::filter(distancePred);
+        auto const skipEmitter  = [&] (Actor const & a) { return a != source;                   };
 
-        for (auto & a : charactersInRange)
-        {
-            if (a.id() != source.id())
-                f(a);
-        }
+        using namespace std::views;
+        auto charactersInRange = _characters | values | filter(distancePred) | filter(skipEmitter);
+        auto monstersInRange   = _monsters   | values | filter(distancePred) | filter(skipEmitter);
 
-        for (auto & a : monstersInRange)
-        {
-            if (a.id() != source.id())
-                f(a);
-        }
+        for (auto & a : charactersInRange) f(a);
+        for (auto & a : monstersInRange)   f(a);
     }
 }
 
@@ -193,14 +187,12 @@ void World::broadcastAround(Actor const & emitter, Packet && packet, bool const 
     packet.finalize();
     auto const & p = packet;
 
-    auto const charHasDriver      = [ ] (Character const & c) { return c.player.has_value();                     };
-    auto const charIsInRange      = [&] (Character const & c) { return isInBroadcastRange(emitter, c);           };
-    auto const emitterIfRequested = [&] (Character const & c) { return c.id() != emitter.id() || includeEmitter; };
+    auto const charHasDriver      = [ ] (Character const & c) { return c.player.has_value();           };
+    auto const charIsInRange      = [&] (Character const & c) { return isInBroadcastRange(emitter, c); };
+    auto const emitterIfRequested = [&] (Character const & c) { return c != emitter || includeEmitter; };
 
-    auto view = _characters | std::views::values
-                            | std::views::filter(charHasDriver)
-                            | std::views::filter(charIsInRange)
-                            | std::views::filter(emitterIfRequested);
+    using namespace std::views;
+    auto view = _characters | values | filter(charHasDriver) | filter(charIsInRange) | filter(emitterIfRequested);
 
     for (auto const & c : view)
         c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
