@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Make corpses disappear after a few seconds;
 - Inflict damage with a magic skill;
 - HP/MP/CP regeneration tick system.
+
+## [0.14.0] - 2026-04-05
+
+### Added
+
+- Actors can be scheduled for deletion
+- Dead NPCs disappear after 5s
 
 ## [0.13.0] - 2026-04-05
 
