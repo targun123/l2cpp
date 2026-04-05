@@ -51,6 +51,10 @@ public:
     static void subscribeToTarget(Actor const & target, Actor const & listener);
     static void unsubscribeFromTarget(Actor const & target, Actor const & listener);
 
+    static void forEachActorAround(Actor const & source, std::function<void(Actor &)> const &);
+
+    static bool isInBroadcastRange(Actor const & source, Actor const & target);
+
     /// @warning This broadcasts given packet to ALL online players, regardless of distance!
     static void broadcast(l2cpp::Network::Packet &&);
 

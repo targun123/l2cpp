@@ -11,6 +11,7 @@
 #include "../network/packets/server/inventory/InventoryListPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
+#include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
 
 DEFINE_PACKET_HANDLER(EnterWorld) try
 {
@@ -27,6 +28,13 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
     c.computeStats();
     conn.send(CharacterStatusUpdatePacket(c));
     World::broadcastAround(c, CharacterStatusUpdateBroadcastPacket(c));
+    World::forEachActorAround(c, [&] (Actor & a)
+    {
+        if (a.type() == ActorType::Character)
+            conn.send(CharacterStatusUpdateBroadcastPacket{static_cast<Character &>(a)});
+        else
+            conn.send(NpcStatusUpdatePacket{static_cast<NonPlayableActor &>(a)});
+    });
 }
 catch (...)
 {

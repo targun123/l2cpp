@@ -7,6 +7,7 @@
 #include "../CompileTimeConfig.hpp"
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include "../utils/Maths.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 
 #include <l2cpp/network/Packet.hpp>
@@ -147,6 +148,33 @@ void World::subscribeToTarget(Actor const & target, Actor const & listener)
 void World::unsubscribeFromTarget(Actor const & target, Actor const & listener)
 {
     _targetSubscribers[target.id()].remove(listener.id());
+}
+
+void World::forEachActorAround(Actor const & source, std::function<void(Actor &)> const & f)
+{
+    if (f)
+    {
+        auto const distancePred = [&] (Actor const & a) { return isInBroadcastRange(source, a); };
+        auto charactersInRange = _characters | std::views::values | std::views::filter(distancePred);
+        auto monstersInRange   = _monsters   | std::views::values | std::views::filter(distancePred);
+
+        for (auto & a : charactersInRange)
+        {
+            if (a.id() != source.id())
+                f(a);
+        }
+
+        for (auto & a : monstersInRange)
+        {
+            if (a.id() != source.id())
+                f(a);
+        }
+    }
+}
+
+bool World::isInBroadcastRange(Actor const & source, Actor const & target)
+{
+    return Utils::Maths::distance(source, target) <= 1000;
 }
 
 void World::broadcast(Packet && packet)
