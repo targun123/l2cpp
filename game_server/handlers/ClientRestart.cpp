@@ -13,7 +13,6 @@ DEFINE_PACKET_HANDLER(ClientRestart)
     if (auto const c = player.currentCharacter())
     {
         World::moveCharacterBackToPreviews(c);
-        player.unsetCurrentCharacter();
         player.connection().send(ClientGoBackToCharacterSelectionPacket(true));
     }
 

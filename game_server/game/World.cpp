@@ -7,6 +7,7 @@
 #include "../CompileTimeConfig.hpp"
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include "../network/packets/server/world/GameObjectDeletePacket.hpp"
 #include "../utils/Maths.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 
@@ -14,6 +15,8 @@
 
 // C++ includes
 #include <ranges>
+
+namespace SC = Network::Packet::Server; // Server -> Client
 
 using l2cpp::Network::Packet;
 
@@ -97,6 +100,18 @@ auto World::loadCharacterFromPreview(Character & c) -> Character &
 
 void World::moveCharacterBackToPreviews(Character & c)
 {
+    forEachActorAround(c, [&c] (Actor & actor)
+    {
+        if (actor.type() == ActorType::Character)
+        {
+            auto const & character = static_cast<Character &>(actor);
+            if (character.player)
+                character.player->connection().send(SC::GameObjectDeletePacket{c});
+        }
+    });
+
+    c.player->unsetCurrentCharacter();
+
     auto const id = c.id();
     _characterPreviews.try_emplace(id, std::move(c));
     _characters.erase(id);
