@@ -10,4 +10,5 @@ enum class ActionType
 {
     Move,
     Attack,
+    Skill,
 };
