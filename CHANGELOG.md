@@ -7,8 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Inflict damage with a magic skill;
+- Make login server handle multiple sessions concurrently;
 - HP/MP/CP regeneration tick system.
+
+## [0.15.0] - 2026-04-09
+
+### Added
+
+- SkillAction
+- Actions can be canceled
+- Gauge during skill animation
+- Position can be deserialized
+- Durations are serialized in a more uniform (and correct) way
+
+### Changed
+
+- `Actor::takeDamage()`
+- Trying to learn an undefined skill no longer leads to an exception
+- Action's performer is now stored for easy access
+- Packet hexdumping is disabled by default now
+
+### Fixed
+
+- Skill animation duration was wrongly truncated during parsing
 
 ## [0.14.0] - 2026-04-05
 
