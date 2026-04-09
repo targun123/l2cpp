@@ -4,6 +4,7 @@
 #include "SkillAction.hpp"
 
 // Project includes
+#include "../../network/packets/server/skill/SkillCancelPacket.hpp"
 #include "../../network/packets/server/skill/SkillSetTargetsPacket.hpp"
 #include "../../network/packets/server/skill/SkillUsePacket.hpp"
 #include "../../utils/Chrono.hpp"
@@ -13,9 +14,11 @@
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
 
+// Third-party includes
+#include <spdlog/spdlog.h>
+
 // C++ includes
 #include <mutex>
-#include <spdlog/spdlog.h>
 
 namespace SC = Network::Packet::Server;
 
@@ -75,4 +78,9 @@ void SkillAction::onFinished()
 {
     // skill animation done, apply effects now
     SPDLOG_DEBUG("{}", __func__);
+}
+
+void SkillAction::onCancelled()
+{
+    World::broadcastAround(performer(), SC::SkillCancelPacket{performer()}, true);
 }

@@ -123,20 +123,25 @@ void Actor::setTeam(Team const team) { _impl->team = team; }
 
 void Actor::setTarget(OptRef<Actor> actor) { _impl->target = std::move(actor); }
 
+void Actor::cancelAction()
+{
+    if (auto const action = std::move(_impl->currentAction))
+        action->cancel();
+
+    _impl->nextAction.reset();
+}
+
 void Actor::doNext(std::unique_ptr<Action> action)
 {
     if (!action)
-    {
-        _impl->currentAction.reset();
-        _impl->nextAction.reset();
-    }
-    else if (!_impl->currentAction)                    // no action: set new action
+        cancelAction();
+    else if (!_impl->currentAction)
         _impl->currentAction = std::move(action);
-    else if (_impl->currentAction->canBeInterrupted()) // interruptible current action: replace with new action
+    else if (_impl->currentAction->canBeInterruptedByAnotherAction())
     {
         _impl->currentAction = std::move(action);
         _impl->nextAction    = nullptr;
     }
-    else                                               // uninterruptible current action: replace next / queue action
+    else
         _impl->nextAction = std::move(action);
 }

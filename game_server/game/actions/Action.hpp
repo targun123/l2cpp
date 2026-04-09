@@ -30,6 +30,7 @@ public:
 
 public:
     void update(ClockDuration elapsed);
+    void cancel();
 
 protected:
     void setFinished(bool finished);
@@ -38,6 +39,7 @@ private:
     virtual void onStarted()               {}
     virtual void updateImpl(ClockDuration) {}
     virtual void onFinished()              {}
+    virtual void onCancelled()             {}
 
 private:
     ActionType     _type;

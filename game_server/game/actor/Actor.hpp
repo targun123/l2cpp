@@ -67,9 +67,12 @@ public:
     void setTeam(Team team);
     void setTarget(OptRef<Actor>);
 
-    void doNext(std::unique_ptr<Action>);
     template<typename A, typename... Args> requires std::is_base_of_v<Action, A>
     void doNext(Args &&... args) { doNext(std::make_unique<A>(*this, std::forward<Args>(args)...)); }
+    void cancelAction();
+
+private:
+    void doNext(std::unique_ptr<Action>);
 
 private:
     struct ActorImpl;

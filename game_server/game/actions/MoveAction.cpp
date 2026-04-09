@@ -6,10 +6,9 @@
 // Project includes
 #include "../../Player.hpp"
 #include "../../network/Connection.hpp"
+#include "../../network/packets/server/movement/ActorMovePacket.hpp"
+#include "../../network/packets/server/movement/ActorMoveStopPacket.hpp"
 #include "../World.hpp"
-#include "../actor/Character.hpp"
-
-#include <l2cpp/network/Packet.hpp>
 
 MoveAction::MoveAction(Actor & performer, Position const & origin, Position const & target, Input const input)
     : Action(ActionType::Move, performer)
@@ -28,16 +27,16 @@ void MoveAction::onStarted()
     performer().state = ActorState::Moving;
     performer().setPosition(_origin);
 
-    l2cpp::Network::Packet p(0x01); // Make character start moving, position will be validated in MoveUpdate handler
-    p
-        << performer().id()
-        << _target
-        << _origin
-    ;
-    World::broadcastAround(performer(), std::move(p), true);
+    // Make character start moving, position will be validated in MoveUpdate handler
+    World::broadcastAround(performer(), Network::Packet::Server::ActorMovePacket{performer(), _origin, _target}, true);
 }
 
 void MoveAction::updateImpl(ClockDuration)
 {
     setFinished(_currentDistance >= _totalDistance);
+}
+
+void MoveAction::onCancelled()
+{
+    World::broadcastAround(performer(), Network::Packet::Server::ActorMoveStopPacket{performer()}, true);
 }

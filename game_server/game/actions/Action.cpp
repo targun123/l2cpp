@@ -37,6 +37,22 @@ void Action::update(ClockDuration const elapsed)
         onFinished();
 }
 
+void Action::cancel()
+{
+    // This function can be called from two places:
+    // 1) From actor.cancelAction();
+    // 2) From actor.currentAction()->cancel();
+    //
+    // We need to ensure both ways will call Action::cancel() and remove the actions from the actor.
+    // To avoid an infinite recursion loop, Actor::cancelAction will first release its currentAction pointer
+    // so that potential next call will do nothing.
+
+    if (performer().currentAction())
+        performer().cancelAction();
+    else
+        onCancelled();
+}
+
 void Action::setFinished(bool const finished)
 {
     _finished = finished;

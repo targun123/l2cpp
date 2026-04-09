@@ -21,6 +21,7 @@ public:
 private:
     void onStarted() override;
     void updateImpl(ClockDuration) override;
+    void onCancelled() override;
 
 private:
     Position _origin, _target;
