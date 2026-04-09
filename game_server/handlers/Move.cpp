@@ -31,10 +31,9 @@ DEFINE_PACKET_HANDLER(Move)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    MoveAction action;
-    reader >> action.targetX >> action.targetY >> action.targetZ;
-    reader >> action.originX >> action.originY >> action.originZ;
-    reader >> action.input;
+    Position origin, target;
+    MoveAction::Input input;
+    reader >> target >> origin >> input;
 
     // TODO: trust originX/Y/Z only if they are close enough to server position
 
@@ -54,5 +53,5 @@ DEFINE_PACKET_HANDLER(Move)
     // SPDLOG_TRACE("Character must travel through {} units. At a speed of {} units per 1s, it will take {:%Q%q}",
     //              action.totalDistance, c.stats().runSpeed, std::chrono::duration_cast<std::chrono::milliseconds>(totalDuration));
     //
-    c.doNext<MoveAction>(action);
+    c.doNext<MoveAction>(origin, target, input);
 }

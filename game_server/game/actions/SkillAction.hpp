@@ -13,17 +13,17 @@ class Skill;
 class SkillAction final : public Action
 {
 public:
-    explicit SkillAction(Skill & skill);
+    explicit SkillAction(Actor & performer, Skill & skill);
     SkillAction(SkillAction &&) noexcept;
     SkillAction & operator=(SkillAction &&) noexcept;
 
 public:
-    bool canBeInterrupted() const override;
+    bool canBeInterruptedByAnotherAction() const override;
 
 private:
-    void onStarted(Actor &) override;
-    void updateImpl(ClockDuration, Actor &) override;
-    void onFinished(Actor &) override;
+    void onStarted() override;
+    void updateImpl(ClockDuration) override;
+    void onFinished() override;
 
 private:
     struct SkillActionImpl;

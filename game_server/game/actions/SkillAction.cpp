@@ -15,6 +15,7 @@
 
 // C++ includes
 #include <mutex>
+#include <spdlog/spdlog.h>
 
 namespace SC = Network::Packet::Server;
 
@@ -31,8 +32,8 @@ template class Pimpl<SkillAction::SkillActionImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-SkillAction::SkillAction(Skill & skill)
-    : Action(ActionType::Skill)
+SkillAction::SkillAction(Actor & performer, Skill & skill)
+    : Action(ActionType::Skill, performer)
     , _impl(skill)
 {
     _impl->ninetyPercenCast = Utils::Chrono::Clock::toDuration(skill.tmplate().castDuration() * 0.9);
@@ -41,21 +42,28 @@ SkillAction::SkillAction(Skill & skill)
 SkillAction::SkillAction(SkillAction &&) noexcept = default;
 SkillAction & SkillAction::operator=(SkillAction &&) noexcept = default;
 
-bool SkillAction::canBeInterrupted() const { return false; }
+bool SkillAction::canBeInterruptedByAnotherAction() const { return false; }
 
-void SkillAction::onStarted(Actor & a)
+void SkillAction::onStarted()
 {
+    SPDLOG_DEBUG("{}", __func__);
     // TODO: if skill is not toggle either because there's no animation and that will crash the client
-    if (_impl->skill.tmplate().type() == SkillType::Active)
-        World::broadcastAround(a, SC::SkillUsePacket(a, _impl->skill, false), true);
+    // if (_impl->skill.tmplate().type() == SkillType::Active)
+    {
+        World::broadcastAround(performer(), SC::SkillUsePacket{performer(), _impl->skill, false}, true);
+        SPDLOG_DEBUG("skill is active");
+    }
 }
 
-void SkillAction::updateImpl(ClockDuration const elapsed, Actor & a)
+void SkillAction::updateImpl(ClockDuration const elapsed)
 {
     _impl->castingElapsed += elapsed;
 
     if (_impl->castingElapsed >= _impl->ninetyPercenCast) std::call_once(_impl->targetsSentFlag, [&]
     {
+        Actor const & a = performer();
+
+        _impl->targets.emplace_back(a.target());
         World::forEachActorAround(a.target(), [&] (Actor const & actor) { _impl->targets.emplace_back(actor); });
         World::broadcastAround(a, SC::SkillSetTargetsPacket{a, _impl->skill, _impl->targets}, true);
     });
@@ -63,7 +71,8 @@ void SkillAction::updateImpl(ClockDuration const elapsed, Actor & a)
     setFinished(_impl->castingElapsed >= _impl->skill.tmplate().castDuration());
 }
 
-void SkillAction::onFinished(Actor & a)
+void SkillAction::onFinished()
 {
     // skill animation done, apply effects now
+    SPDLOG_DEBUG("{}", __func__);
 }

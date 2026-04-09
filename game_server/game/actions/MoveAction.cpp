@@ -11,32 +11,33 @@
 
 #include <l2cpp/network/Packet.hpp>
 
-MoveAction::MoveAction() noexcept
-    : Action(ActionType::Move)
+MoveAction::MoveAction(Actor & performer, Position const & origin, Position const & target, Input const input)
+    : Action(ActionType::Move, performer)
+    , _origin(origin)
+    , _target(target)
+    , _input(input)
 {}
 
-bool MoveAction::canBeInterrupted() const
+bool MoveAction::canBeInterruptedByAnotherAction() const
 {
     return true;
 }
 
-void MoveAction::onStarted(Actor & actor)
+void MoveAction::onStarted()
 {
-    auto & c = static_cast<Character &>(actor);
-
-    c.state = ActorState::Moving;
-    c.setPosition(originX, originY, originZ);
+    performer().state = ActorState::Moving;
+    performer().setPosition(_origin);
 
     l2cpp::Network::Packet p(0x01); // Make character start moving, position will be validated in MoveUpdate handler
     p
-        << c.id()
-        << targetX << targetY << targetZ
-        << originX << originY << originZ
+        << performer().id()
+        << _target
+        << _origin
     ;
-    World::broadcastAround(c, std::move(p), true);
+    World::broadcastAround(performer(), std::move(p), true);
 }
 
-void MoveAction::updateImpl(ClockDuration, Actor &)
+void MoveAction::updateImpl(ClockDuration)
 {
-    setFinished(currentDistance >= totalDistance);
+    setFinished(_currentDistance >= _totalDistance);
 }

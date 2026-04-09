@@ -60,7 +60,7 @@ void World::update(ClockDuration const elapsed)
     for (auto & c : _characters | std::views::values)
     {
         if (auto const action = c.currentAction(); action)
-            action->update(elapsed, c);
+            action->update(elapsed);
     }
 
     for (auto const & system : _systems)
