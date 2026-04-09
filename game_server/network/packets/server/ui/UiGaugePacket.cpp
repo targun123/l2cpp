@@ -10,7 +10,7 @@ UiGaugePacket::UiGaugePacket(GaugeColor const color, MSec const duration)
 {
     *this
         << color
-        << static_cast<u32>(duration.count())
-        << static_cast<u32>(duration.count())
+        << duration // cur value
+        << duration // max value
     ;
 }

@@ -21,7 +21,7 @@ SkillUsePacket::SkillUsePacket(Actor const & caster, Skill const & skill, bool c
         << target.id()
         << static_cast<u32>(skill.tmplate().id())
         << static_cast<u32>(skill.tmplate().level())
-        << static_cast<u32>(skill.tmplate().castDuration().count())
+        << skill.tmplate().castDuration()
         << 1000 // reuse delay (in ms)
         << caster.position()
         << (isCritical ? 1 : 0)

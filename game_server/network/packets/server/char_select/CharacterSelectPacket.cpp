@@ -43,7 +43,7 @@ CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encr
         << c.stats().DEX
         << c.stats().WIT
         << std::array<u32, 32>{} // ?
-        << World::inGameTime().count()
+        << World::inGameTime()
         << 0
         << c.profession()
         << std::array<u32, 12>{} // ?

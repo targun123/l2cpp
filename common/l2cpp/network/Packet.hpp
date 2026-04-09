@@ -76,6 +76,9 @@ public:
     Packet & operator<<(std::string_view const str)  {return append(str.data(), str.size() * sizeof(char))    <<  '\0';}
     Packet & operator<<(std::wstring_view const str) {return append(str.data(), str.size() * sizeof(wchar_t)) << L'\0';}
 
+    template<typename Rep, typename Period>
+    Packet & operator<<(std::chrono::duration<Rep, Period> const & d) { return *this << static_cast<u32>(d.count()); }
+
 private:
     template<typename T>
     Packet & append(T const * ptr, size_t const sz)
