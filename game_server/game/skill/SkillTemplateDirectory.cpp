@@ -74,7 +74,8 @@ namespace
                 continue;
             }
 
-            it->second.setCastDuration(MSec(static_cast<u16>(Utils::stringViewTo<double>(parts[6]) * 1000)));
+            std::chrono::duration<double> const duration{Utils::stringViewTo<double>(parts[6])};
+            it->second.setCastDuration(std::chrono::floor<std::chrono::milliseconds>(duration));
         }
         catch  (l2cpp::Exception const & e)
         {

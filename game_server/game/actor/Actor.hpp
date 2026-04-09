@@ -51,6 +51,8 @@ public:
     auto skills() const -> SkillDirectory const &;
 
     auto target() const -> OptRef<Actor>;
+
+    bool isAlive() const;
     bool isInCombatStance() const;
 
     auto currentAction() -> OptRef<Action>;
@@ -67,9 +69,14 @@ public:
     void setTeam(Team team);
     void setTarget(OptRef<Actor>);
 
-    void doNext(std::unique_ptr<Action>);
     template<typename A, typename... Args> requires std::is_base_of_v<Action, A>
-    void doNext(Args &&... args) { doNext(std::make_unique<A>(std::forward<Args>(args)...)); }
+    void doNext(Args &&... args) { doNext(std::make_unique<A>(*this, std::forward<Args>(args)...)); }
+    void cancelAction();
+
+    void takeDamage(double amount);
+
+private:
+    void doNext(std::unique_ptr<Action>);
 
 private:
     struct ActorImpl;

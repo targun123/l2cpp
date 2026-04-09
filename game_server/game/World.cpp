@@ -60,7 +60,7 @@ void World::update(ClockDuration const elapsed)
     for (auto & c : _characters | std::views::values)
     {
         if (auto const action = c.currentAction(); action)
-            action->update(elapsed, c);
+            action->update(elapsed);
     }
 
     for (auto const & system : _systems)
@@ -212,6 +212,15 @@ bool World::isInBroadcastRange(Actor const & source, Actor const & target)
     return Utils::Maths::distance(source, target) <= 1000;
 }
 
+void World::send(Actor const & to, Packet & packet)
+{
+    if (to.type() == ActorType::Character)
+    {
+        if (auto const & c = static_cast<Character const &>(to); c.player)
+            c.player->connection().send(packet);
+    }
+}
+
 void World::broadcast(Packet && packet)
 {
     packet.finalize();
@@ -247,17 +256,13 @@ void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool
 
     for (auto const id : _targetSubscribers[emitter.id()])
     {
-        // Ensure we find a player
+        // Ensure we find an active player
         if (auto const it = _characters.find(id); it != _characters.end() && it->second.player)
             it->second.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
     }
 
-    if (emitter.type() == ActorType::Character)
-    {
-        auto const & c = static_cast<Character const &>(emitter);
-        if (includeEmitter && c.player)
-            c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
-    }
+    if (includeEmitter)
+        send(emitter, Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
 }
 
 // PRIVATE -------------------------------------------------------------------------------------------------------------

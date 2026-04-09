@@ -57,12 +57,19 @@ public:
 
     static bool isInBroadcastRange(Actor const & source, Actor const & target);
 
+    /// Sends a packet to specified actor if it is a Character with an active player
+    static void send(Actor const & to, l2cpp::Network::Packet & packet);
+
+    /// Sends a packet to specified actor if it is a Character with an active player
+    static void send(Actor const & to, l2cpp::Network::Packet && packet) { send(to, packet); }
+
     /// @warning This broadcasts given packet to ALL online players, regardless of distance!
     static void broadcast(l2cpp::Network::Packet &&);
 
     /// Broadcasts given packet to all online players around emitter, including the emitter if needed
     static void broadcastAround(Actor const & emitter, l2cpp::Network::Packet &&, bool includeEmitter = false);
 
+    /// Broadcasts given packet to all online players whose current target is the emitter
     static void broadcastToSubscribers(Actor const & emitter, l2cpp::Network::Packet &&, bool includeEmitter = false);
 
 private:

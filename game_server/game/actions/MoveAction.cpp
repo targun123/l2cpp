@@ -6,37 +6,37 @@
 // Project includes
 #include "../../Player.hpp"
 #include "../../network/Connection.hpp"
+#include "../../network/packets/server/movement/ActorMovePacket.hpp"
+#include "../../network/packets/server/movement/ActorMoveStopPacket.hpp"
 #include "../World.hpp"
-#include "../actor/Character.hpp"
 
-#include <l2cpp/network/Packet.hpp>
-
-MoveAction::MoveAction() noexcept
-    : Action(ActionType::Move)
+MoveAction::MoveAction(Actor & performer, Position const & origin, Position const & target, Input const input)
+    : Action(ActionType::Move, performer)
+    , _origin(origin)
+    , _target(target)
+    , _input(input)
 {}
 
-bool MoveAction::canBeInterrupted() const
+bool MoveAction::canBeInterruptedByAnotherAction() const
 {
     return true;
 }
 
-void MoveAction::onStarted(Actor & actor)
+void MoveAction::onStarted()
 {
-    auto & c = static_cast<Character &>(actor);
+    performer().state = ActorState::Moving;
+    performer().setPosition(_origin);
 
-    c.state = ActorState::Moving;
-    c.setPosition(originX, originY, originZ);
-
-    l2cpp::Network::Packet p(0x01); // Make character start moving, position will be validated in MoveUpdate handler
-    p
-        << c.id()
-        << targetX << targetY << targetZ
-        << originX << originY << originZ
-    ;
-    World::broadcastAround(c, std::move(p), true);
+    // Make character start moving, position will be validated in MoveUpdate handler
+    World::broadcastAround(performer(), Network::Packet::Server::ActorMovePacket{performer(), _origin, _target}, true);
 }
 
-void MoveAction::updateImpl(ClockDuration, Actor &)
+void MoveAction::updateImpl(ClockDuration)
 {
-    setFinished(currentDistance >= totalDistance);
+    setFinished(_currentDistance >= _totalDistance);
+}
+
+void MoveAction::onCancelled()
+{
+    World::broadcastAround(performer(), Network::Packet::Server::ActorMoveStopPacket{performer()}, true);
 }

@@ -6,8 +6,6 @@
 // Project includes
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
-#include "../../network/packets/server/status/ActorDiePacket.hpp"
-#include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../../utils/Chrono.hpp"
 #include "../World.hpp"
 #include "../actor/Character.hpp"
@@ -19,24 +17,24 @@
 
 namespace SM = Network::Packet::Server;
 
-AttackAction::AttackAction(Actor & target, u32 const pAtkSpeed) noexcept
-    : Action(ActionType::Attack)
+AttackAction::AttackAction(Actor & performer, Actor & target, u32 const pAtkSpeed) noexcept
+    : Action(ActionType::Attack, performer)
     , _target(target)
     , _hitDuration(Utils::Chrono::Clock::toDuration(1s / (pAtkSpeed / 500.)))
 {}
 
-bool AttackAction::canBeInterrupted() const { return false; }
+bool AttackAction::canBeInterruptedByAnotherAction() const { return false; }
 
-void AttackAction::onStarted(Actor & actor)
+void AttackAction::onStarted()
 {
-    actor.state = ActorState::Attacking;
+    performer().state = ActorState::Attacking;
 
     u8 hitCount = 1;
 
     std::optional<ItemGrade> soulShotGrade;
-    if (actor.type() == ActorType::Character)
+    if (performer().type() == ActorType::Character)
     {
-        auto & c = static_cast<Character &>(actor);
+        auto & c = static_cast<Character &>(performer());
 
         if (auto const weapon = c.gear().weapon())
         {
@@ -51,50 +49,33 @@ void AttackAction::onStarted(Actor & actor)
             ++hitCount; // bare fists have two hits when not carrying a shield
     }
 
-    SM::AttackPacket p(actor, _target);
+    SM::AttackPacket p(performer(), _target);
     for (decltype(hitCount) i = 0; i < hitCount; ++i) // split dual hits damage
         p.addHit({_target, 50u / hitCount, false, soulShotGrade});
 
-    World::broadcastAround(actor, std::move(p), true);
+    World::broadcastAround(performer(), std::move(p), true);
 }
 
-void AttackAction::updateImpl(ClockDuration const, Actor &)
+void AttackAction::updateImpl(ClockDuration const)
 {
     setFinished(lastUpdateTime() >= startTime() + _hitDuration);
 }
 
-void AttackAction::onFinished(Actor & actor)
+void AttackAction::onFinished()
 {
+    auto & actor = performer();
+
     // Enable attack stance on target once it gets hit
     World::broadcastAround(_target, SM::AttackStanceTogglePacket(true, _target), true);
 
-    actor.getOrAddComponent<AttackStanceTimer>().restart();
+    actor  .getOrAddComponent<AttackStanceTimer>().restart();
     _target.getOrAddComponent<AttackStanceTimer>().restart();
 
-    bool targetIsDead = false;
-
-    auto & stats = *_target.component<ComputedStats>();
-    if ((stats.curHp -= 100) <= 0)
-    {
-        stats.curHp = 0;
-        targetIsDead = true;
-    }
-
-    Network::Packet::Server::StatsUpdatePacket p(_target);
-    p.addStat(Stat::CurHp, static_cast<u32>(stats.curHp));
-    World::broadcastToSubscribers(_target, std::move(p));
-
-    if (targetIsDead)
-    {
-        World::broadcastAround(_target, Network::Packet::Server::ActorDiePacket(_target), true);
-
-        if (_target.type() != ActorType::Character || !static_cast<Character &>(_target).player)
-            World::scheduleForDeletion(_target, 5s); // Corpse will disappear soon
-    }
+    _target.takeDamage(250);
 
     // TODO: consume the soulshot charge here (not before because could have been canceled with stun/para/…)
 
     // Physical attacking never stops unless another action is requested (e.g. actor moves) or target dies
-    if (!actor.nextAction() && !targetIsDead)
+    if (!actor.nextAction() && _target.isAlive())
         actor.doNext<AttackAction>(_target, actor.stats().pAtkSpeed);
 }

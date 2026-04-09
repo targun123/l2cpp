@@ -9,15 +9,15 @@
 class AttackAction : public Action
 {
 public:
-    AttackAction(Actor & target, u32 pAtkSpeed) noexcept;
+    AttackAction(Actor & performer, Actor & target, u32 pAtkSpeed) noexcept;
 
 public:
-    bool canBeInterrupted() const override;
+    bool canBeInterruptedByAnotherAction() const override;
 
 private:
-    void onStarted(Actor &) override;
-    void updateImpl(ClockDuration, Actor &) override;
-    void onFinished(Actor &) override;
+    void onStarted() override;
+    void updateImpl(ClockDuration) override;
+    void onFinished() override;
 
 private:
     Actor &        _target;

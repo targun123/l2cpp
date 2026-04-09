@@ -15,5 +15,5 @@ namespace Config
 #endif
 
     // ReSharper disable once CppRedundantBooleanExpressionArgument
-    constexpr inline bool hexdumpPackets = isDebugMode && enabled;
+    constexpr inline bool hexdumpPackets = isDebugMode && disabled;
 }

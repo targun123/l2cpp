@@ -3,8 +3,8 @@
 
 // Project includes
 #include "_Common.hpp"
+#include "../game/actions/SkillAction.hpp"
 #include "../game/actor/Character.hpp"
-#include "../game/components/Position.hpp"
 #include "../game/components/SkillDirectory.hpp"
 
 DEFINE_PACKET_HANDLER(SkillUse)
@@ -19,17 +19,7 @@ DEFINE_PACKET_HANDLER(SkillUse)
     auto const skill = c.skills().skill(static_cast<SkillId>(skillId));
     L2CPP_B_ASSERT(skill, "Character does not possess skill id '{}'", skillId);
 
-    Packet p(0x48);
-    p
-        << c.id()  // caster
-        << (c.target() ? c.target()->id() : c.id())
-        << static_cast<u32>(skill->tmplate().id())
-        << static_cast<u32>(skill->tmplate().level())
-        << static_cast<u32>(skill->tmplate().castDuration().count())
-        << 1000 // reuse delay (in ms)
-        << c.position()
-        << 0 // critical
-        << c.position()
-    ;
-    player.connection().send(p);
+    // TODO: check that the skill can actually be casted here (enough MP, relevant target if required, etc.)
+
+    c.doNext<SkillAction>(skill);
 }

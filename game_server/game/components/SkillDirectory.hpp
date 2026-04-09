@@ -24,7 +24,7 @@ public:
     auto skill(SkillId id) const -> OptRef<Skill const>;
 
 public:
-    auto learn(SkillId id, SkillLevel level) -> Skill &;
+    auto learn(SkillId id, SkillLevel level) -> OptRef<Skill>;
 
 public:
     auto begin() -> std::unordered_map<SkillId, Skill>::iterator;

@@ -5,20 +5,26 @@
 
 // Project includes
 #include "Action.hpp"
+#include "../components/Position.hpp"
 
-struct MoveAction : public Action
+class MoveAction final : public Action
 {
-    MoveAction() noexcept;
+public:
+    enum class Input { Keyboard, Mouse };
 
-    bool canBeInterrupted() const override;
+public:
+    MoveAction(Actor & performer, Position const & origin, Position const & target, Input input);
 
-    void onStarted(Actor &) override;
-    void updateImpl(ClockDuration, Actor &) override;
+public:
+    bool canBeInterruptedByAnotherAction() const override;
 
-    s32 originX = 0, originY = 0, originZ = 0;
-    s32 targetX = 0, targetY = 0, targetZ = 0;
+private:
+    void onStarted() override;
+    void updateImpl(ClockDuration) override;
+    void onCancelled() override;
 
-    float currentDistance = 0, totalDistance = 0;
-
-    enum class Input { Keyboard, Mouse } input = Input::Mouse;
+private:
+    Position _origin, _target;
+    Input    _input;
+    float    _currentDistance = 0, _totalDistance = 0;
 };

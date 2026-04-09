@@ -9,6 +9,9 @@
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/details/Pimpl.hpp>
 
+// Third-party includes
+#include <spdlog/spdlog.h>
+
 // C++ includes
 #include <unordered_map>
 
@@ -33,12 +36,8 @@ auto SkillDirectory::size() const -> size_t
 
 auto SkillDirectory::skill(SkillId const id) -> OptRef<Skill>
 {
-    OptRef<Skill> skill;
-
-    if (auto const it = _impl->skills.find(id); it != _impl->skills.end())
-        skill = it->second;
-
-    return skill;
+    auto const it = _impl->skills.find(id);
+    return it != _impl->skills.end() ? OptRef(it->second) : std::nullopt;
 }
 
 auto SkillDirectory::skill(SkillId const id) const -> OptRef<Skill const>
@@ -46,17 +45,18 @@ auto SkillDirectory::skill(SkillId const id) const -> OptRef<Skill const>
     return *const_cast<SkillDirectory *>(this)->skill(id);
 }
 
-auto SkillDirectory::learn(SkillId const id, SkillLevel const level) -> Skill &
+auto SkillDirectory::learn(SkillId const id, SkillLevel const level) -> OptRef<Skill>
 {
-    if (auto const s = skill(id); s)
+    OptRef<Skill> s;
+
+    if (s = skill(id); s)
         s->setLevel(level);
+    else if (auto const tmpl = SkillTemplateDirectory::skill(id, level))
+        s = _impl->skills.try_emplace(id, *tmpl).first->second;
     else
-    {
-        auto const tmpl = SkillTemplateDirectory::skill(id, level);
-        L2CPP_B_ASSERT(tmpl, "Failed to learn skill '{}' at level '{}': not loaded", id, level);
-        _impl->skills.try_emplace(id, *tmpl);
-    }
-    return _impl->skills.at(id);
+        SPDLOG_WARN("Failed to learn skill '{}' at level '{}': not found", id, level);
+
+    return s;
 }
 
 auto SkillDirectory::begin()        -> std::unordered_map<SkillId, Skill>::iterator       { return _impl->skills.begin();  }
