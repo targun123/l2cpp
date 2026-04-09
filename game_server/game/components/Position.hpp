@@ -11,7 +11,7 @@
 
 struct Position : public Component
 {
-    DECLARE_PACKET_SERIALIZATION_OPERATOR(Position);
+    DECLARE_PACKET_SERIALIZATION_OPERATORS(Position);
 
     s32 x, y, z;
 
