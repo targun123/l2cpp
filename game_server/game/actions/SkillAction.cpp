@@ -74,6 +74,8 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
 void SkillAction::onFinished()
 {
     // skill animation done, apply effects now
+    if (auto const target = performer().target(); target && *target != performer())
+        target->takeDamage(250);
 }
 
 void SkillAction::onCancelled()

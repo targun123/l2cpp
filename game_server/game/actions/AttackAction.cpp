@@ -6,8 +6,6 @@
 // Project includes
 #include "../../network/packets/server/combat/AttackPacket.hpp"
 #include "../../network/packets/server/combat/AttackStanceTogglePacket.hpp"
-#include "../../network/packets/server/status/ActorDiePacket.hpp"
-#include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../../utils/Chrono.hpp"
 #include "../World.hpp"
 #include "../actor/Character.hpp"
@@ -73,29 +71,11 @@ void AttackAction::onFinished()
     actor  .getOrAddComponent<AttackStanceTimer>().restart();
     _target.getOrAddComponent<AttackStanceTimer>().restart();
 
-    auto & stats = *_target.component<ComputedStats>();
-    bool targetIsDead = stats.curHp > 0;
-    if ((stats.curHp -= 500) <= 0)
-    {
-        stats.curHp = 0;
-        targetIsDead = true;
-    }
-
-    Network::Packet::Server::StatsUpdatePacket p(_target);
-    p.addStat(Stat::CurHp, static_cast<u32>(stats.curHp));
-    World::broadcastToSubscribers(_target, std::move(p));
-
-    if (targetIsDead)
-    {
-        World::broadcastAround(_target, Network::Packet::Server::ActorDiePacket(_target), true);
-
-        if (_target.type() != ActorType::Character || !static_cast<Character &>(_target).player)
-            World::scheduleForDeletion(_target, 5s); // Corpse will disappear soon
-    }
+    _target.takeDamage(250);
 
     // TODO: consume the soulshot charge here (not before because could have been canceled with stun/para/…)
 
     // Physical attacking never stops unless another action is requested (e.g. actor moves) or target dies
-    if (!actor.nextAction() && !targetIsDead)
+    if (!actor.nextAction() && _target.isAlive())
         actor.doNext<AttackAction>(_target, actor.stats().pAtkSpeed);
 }

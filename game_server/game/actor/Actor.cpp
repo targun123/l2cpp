@@ -4,6 +4,9 @@
 #include "Actor.hpp"
 
 // Project includes
+#include "../../network/packets/server/status/ActorDiePacket.hpp"
+#include "../../network/packets/server/status/StatsUpdatePacket.hpp"
+#include "../World.hpp"
 #include "../components/ActorIdentity.hpp"
 #include "../components/Gear.hpp"
 #include "../components/Position.hpp"
@@ -92,6 +95,7 @@ auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDi
 
 auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
+bool Actor::isAlive()          const { return stats().curHp > 0;       }
 bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
 auto Actor::currentAction() -> OptRef<Action>
@@ -129,6 +133,33 @@ void Actor::cancelAction()
         action->cancel();
 
     _impl->nextAction.reset();
+}
+
+void Actor::takeDamage(double const amount)
+{
+    if (amount <= 0)
+        return;
+
+    bool dying = false;
+
+    auto & stats = *component<ComputedStats>();
+    if ((stats.curHp -= amount) <= 0)
+    {
+        stats.curHp = 0;
+        dying = true;
+    }
+
+    Network::Packet::Server::StatsUpdatePacket p(*this);
+    p.addStat(Stat::CurHp, static_cast<u32>(stats.curHp));
+    World::broadcastToSubscribers(*this, std::move(p));
+
+    if (dying)
+    {
+        World::broadcastAround(*this, Network::Packet::Server::ActorDiePacket(*this), true);
+
+        if (this->type() != ActorType::Character || !static_cast<Character &>(*this).player)
+            World::scheduleForDeletion(*this, 5s); // Corpse will disappear soon
+    }
 }
 
 void Actor::doNext(std::unique_ptr<Action> action)
