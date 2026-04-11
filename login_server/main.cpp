@@ -54,6 +54,7 @@ namespace
 
 struct Connection
 {
+    u32             sessionId;
     tcp::socket     socket;
     l2cpp::Blowfish blowfish;
 
@@ -65,18 +66,49 @@ struct Connection
     std::string userName;
     std::string password;
 
+    std::function<void()>                          onSocketClosed;
+    std::function<void(std::vector<byte> const &)> onPacketRead;
+
     explicit Connection(tcp::socket socket)
         : socket(std::move(socket))
         , blowfish(gBlowfishToken)
         , bigNum(nullptr, &BN_free)
         , rsaKey(RSA_new(), &RSA_free)
     {
+        static decltype(sessionId) nextSessionId = 0;
+        sessionId = nextSessionId++;
+
         BIGNUM * n = nullptr;
         BN_dec2bn(&n, "65537");
         bigNum.reset(n);
 
         RSA_generate_key_ex(rsaKey.get(), 1024, bigNum.get(), nullptr);
         readBuffer.resize(sizeof(u16) + sizeof(u8) + RSA_size(rsaKey.get())); // size + opCode + rsa
+    }
+
+    bool operator==(Connection const & other) const { return sessionId == other.sessionId; }
+
+    void close()
+    {
+        if (socket.is_open())
+        {
+            boost::system::error_code ec;
+            if (socket.shutdown(socket.shutdown_both, ec))
+                SPDLOG_ERROR("shutdown error '{}' ({}): {}", ec.category().name(), ec.value(), ec.message());
+
+            if (socket.close(ec))
+                SPDLOG_ERROR("close error '{}' ({}): {}", ec.category().name(), ec.value(), ec.message());
+
+            if (onSocketClosed)
+                onSocketClosed();
+        }
+    }
+
+    void asyncReadNextPacket()
+    {
+        L2CPP_B_ASSERT(socket.is_open(), "Cannot read another packet: socket not open");
+        boost::asio::async_read(socket, boost::asio::buffer(readBuffer, sizeof(PacketHeader)),
+                                [this] (auto const & ec, auto) { onSizeRead(ec); });
     }
 
     void send(Packet & p, bool const encryptPacket = true)
@@ -91,15 +123,57 @@ struct Connection
         if (encryptPacket)
             blowfish.encrypt(p.body());
 
-        socket.send(boost::asio::buffer(p.buffer()));
-        SPDLOG_INFO("sent: 0x{:02x} ({} bytes)", p.opCode(), p.size());
+        boost::asio::write(socket, boost::asio::buffer(p.buffer()));
+        SPDLOG_INFO("'{}' ← 0x{:02x} ({} bytes)", sessionId, p.opCode(), p.size());
+    }
+
+private:
+    void onSizeRead(boost::system::error_code const & ec)
+    {
+        if (!handleError(ec))
+            return close();
+
+        readBuffer.resize(*reinterpret_cast<PacketHeader const *>(readBuffer.data()));
+
+        auto const payload = std::span(readBuffer).subspan(sizeof(PacketHeader));
+        boost::asio::async_read(socket, boost::asio::buffer(payload), [this] (auto const & e, auto) { onBodyRead(e); });
+    }
+
+    void onBodyRead(boost::system::error_code const & ec)
+    {
+        if (!handleError(ec))
+            return close();
+
+        if (onPacketRead)
+            onPacketRead(readBuffer);
+    }
+
+    /// @returns @c true if the async operation can be executed again, else @c false
+    bool handleError(boost::system::error_code const & ec) const
+    {
+        switch (auto const code = ec.value())
+        {
+            case boost::system::errc::success:
+                return true;
+
+            case boost::asio::error::eof:
+                SPDLOG_INFO("Client {} disconnected by themselves", sessionId);
+                break;
+
+            case boost::asio::error::operation_aborted:
+                SPDLOG_INFO("Client {} disconnected by server", sessionId);
+                break;
+
+            default:
+                SPDLOG_ERROR("Something went wrong during packet body reading (code {}): {}", code, ec.message());
+                break;
+        }
+        return false;
     }
 };
 
 static void sendInitPacket(Connection & conn)
 {
-    static u32 sessionId = 0;
-
     constexpr u32 protocol = 0xc621;
     std::array<byte, 128> modulus;
 
@@ -126,8 +200,10 @@ static void sendInitPacket(Connection & conn)
     }
 
     Packet p(SentPacket::Initialization);
-    p << sessionId++ << protocol << modulus;
+    p << conn.sessionId << protocol << modulus;
     conn.send(p, false);
+
+    conn.asyncReadNextPacket();
 }
 
 static void handleGameGuardPacket(Connection & conn)
@@ -154,8 +230,6 @@ static void handleAuthPacket(Connection & conn)
 
     conn.userName = reinterpret_cast<char const *>(content + 0x62);
     conn.password = reinterpret_cast<char const *>(content + 0x70);
-
-    SPDLOG_TRACE("username: '{}' | password: '{}'", conn.userName, conn.password);
 
     u32 loginOk1, loginOk2;
     RAND_bytes(reinterpret_cast<byte *>(&loginOk1), sizeof(loginOk1));
@@ -185,8 +259,7 @@ static void handleServerListPacket(Connection & conn)
     constexpr u8 serverCount = 2;
 
     Packet p(SentPacket::GameServerList);
-    p << serverCount
-      << static_cast<u8>(0); // unused or reserved
+    p << serverCount << 0_u8; // ?
 
     for (auto const srv : {&onlineServer, &offlineServer})
     {
@@ -218,82 +291,45 @@ static void handleServerSelectionPacket(Connection & conn)
     conn.send(p);
 }
 
-static PacketHandler readPacket(Connection & conn)
+static void handlePacket(Connection & conn)
 {
-    L2CPP_B_ASSERT(conn.socket.is_open(), "Cannot read packet: socket is not opened");
+    auto const payload = std::span(conn.readBuffer).subspan(sizeof(PacketHeader));
+    conn.blowfish.decrypt(payload);
+    L2CPP_B_ASSERT(verifyChecksum(payload), "Checksum verification failed");
 
-    // Reset buffer
-    std::ranges::fill(conn.readBuffer, 0);
+    auto const opCode = payload[0];
+    SPDLOG_INFO("'{}' → 0x{:02x} ({} bytes)", conn.sessionId, opCode, conn.readBuffer.size());
 
-    // Read packet size
-    boost::system::error_code ec;
-    boost::asio::read(conn.socket, boost::asio::buffer(conn.readBuffer.data(), sizeof(u16)), ec);
-    if (ec.value() == boost::asio::error::eof)
+    static std::unordered_map<RecvPacket, void(*)(Connection &)> const handlers
     {
-        SPDLOG_INFO("Client disconnected");
-        return nullptr;
-    }
-    L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
+        { RecvPacket::Authentication,      &handleAuthPacket            },
+        { RecvPacket::GameServerSelection, &handleServerSelectionPacket },
+        { RecvPacket::GameServerList,      &handleServerListPacket      },
+        { RecvPacket::GameGuard,           &handleGameGuardPacket       },
+    };
 
-    auto const size = *reinterpret_cast<u16 *>(conn.readBuffer.data());
-    SPDLOG_TRACE("Incoming packet of size '{}'", size);
-
-    if (conn.readBuffer.size() < size)
+    if (auto const it = handlers.find(static_cast<RecvPacket>(opCode)); it != handlers.end()) try
     {
-        auto const oldSize = conn.readBuffer.size();
-        conn.readBuffer.resize(size);
-        SPDLOG_TRACE("readBuffer resized from '{}' to '{}'", oldSize, conn.readBuffer.size());
+        (*it->second)(conn);
     }
-
-    auto request  = conn.readBuffer.data() + sizeof(size);
-    auto bodySize = size - sizeof(size);
-
-    SPDLOG_TRACE("Attempt to read next {} bytes", bodySize);
-    boost::asio::read(conn.socket, boost::asio::buffer(request, bodySize), ec);
-    L2CPP_BC_ASSERT(!ec, ec.value(), "read error: {}", ec.message());
-
-    conn.blowfish.decrypt({request, bodySize});
-    L2CPP_B_ASSERT(verifyChecksum({request, bodySize}), "Checksum verification failed");
-
-    auto const opCode = request[0];
-    SPDLOG_INFO("recv: 0x{:02X} ({} bytes)", opCode, size);
-
-    void (*handle)(Connection & conn) = {};
-    switch (opCode)
+    catch (l2cpp::Exception const & e)
     {
-#define CASE(id) case static_cast<decltype(opCode)>(RecvPacket::id)
-        CASE(Authentication):
-        {
-            handle = &handleAuthPacket;
-            break;
-        }
-        CASE(GameServerSelection):
-        {
-            handle = &handleServerSelectionPacket;
-            break;
-        }
-        CASE(GameServerList):
-        {
-            handle = &handleServerListPacket;
-            break;
-        }
-        CASE(GameGuard):
-        {
-            handle = &handleGameGuardPacket;
-            break;
-        }
-        default:
-        {
-            SPDLOG_WARN("Received unknown packet type '{}'", opCode);
-            break;
-        }
-#undef CASE
+        SPDLOG_ERROR("Something wrong happened during packet handling of connection {}. Closing connection."
+                     "\nBacktrace:\n{}", conn.sessionId, l2cpp::formatExceptionStack(e));
+        return conn.close();
     }
-    return handle;
+    else
+        SPDLOG_WARN("Received unknown packet type '{}'", opCode);
+
+    conn.asyncReadNextPacket();
 }
 
 int main() try
 {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+
 #ifdef NDEBUG
     spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
 #else
@@ -301,24 +337,17 @@ int main() try
 #endif
     spdlog::set_level(spdlog::level::trace);
 
+    std::list<Connection> connections;
+
     boost::asio::io_context io;
     l2cpp::Network::SocketListener listener(io);
-    auto onSocketAccepted = [] (tcp::socket && socket)
+    auto onSocketAccepted = [&] (tcp::socket && socket)
     {
         SPDLOG_INFO("Client connected!");
-        Connection conn(std::move(socket));
+        auto & conn = connections.emplace_back(std::move(socket));
+        conn.onSocketClosed = [&] { connections.remove(conn);          };
+        conn.onPacketRead   = [&] (auto const &) { handlePacket(conn); };
         sendInitPacket(conn);
-
-        try
-        {
-            PacketHandler handle;
-            while ((handle = readPacket(conn)))
-                (*handle)(conn);
-        }
-        catch (l2cpp::Exception const & e)
-        {
-            SPDLOG_ERROR("Packet reading failed, disconnecting client:\n{}", l2cpp::formatExceptionStack(e));
-        }
     };
     if (!listener.listen("127.0.0.1", 2106, std::move(onSocketAccepted)))
         return EXIT_FAILURE;
