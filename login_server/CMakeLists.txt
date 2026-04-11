@@ -19,7 +19,8 @@ target_sources(${PROJECT_NAME}
         $<TARGET_OBJECTS:${CMAKE_PROJECT_NAME}-common>
     PRIVATE
         main.cpp
+        Constants.hpp
         Packets.hpp
-        Blowfish.cpp
-        Blowfish.hpp
+        crypto/Blowfish.cpp
+        crypto/Blowfish.hpp
 )

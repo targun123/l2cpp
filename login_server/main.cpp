@@ -2,8 +2,8 @@
 /// @date      Created on 2026-02-13
 
 // Project includes
-#include "Blowfish.hpp"
 #include "Packets.hpp"
+#include "crypto/Blowfish.hpp"
 
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
@@ -21,9 +21,6 @@ using boost::asio::ip::tcp;
 using l2cpp::Network::Packet;
 
 struct Connection;
-using PacketHandler = void (*)(Connection &);
-
-constexpr byte gBlowfishToken[] = "_;5.]94-31==-%xT!^[$"; // trailing zero is included by sizeof()
 
 namespace
 {
@@ -56,7 +53,6 @@ struct Connection
 {
     u32             sessionId;
     tcp::socket     socket;
-    l2cpp::Blowfish blowfish;
 
     std::unique_ptr<BIGNUM, decltype(&BN_free)>  bigNum;
     std::unique_ptr<RSA,    decltype(&RSA_free)> rsaKey;
@@ -71,7 +67,6 @@ struct Connection
 
     explicit Connection(tcp::socket socket)
         : socket(std::move(socket))
-        , blowfish(gBlowfishToken)
         , bigNum(nullptr, &BN_free)
         , rsaKey(RSA_new(), &RSA_free)
     {
@@ -121,10 +116,10 @@ struct Connection
         p.finalize();
 
         if (encryptPacket)
-            blowfish.encrypt(p.body());
+            Blowfish::encrypt(p.body());
 
         boost::asio::write(socket, boost::asio::buffer(p.buffer()));
-        SPDLOG_INFO("'{}' ← 0x{:02x} ({} bytes)", sessionId, p.opCode(), p.size());
+        SPDLOG_INFO("'{}' ← 0x{:02x} ({:>3} bytes)", sessionId, p.opCode(), p.size());
     }
 
 private:
@@ -294,11 +289,11 @@ static void handleServerSelectionPacket(Connection & conn)
 static void handlePacket(Connection & conn)
 {
     auto const payload = std::span(conn.readBuffer).subspan(sizeof(PacketHeader));
-    conn.blowfish.decrypt(payload);
+    Blowfish::decrypt(payload);
     L2CPP_B_ASSERT(verifyChecksum(payload), "Checksum verification failed");
 
     auto const opCode = payload[0];
-    SPDLOG_INFO("'{}' → 0x{:02x} ({} bytes)", conn.sessionId, opCode, conn.readBuffer.size());
+    SPDLOG_INFO("'{}' → 0x{:02x} ({:>3} bytes)", conn.sessionId, opCode, conn.readBuffer.size());
 
     static std::unordered_map<RecvPacket, void(*)(Connection &)> const handlers
     {
