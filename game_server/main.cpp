@@ -4,6 +4,7 @@
 // Project includes
 #include "Application.hpp"
 
+#include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/Exception.hpp>
 
 // Third-party
@@ -15,15 +16,15 @@ int main(int const argc, char const * const argv[]) try
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-#ifdef NDEBUG
-    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
-#else
-    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#] [%!()]");
+    if constexpr (Config::isDebugMode)
+        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#] [%!()]");
+    else
+        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
+
     spdlog::set_level(spdlog::level::trace);
-#endif
 
     Application app({argv, argv + argc});
-    return app.load() && app.run();
+    return app.load() && app.run() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 catch (l2cpp::Exception const & e)
 {

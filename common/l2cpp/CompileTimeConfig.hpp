@@ -1,6 +1,8 @@
 /// @author    Chnossos
 /// @date      Created on 2026-03-26
 
+// ReSharper disable file CppRedundantBooleanExpressionArgument
+
 #pragma once
 
 namespace Config
@@ -14,6 +16,5 @@ namespace Config
     constexpr inline bool isDebugMode = true;
 #endif
 
-    // ReSharper disable once CppRedundantBooleanExpressionArgument
     constexpr inline bool hexdumpPackets = isDebugMode && disabled;
 }

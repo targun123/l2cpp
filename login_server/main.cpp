@@ -9,6 +9,7 @@
 #include "network/Connection.hpp"
 #include "network/OpCodes.hpp"
 
+#include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Packet.hpp>
@@ -143,11 +144,11 @@ int main() try
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-#ifdef NDEBUG
-    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
-#else
-    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#] [%!()]");
-#endif
+    if constexpr (Config::isDebugMode)
+        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#] [%!()]");
+    else
+        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
+
     spdlog::set_level(spdlog::level::trace);
 
     std::list<Connection> connections;

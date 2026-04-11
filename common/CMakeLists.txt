@@ -18,6 +18,7 @@ target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET  HEADERS
     BASE_DIRS l2cpp
     FILES
+        l2cpp/CompileTimeConfig.hpp
         l2cpp/Exception.hpp
         l2cpp/Misc.hpp
         l2cpp/OptRef.hpp

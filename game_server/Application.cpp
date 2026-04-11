@@ -4,7 +4,6 @@
 #include "Application.hpp"
 
 // Project includes
-#include "CompileTimeConfig.hpp"
 #include "Player.hpp"
 #include "game/World.hpp"
 #include "game/skill/SkillTemplateDirectory.hpp"
@@ -14,6 +13,7 @@
 #include "network/packets/server/client/ClientForceDisconnectPacket.hpp"
 #include "utils/Chrono.hpp"
 
+#include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Misc.hpp>
 #include <l2cpp/Typedefs.hpp>

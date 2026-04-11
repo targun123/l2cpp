@@ -4,8 +4,7 @@
 #include "Connection.hpp"
 
 // Project includes
-#include "../CompileTimeConfig.hpp"
-
+#include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Misc.hpp>
 // ReSharper disable once CppUnusedIncludeDirective
