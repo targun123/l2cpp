@@ -339,8 +339,21 @@ int main() try
 
     std::list<Connection> connections;
 
-    boost::asio::io_context io;
-    l2cpp::Network::SocketListener listener(io);
+    boost::asio::io_context ioContext;
+    l2cpp::Network::SocketListener listener(ioContext);
+
+    boost::asio::signal_set signals(ioContext, SIGINT);
+    signals.async_wait([&] (auto const &, auto)
+    {
+        for (auto & conn : connections)
+        {
+            conn.onSocketClosed = nullptr;
+            conn.close();
+        }
+
+        listener.shutdown();
+    });
+
     auto onSocketAccepted = [&] (tcp::socket && socket)
     {
         SPDLOG_INFO("Client connected!");
@@ -353,8 +366,9 @@ int main() try
         return EXIT_FAILURE;
 
     SPDLOG_INFO("Listening for clients on 127.0.0.1:2106");
-    io.run();
+    ioContext.run();
 
+    SPDLOG_INFO("Goodbye!");
     return EXIT_SUCCESS;
 }
 catch (std::exception const & e)
