@@ -4,6 +4,7 @@
 // Project includes
 #include "Packets.hpp"
 #include "crypto/Blowfish.hpp"
+#include "crypto/Rsa.hpp"
 
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
@@ -170,32 +171,9 @@ private:
 static void sendInitPacket(Connection & conn)
 {
     constexpr u32 protocol = 0xc621;
-    std::array<byte, 128> modulus;
-
-    BIGNUM const * n = nullptr;
-    RSA_get0_key(conn.rsaKey.get(), &n, nullptr, nullptr);
-    BN_bn2bin(n, &modulus[0]);
-
-    // scramble modulus
-    {
-        for (size_t i = 0; i < 4; ++i)
-            std::swap(modulus[i], modulus[0x4d + i]);
-
-        // step 2 xor first 0x40 bytes with last 0x40 bytes
-        for (size_t i = 0; i < 0x40; ++i)
-            modulus[i] = static_cast<byte>(modulus[i] ^ modulus[0x40 + i]);
-
-        // step 3 xor bytes 0x0d-0x10 with bytes 0x34-0x38
-        for (size_t i = 0; i < 4; ++i)
-            modulus[0x0d + i] = static_cast<byte>(modulus[0x0d + i] ^ modulus[0x34 + i]);
-
-        // step 4 xor last 0x40 bytes with first 0x40 bytes
-        for (size_t i = 0; i < 0x40; ++i)
-            modulus[0x40 + i] = static_cast<byte>(modulus[0x40 + i] ^ modulus[i]);
-    }
 
     Packet p(SentPacket::Initialization);
-    p << conn.sessionId << protocol << modulus;
+    p << conn.sessionId << protocol << Rsa::instance().modulus();
     conn.send(p, false);
 
     conn.asyncReadNextPacket();
@@ -209,30 +187,24 @@ static void handleGameGuardPacket(Connection & conn)
 
 static void handleAuthPacket(Connection & conn)
 {
-    auto const content = conn.readBuffer.data() + sizeof(u16) + sizeof(byte);
+    auto const body = std::span(conn.readBuffer).subspan(sizeof(PacketHeader) + sizeof(PacketOpCode));
 
-    // RSA in-place decrypt the content of the packet
-    auto const decryptedSize = RSA_private_decrypt(RSA_size(conn.rsaKey.get()), content,
-                                                   content, conn.rsaKey.get(), RSA_NO_PADDING);
-    if (decryptedSize == -1)
+    try
     {
-        auto const code = ERR_get_error();
-        SPDLOG_ERROR("RSA_private_decrypt failed with code {}: {}",
-                     code, ERR_error_string(code, nullptr));
-
+        Rsa::instance().decrypt(body);
+    }
+    catch (l2cpp::Exception const & e)
+    {
+        SPDLOG_ERROR("Rsa::decrypt failed:\n{}", l2cpp::formatExceptionStack(e));
         return conn.send(Packet(SentPacket::AuthenticationFailed) << 0x01); // system error
     }
 
-    conn.userName = reinterpret_cast<char const *>(content + 0x62);
-    conn.password = reinterpret_cast<char const *>(content + 0x70);
+    conn.userName = reinterpret_cast<char const *>(body.data() + 0x62);
+    conn.password = reinterpret_cast<char const *>(body.data() + 0x70);
 
-    u32 loginOk1, loginOk2;
-    RAND_bytes(reinterpret_cast<byte *>(&loginOk1), sizeof(loginOk1));
-    RAND_bytes(reinterpret_cast<byte *>(&loginOk2), sizeof(loginOk2));
-
-    Packet p(SentPacket::AuthenticationSuccess);
-    p << loginOk1 << loginOk2;
-    conn.send(p);
+    std::array<byte, sizeof(u64)> loginKey;
+    RAND_bytes(loginKey.data(), static_cast<int>(loginKey.size()));
+    conn.send(Packet(SentPacket::AuthenticationSuccess) << loginKey);
 }
 
 static void handleServerListPacket(Connection & conn)
@@ -243,13 +215,13 @@ static void handleServerListPacket(Connection & conn)
         u8   host[4]        = {127, 0, 0, 1};
         u32  port           = 7777;
         u8   ageLimit       = 0;
-        bool isPvp          = false;
+        bool isPvp          = true;
         u16  curPlayerCount = 0;
         u16  maxPlayerCount = 1'000;
         bool isOnline       = true;
         u32  extra          = 0;
         u8   brackets       = 0;
-    } const onlineServer, offlineServer{.id = 2, .isPvp = true, .isOnline = false};
+    } const onlineServer, offlineServer{.id = 2, .isPvp = false, .isOnline = false};
 
     constexpr u8 serverCount = 2;
 

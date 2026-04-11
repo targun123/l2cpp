@@ -57,9 +57,6 @@ public:
     /// @warning Appending to a finalized packet won't work!
     Packet & operator<<(std::span<byte const> span);
 
-    template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
-    Packet & operator<<(std::span<T, N> span) { return append(span.data(), span.size() * sizeof(T)); }
-
     /// Allows to append any "basic" type as bytes to the packet.
     template<typename T> requires std::integral<T> || std::floating_point<T> || std::is_enum_v<T>
     Packet & operator<<(T t)
@@ -71,7 +68,7 @@ public:
     }
 
     /// Appends a contiguous array of integrals to the packet.
-    template<typename T, size_t N> requires std::integral<T> || std::floating_point<T>
+    template<typename T, size_t N> requires (!std::is_same_v<T, byte> && std::integral<T> || std::floating_point<T>)
     Packet & operator<<(std::array<T, N> const & a)  {return append(a.data(),   a.size()   * sizeof(T));               }
     Packet & operator<<(std::string_view const str)  {return append(str.data(), str.size() * sizeof(char))    <<  '\0';}
     Packet & operator<<(std::wstring_view const str) {return append(str.data(), str.size() * sizeof(wchar_t)) << L'\0';}
