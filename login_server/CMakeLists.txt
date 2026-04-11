@@ -23,6 +23,8 @@ target_sources(${PROJECT_NAME}
         Packets.hpp
         crypto/Blowfish.cpp
         crypto/Blowfish.hpp
+        crypto/Checksum.cpp
+        crypto/Checksum.hpp
         crypto/Rsa.cpp
         crypto/Rsa.hpp
 )

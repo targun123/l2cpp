@@ -4,6 +4,7 @@
 // Project includes
 #include "Packets.hpp"
 #include "crypto/Blowfish.hpp"
+#include "crypto/Checksum.hpp"
 #include "crypto/Rsa.hpp"
 
 #include <l2cpp/Exception.hpp>
@@ -20,35 +21,6 @@
 
 using boost::asio::ip::tcp;
 using l2cpp::Network::Packet;
-
-struct Connection;
-
-namespace
-{
-    u64 calculateChecksum(std::span<byte const> const data)
-    {
-        L2CPP_B_ASSERT(data.size() >= sizeof(u32), "Cannot calculate checksum: size < sizeof(u32)");
-
-        u32 checksum = 0;
-
-        for (size_t i = 0; i < data.size(); i += sizeof(u32))
-            checksum ^= *reinterpret_cast<u32 const *>(data.data() + i);
-
-        return checksum; // pad to 8 bytes, required by Blowfish
-    }
-
-    bool verifyChecksum(std::span<byte const> const data)
-    {
-        auto       start = reinterpret_cast<u32 const *>(data.data());
-        auto const end   = reinterpret_cast<u32 const *>(data.data() + data.size() - sizeof(u64));
-
-        u32 checksum = 0;
-        while (start < end)
-            checksum ^= *start++;
-
-        return checksum == *start;
-    }
-}
 
 struct Connection
 {
@@ -109,11 +81,13 @@ struct Connection
 
     void send(Packet & p, bool const encryptPacket = true)
     {
-        // Align to 8 bytes then append checksum
-        while (p.bodySize() % 8 != 0)
-            p << 0_u8;
+        static std::array<byte, 7> pad{};
 
-        p << calculateChecksum({p.body().data(), p.bodySize()});
+        // Align to 8 bytes then append checksum
+        if (auto const overflow = p.bodySize() % 8)
+            p << std::span(pad.data(), 8 - overflow);
+
+        p << Checksum::calculate({p.body().data(), p.bodySize()});
         p.finalize();
 
         if (encryptPacket)
@@ -262,7 +236,7 @@ static void handlePacket(Connection & conn)
 {
     auto const payload = std::span(conn.readBuffer).subspan(sizeof(PacketHeader));
     Blowfish::decrypt(payload);
-    L2CPP_B_ASSERT(verifyChecksum(payload), "Checksum verification failed");
+    L2CPP_B_ASSERT(Checksum::verify(payload), "Checksum verification failed: checksums differ");
 
     auto const opCode = payload[0];
     SPDLOG_INFO("'{}' → 0x{:02x} ({:>3} bytes)", conn.sessionId, opCode, conn.readBuffer.size());
