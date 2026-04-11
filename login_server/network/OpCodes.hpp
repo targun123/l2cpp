@@ -3,10 +3,11 @@
 
 #pragma once
 
+// Project includes
 #include <l2cpp/Typedefs.hpp>
 
 /// Packet types received from client
-enum class RecvPacket : u8
+enum class ClientOpCode : u8
 {
     Authentication      = 0x00,
     GameServerSelection = 0x02,
@@ -14,13 +15,13 @@ enum class RecvPacket : u8
     GameGuard           = 0x07,
 };
 
-inline bool operator==(RecvPacket const p, byte const type)
+inline bool operator==(ClientOpCode const p, byte const type)
 {
     return static_cast<byte>(p) == type;
 }
 
 /// Packet types sent to client
-enum class SentPacket : u8
+enum class ServerOpCode : u8
 {
     Initialization               = 0x00,
     AuthenticationFailed         = 0x01,
@@ -32,7 +33,7 @@ enum class SentPacket : u8
     GameGuard                    = 0x0b,
 };
 
-inline bool operator==(SentPacket const p, byte const type)
+inline bool operator==(ServerOpCode const p, byte const type)
 {
     return static_cast<byte>(p) == type;
 }

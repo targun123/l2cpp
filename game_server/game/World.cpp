@@ -4,7 +4,6 @@
 #include "World.hpp"
 
 // Project includes
-#include "../CompileTimeConfig.hpp"
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
@@ -14,6 +13,7 @@
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
 
+#include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/network/Packet.hpp>
 
 // C++ includes
