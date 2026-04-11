@@ -20,7 +20,9 @@ target_sources(${PROJECT_NAME}
     PRIVATE
         main.cpp
         Constants.hpp
-        Packets.hpp
+        network/Connection.cpp
+        network/Connection.hpp
+        network/OpCodes.hpp
         crypto/Blowfish.cpp
         crypto/Blowfish.hpp
         crypto/Checksum.cpp
