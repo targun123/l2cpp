@@ -8,7 +8,7 @@ Even though I never played C4 (began on Interlude), I'm targeting this one becau
 
 ## The goal
 
-Go fast (but not too fast) and break things. YAGNI. Do solo gameplay for now, broadcast later. Implement game design patterns I've studied years ago. Don't be too clever but have fun implementing and testing. DO **NOT** USE MULTIPLE THREADS.
+Go fast (but not too fast) and break things. YAGNI. Implement game design patterns I've studied years ago. Don't be too clever but have fun implementing and testing. DO **NOT** USE MULTIPLE THREADS. Leverage async code instead.
 
 ## What's available?
 
@@ -21,28 +21,31 @@ Unless explicitely specified, don't assume anything to be available. Here's what
 
 **Login Server**
 - [x] Protocol `c621` only;
-- [x] Only one user is served at any point in time for now;
 - [x] Users can log in with any credentials, no data is stored on disk (yet);
 - [x] Server list always displays 2 server (one up, one down), both lead to game server.
 
 **Game Server**
 - [x] Protocol 656 only; 
-- [x] Character creation (but not restored as no data is stored on disk yet);
-- [x] One male human fighter named "test" is automatically created (for uh… test purposes);
+- [x] Character creation (but not restored between runs as no data is stored on disk yet);
 - [x] World entering (every character spawns at Talking Island);
-- [x] Moving around (not broadcasted yet);
+- [x] Moving around;
 - [x] Inventory list (gear items can be equipped and unequipped);
 - [x] Mini-map;
 - [x] Character status;
 - [x] Skills list (can give yourself any skill with `//learn <skill_id> <skill_level>` command);
-- [x] Skill use (animation only);
+- [x] Skill use (effects will come later);
+- [x] Skill cancellation;
 - [x] Shortcuts (skills and items);
 - [x] Target select and unselect;
 - [x] Chat (no restrictions);
 - [x] Can spawn any NPC with `//spawn <npc_id>` (collision is bugged);
 - [x] game loop to handle over-time actions and updates (regen, auto-attacks, DoTs…);
 - [x] Auto-attacking (infinite);
-- [x] In-game time.
+- [x] Damage can be inflicted until death ensues;
+- [x] Status (health…) modification broadcasting;
+- [x] In-game time;
+- [x] Corpse removal after a few seconds;
+- [x] System messages.
 
 ## What's coming next
 
@@ -53,9 +56,9 @@ See the _Unrealeased_ section of [CHANGELOG.md](CHANGELOG.md)
 I develop with the following environment:
  - Windows 11
  - Visual Studio Build Tools 2026
- - CMake 4.2
- - Conan (latest as of 2026-03-08)
- - Ninja (latest as of 2026-03-08)
+ - CMake 4.2 (required for VS 2026 generator)
+ - Conan (latest as of 2026-04-12)
+ - Ninja (latest as of 2026-04-12)
 
 ```shell
 git clone https://github.com/Chnossos/l2cpp.git && cd l2cpp

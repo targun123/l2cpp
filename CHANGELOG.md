@@ -2,13 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-- Make login server handle multiple sessions concurrently;
-- HP/MP/CP regeneration tick system.
+- HP/MP/CP regeneration tick system;
+- Some basic skill effects (instant damage, buffs);
+- Loading basic NPC table;
+- Store/Load data in-between runs.
+
+## [0.16.0] - 2026-04-12
+
+### Added
+
+- Login server can handle multiple users concurrently
+- Login server can be stopped gracefully with CTRL+C
 
 ## [0.15.0] - 2026-04-09
 
