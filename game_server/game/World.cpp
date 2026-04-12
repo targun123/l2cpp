@@ -111,6 +111,9 @@ auto World::loadCharacterFromPreview(Character & c) -> Character &
 
 void World::moveCharacterBackToPreviews(Character & c)
 {
+    if (auto const target = c.target())
+        unsubscribeFromTarget(target, c);
+
     unsubscribeAllTargetListeners(c);
     broadcastAround(c, SC::GameObjectDeletePacket{c});
 
