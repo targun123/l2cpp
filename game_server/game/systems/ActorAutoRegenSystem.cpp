@@ -45,7 +45,7 @@ void ActorAutoRegenSystem::updateImpl(ClockDuration const elapsed, Actor & actor
             Network::Packet::Server::StatsUpdatePacket p(actor);
 
             for (auto const [stat, value] : updates)
-                p.addStat(stat, static_cast<u32>(value));
+                p.addStat(stat, value);
 
             World::broadcastToSubscribers(actor, std::move(p), true);
         }

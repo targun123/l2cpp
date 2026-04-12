@@ -52,6 +52,8 @@ public:
 
 public:
     StatsUpdatePacket & addStat(Stat id, s32 value);
+    template<typename T> requires std::integral<T> || std::floating_point<T>
+    StatsUpdatePacket & addStat(Stat const id, T const value) { return addStat(id, static_cast<s32>(value)); }
 
 private:
     void finalizeImpl() override;

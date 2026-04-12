@@ -41,8 +41,8 @@ DEFINE_PACKET_HANDLER(ActionRequest)
             World::subscribeToTarget(m, character);
 
             StatsUpdatePacket p(m);
-            p.addStat(Stat::MaxHp, static_cast<u32>(m->stats().maxHp));
-            p.addStat(Stat::CurHp, static_cast<u32>(m->stats().curHp));
+            p.addStat(Stat::MaxHp, m->stats().maxHp);
+            p.addStat(Stat::CurHp, m->stats().curHp);
             player.connection().send(p);
         }
     }
