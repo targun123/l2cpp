@@ -11,6 +11,7 @@
 #include "../utils/Maths.hpp"
 #include "components/DeletionTimer.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
+#include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
@@ -47,6 +48,7 @@ void World::init()
 {
     registerSystem<ActorAttackStanceTimerSystem>();
     registerSystem<ActorDeletionTimerSystem>();
+    registerSystem<ActorAutoRegenSystem>();
 
     auto & c = addCharacterPreview(L"Admin");
     c.setName(L"test" + std::to_wstring(c.id()));

@@ -7,6 +7,7 @@
 #include "../../network/packets/server/status/ActorDiePacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../World.hpp"
+#include "../components/ActorAutoRegen.hpp"
 #include "../components/ActorIdentity.hpp"
 #include "../components/Gear.hpp"
 #include "../components/Position.hpp"
@@ -34,6 +35,7 @@ Actor::Actor(ActorType const type)
 {
     _impl->type = type;
 
+    addComponent<ActorAutoRegen>();
     addComponent<ActorIdentity>();
     addComponent<Gear>();
     addComponent<Position>();
@@ -65,6 +67,10 @@ Actor::Actor(ActorType const type)
     baseStats.walkSpeed     = 80;
     baseStats.swimRunSpeed  = 50;
     baseStats.swimWalkSpeed = 50;
+
+    baseStats.hpRegen = 2.0;
+    baseStats.mpRegen = 0.8;
+    baseStats.cpRegen = 1.4;
 
     auto & stats = addComponent<ComputedStats>(baseStats);
     stats.curCp = stats.maxCp;
