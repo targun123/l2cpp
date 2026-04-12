@@ -6,12 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-- HP/MP/CP regeneration tick system;
 - Some basic skill effects (instant damage, buffs);
 - Loading basic NPC table;
 - Store/Load data in-between runs.
 
-## [0.16.0] - 2026-04-12
+## [0.17.0] - 2026-04-12
+
+### Added
+
+- HP/MP/CP regeneration tick system
+
+## [0.16.0] - 2026-04-11
 
 ### Added
 
