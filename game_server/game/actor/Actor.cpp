@@ -160,12 +160,22 @@ void Actor::takeDamage(double const amount)
     World::broadcastToSubscribers(*this, std::move(p));
 
     if (dying)
-    {
-        World::broadcastAround(*this, Network::Packet::Server::ActorDiePacket(*this), true);
+        die();
+}
 
-        if (this->type() != ActorType::Character || !static_cast<Character &>(*this).player)
-            World::scheduleForDeletion(*this, 5s); // Corpse will disappear soon
-    }
+void Actor::die()
+{
+    delComponent<ActorAutoRegen>();
+
+    World::broadcastAround(*this, Network::Packet::Server::ActorDiePacket(*this), true);
+
+    if (this->type() != ActorType::Character || !static_cast<Character &>(*this).player)
+        World::scheduleForDeletion(*this, 5s); // Corpse will disappear soon
+}
+
+void Actor::resurrect()
+{
+    addComponent<ActorAutoRegen>();
 }
 
 void Actor::doNext(std::unique_ptr<Action> action)

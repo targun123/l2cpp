@@ -74,6 +74,8 @@ public:
     void cancelAction();
 
     void takeDamage(double amount);
+    void die();
+    void resurrect();
 
 private:
     void doNext(std::unique_ptr<Action>);
