@@ -46,7 +46,7 @@ static void handleAuthPacket(Connection & conn)
     }
     catch (l2cpp::Exception const & e)
     {
-        SPDLOG_ERROR("Rsa::decrypt failed:\n{}", l2cpp::formatExceptionStack(e));
+        SPDLOG_ERROR("Rsa::decrypt() failed:\n{}", l2cpp::formatExceptionStack(e));
         return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 0x01); // system error
     }
 
