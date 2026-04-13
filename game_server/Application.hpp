@@ -18,7 +18,7 @@ public:
 
 public:
     bool load();
-    bool run();
+    int  run();
 
 private:
     struct ApplicationImpl;
