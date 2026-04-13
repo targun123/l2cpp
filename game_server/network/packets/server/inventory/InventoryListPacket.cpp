@@ -6,7 +6,7 @@
 using Network::Packet::Server::InventoryListPacket;
 
 InventoryListPacket::InventoryListPacket(bool const openInventory, ItemStorage const & inventory)
-    : Packet(0x1b)
+    : Packet(0x1b, "InventoryList")
 {
     auto const & items = inventory.items();
 

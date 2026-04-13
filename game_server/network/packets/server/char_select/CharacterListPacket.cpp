@@ -15,7 +15,7 @@
 using Network::Packet::Server::CharacterListPacket;
 
 CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<Character>> const & characters)
-    : Packet(0x13)
+    : Packet(0x13, "CharacterList")
 {
     *this << static_cast<u32>(characters.size());
 

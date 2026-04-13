@@ -9,7 +9,7 @@
 using Network::Packet::Server::StatsUpdatePacket;
 
 StatsUpdatePacket::StatsUpdatePacket(Actor const & emitter)
-    : Packet(0x0e)
+    : Packet(0x0e, "StatsUpdate")
 {
     *this
         << emitter.id()

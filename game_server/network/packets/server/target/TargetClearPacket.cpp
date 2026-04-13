@@ -10,7 +10,7 @@
 using Network::Packet::Server::TargetClearPacket;
 
 TargetClearPacket::TargetClearPacket(Character const & c)
-    : Packet(0x2a)
+    : Packet(0x2a, "TargetClear")
 {
     *this
         << c.id()

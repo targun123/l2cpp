@@ -11,7 +11,7 @@
 using Network::Packet::Server::AttackPacket;
 
 AttackPacket::AttackPacket(Actor const & attacker, Actor const & mainTarget)
-    : Packet(0x05)
+    : Packet(0x05, "Attack")
     , _attacker(attacker)
     , _mainTarget(mainTarget)
 {

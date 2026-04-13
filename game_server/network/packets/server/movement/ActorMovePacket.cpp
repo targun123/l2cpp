@@ -10,7 +10,7 @@
 using Network::Packet::Server::ActorMovePacket;
 
 ActorMovePacket::ActorMovePacket(Actor const & actor, Position const & origin, Position const & destination)
-    : Packet(0x01)
+    : Packet(0x01, "ActorMove")
 {
     *this
         << actor.id()

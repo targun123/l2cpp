@@ -9,7 +9,7 @@
 using Network::Packet::Server::AttackStanceTogglePacket;
 
 AttackStanceTogglePacket::AttackStanceTogglePacket(bool const enable, Actor const & target)
-    : Packet(enable ? 0x2b : 0x2c)
+    : Packet(enable ? 0x2b : 0x2c, enable ? "AttackStanceEnable" : "AttackStanceDisable")
 {
     *this
         << target.id()

@@ -27,7 +27,7 @@ namespace
 }
 
 ActorDiePacket::ActorDiePacket(Actor const & actor)
-    : Packet(0x06)
+    : Packet(0x06, "ActorDie")
 {
     if (actor.type() == ActorType::Character)
         ::write(*this, actor, true, true, true, true, false, true);

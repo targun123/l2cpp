@@ -13,7 +13,7 @@ namespace Network::Packet::Server
         template<bool ok>
         struct ProtocolHandshakeBase : public l2cpp::Network::Packet
         {
-            ProtocolHandshakeBase(): Packet(0x00) { *this << ok; }
+            ProtocolHandshakeBase(): Packet(0x00, ok ? "ProtocolHandshakeOk" : "ProtocolHandshakeFail") { *this << ok; }
         };
     }
 

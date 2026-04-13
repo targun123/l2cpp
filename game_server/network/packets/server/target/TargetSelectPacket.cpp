@@ -10,7 +10,7 @@
 using Network::Packet::Server::TargetSelectPacket;
 
 TargetSelectPacket::TargetSelectPacket(Character const & source, Actor const & target)
-    : Packet(0x29)
+    : Packet(0x29, "TargetSelect")
 {
     *this
         << source.id()

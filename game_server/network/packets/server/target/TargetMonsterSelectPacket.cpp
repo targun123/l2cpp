@@ -12,7 +12,7 @@
 using Network::Packet::Server::TargetMonsterSelectPacket;
 
 TargetMonsterSelectPacket::TargetMonsterSelectPacket(Character const & source, Monster const & target)
-    : Packet(0xa6)
+    : Packet(0xa6, "TargetMonsterSelect")
 {
     *this
         << target.id()

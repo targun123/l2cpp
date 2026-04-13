@@ -6,7 +6,7 @@
 using Network::Packet::Server::UiGaugePacket;
 
 UiGaugePacket::UiGaugePacket(GaugeColor const color, MSec const duration)
-    : Packet(0x6d)
+    : Packet(0x6d, "UiGauge")
 {
     *this
         << color

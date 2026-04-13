@@ -54,6 +54,7 @@ Packet::PacketImpl::PacketImpl(PacketImpl const & other)
     : buffer(other.buffer)
     , isFinalized(other.isFinalized)
     , opCode(other.opCode)
+    , name(other.name)
 {}
 
 // ---------------------------------------------------------------------------------------------------------------------

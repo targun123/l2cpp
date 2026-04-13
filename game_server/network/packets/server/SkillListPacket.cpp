@@ -9,7 +9,7 @@
 using Network::Packet::Server::SkillListPacket;
 
 SkillListPacket::SkillListPacket(SkillDirectory const & skills)
-    : Packet(0x58)
+    : Packet(0x58, "SkillList")
 {
     *this << static_cast<u32>(skills.size());
 

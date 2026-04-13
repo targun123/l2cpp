@@ -13,7 +13,7 @@
 using Network::Packet::Server::NpcStatusUpdatePacket;
 
 NpcStatusUpdatePacket::NpcStatusUpdatePacket(NonPlayableActor const & actor)
-    : Packet(0x16)
+    : Packet(0x16, "NpcStatusUpdate")
 {
     *this
         << actor.id()

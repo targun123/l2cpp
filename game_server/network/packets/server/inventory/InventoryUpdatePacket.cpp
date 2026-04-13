@@ -17,7 +17,7 @@ namespace
 }
 
 InventoryUpdatePacket::InventoryUpdatePacket()
-    : Packet(0x27)
+    : Packet(0x27, "InventoryUpdate")
 {
     *this << 0_u16;
 }
