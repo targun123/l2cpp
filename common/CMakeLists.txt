@@ -2,13 +2,12 @@ project(${CMAKE_PROJECT_NAME}-common)
 
 add_library(${PROJECT_NAME} OBJECT)
 
-find_package(Boost   REQUIRED)
-find_package(OpenSSL REQUIRED COMPONENTS Crypto)
-find_package(spdlog  REQUIRED COMPONENTS header_only)
-target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost OpenSSL::Crypto spdlog::spdlog_header_only)
+find_package(Boost  REQUIRED)
+find_package(spdlog REQUIRED COMPONENTS header_only)
+target_link_libraries(${PROJECT_NAME} PUBLIC Boost::headers spdlog::spdlog_header_only)
 
 target_sources(${PROJECT_NAME}
-    PUBLIC
+    PRIVATE
         l2cpp/Exception.cpp
         l2cpp/Misc.cpp
         l2cpp/network/Packet.cpp
