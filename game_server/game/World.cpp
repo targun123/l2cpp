@@ -230,17 +230,16 @@ void World::broadcast(Packet && packet)
 {
     packet.finalize();
 
-    for (auto const & p = packet; auto const & c : _characters | std::views::values)
+    for (auto const & c : _characters | std::views::values)
     {
         if (c.player)
-            c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
+            c.player->connection().send(Packet(packet));
     }
 }
 
 void World::broadcastAround(Actor const & emitter, Packet && packet, bool const includeEmitter)
 {
     packet.finalize();
-    auto const & p = packet;
 
     auto const charHasDriver      = [ ] (Character const & c) { return c.player.has_value();           };
     auto const charIsInRange      = [&] (Character const & c) { return isInBroadcastRange(emitter, c); };
@@ -251,23 +250,22 @@ void World::broadcastAround(Actor const & emitter, Packet && packet, bool const 
     auto view = _characters | values | filter(charHasDriver) | filter(charIsInRange) | filter(emitterIfRequested);
 
     for (auto const & c : view)
-        c.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
+        c.player->connection().send(Packet(packet));
 }
 
 void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool const includeEmitter)
 {
     packet.finalize();
-    auto const & p = packet;
 
     for (auto const id : _targetSubscribers[emitter.id()])
     {
         // Ensure we find an active player
         if (auto const it = _characters.find(id); it != _characters.end() && it->second.player)
-            it->second.player->connection().send(Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
+            it->second.player->connection().send(Packet(packet));
     }
 
     if (includeEmitter)
-        send(emitter, Packet(p.opCode()) << p.body().subspan(p.opCode() > 0xff ? 2 : 1));
+        send(emitter, Packet(packet));
 }
 
 // PRIVATE -------------------------------------------------------------------------------------------------------------

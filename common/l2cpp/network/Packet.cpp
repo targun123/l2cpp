@@ -18,15 +18,16 @@ struct Packet::PacketImpl
     PacketOpCode      opCode;
 
     explicit PacketImpl(PacketOpCode opCode_);
+    PacketImpl(PacketImpl const & other);
 
-    template<typename T> requires(std::integral<T> || std::floating_point<T>)
+    template<typename T> requires std::integral<T> || std::floating_point<T>
     PacketImpl & append(T t)
     {
         buffer.append_range(std::span{reinterpret_cast<byte const *>(&t), sizeof(T)});
         return *this;
     }
 
-    template<typename T, typename U = T> requires(std::integral<U> || std::floating_point<U>)
+    template<typename T, typename U = T> requires std::integral<U> || std::floating_point<U>
     PacketImpl & append(U u)
     {
         return append(static_cast<T>(u));
@@ -47,10 +48,20 @@ Packet::PacketImpl::PacketImpl(PacketOpCode const opCode_)
         append<u8>(opCode);
 }
 
+Packet::PacketImpl::PacketImpl(PacketImpl const & other)
+    : buffer(other.buffer)
+    , isFinalized(other.isFinalized)
+    , opCode(other.opCode)
+{}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 Packet::Packet(PacketOpCode const opCode)
     : _impl(opCode)
+{}
+
+Packet::Packet(Packet const & other)
+    : _impl(*other._impl)
 {}
 
 Packet::~Packet() = default;

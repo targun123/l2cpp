@@ -18,6 +18,9 @@ class l2cpp::Network::Packet
 public:
     explicit Packet(PacketOpCode opCode);
 
+    /// Enables shallow copy.
+    Packet(Packet const & other);
+
     /// Permits conversion from any Packet enumerations that has the correct underlying type size
     template<typename E>
     requires std::is_enum_v<E> && Utils::Traits::isAnyOf<std::underlying_type_t<E>, byte, PacketOpCode>
