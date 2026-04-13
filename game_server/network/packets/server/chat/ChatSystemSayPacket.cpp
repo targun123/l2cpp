@@ -6,21 +6,16 @@
 using Network::Packet::Server::ChatSystemSayPacket;
 
 ChatSystemSayPacket::ChatSystemSayPacket(u32 const messageId)
-    : Packet(0x64)
+    : Packet(0x64, "ChatSystemSay")
 {
     *this << messageId;
+
+    _argsCountOffset = appendSize(0);
 }
 
-ChatSystemSayPacket & ChatSystemSayPacket::appendArg(std::unique_ptr<details::SystemMessageArgument> arg)
+ChatSystemSayPacket & ChatSystemSayPacket::appendArg(details::SystemMessageArgument const && arg)
 {
-    _args.emplace_back(std::move(arg));
+    sizeAtOffset<u32>(_argsCountOffset) += 1;
+    arg.serialize(*this);
     return *this;
-}
-
-void ChatSystemSayPacket::finalizeImpl()
-{
-    *this << static_cast<u32>(_args.size());
-
-    for (auto const & arg : _args)
-        arg->serialize(*this);
 }

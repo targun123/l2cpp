@@ -40,6 +40,6 @@ private:
     void onBodyRead(boost::system::error_code const & ec);
 
     /// @returns @c true if the async operation can be executed again, else @c false
-    bool handleError(boost::system::error_code const & ec) const;
+    bool handleError(boost::system::error_code const & ec, std::string_view src) const;
 };
 

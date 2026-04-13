@@ -10,7 +10,7 @@
 using Network::Packet::Server::ActorMoveStopPacket;
 
 ActorMoveStopPacket::ActorMoveStopPacket(Actor const & actor)
-    : Packet(0x47)
+    : Packet(0x47, "ActorMoveStop")
 {
     *this
         << actor.id()

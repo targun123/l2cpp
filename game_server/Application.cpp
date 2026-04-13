@@ -26,7 +26,16 @@
 #include <spdlog/spdlog.h>
 
 // C++ includes
-#include <iostream>
+#include <print>
+
+static void hexdump(std::span<byte const> const buffer)
+{
+    if constexpr (Config::hexdumpPackets)
+    {
+        if (auto const dump = l2cpp::hexdump(buffer.data(), buffer.size()); !dump.empty())
+            std::println("{}", dump);
+    }
+}
 
 struct Application::ApplicationImpl
 {
@@ -42,8 +51,8 @@ struct Application::ApplicationImpl
         , socketListener(ioContext)
     {}
 
-    bool load();
-    bool run();
+    bool load() const;
+    int  run();
     void shutdown();
 
 private:
@@ -53,7 +62,7 @@ private:
 
 template class Pimpl<Application::ApplicationImpl>;
 
-bool Application::ApplicationImpl::load() try
+bool Application::ApplicationImpl::load() const try
 {
     SPDLOG_INFO("Loading static data…");
 
@@ -71,7 +80,7 @@ catch (l2cpp::Exception const & e)
     return false;
 }
 
-bool Application::ApplicationImpl::run()
+int Application::ApplicationImpl::run()
 {
     signalSet.async_wait([this] (auto const & ec, int s) { onSignal(ec, s); });
 
@@ -113,13 +122,12 @@ void Application::ApplicationImpl::shutdown()
     for (auto & player : players)
     {
         auto & conn = player.connection();
-        conn.send(Network::Packet::Server::ChatSystemSayPacket(0)); // You have been disconnected from the server.
+        conn.send(Network::Packet::Server::ChatSystemSayPacket(0)); // "You have been disconnected from the server."
         conn.send(Network::Packet::Server::ClientForceDisconnectPacket());
         conn.close();
     }
 
     boost::asio::post(ioContext, [] { SPDLOG_INFO("Shutting down sequence done."); });
-    boost::asio::post(ioContext, [this] { ioContext.stop(); });
 }
 
 void Application::ApplicationImpl::onSignal(boost::system::error_code const & ec, int)
@@ -139,17 +147,6 @@ void Application::ApplicationImpl::onSignal(boost::system::error_code const & ec
 
 void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket socket) try
 {
-    static std::function<void(std::span<byte const>)> hexdump;
-
-    if constexpr (Config::hexdumpPackets)
-    {
-        hexdump = [] (std::span<byte const> const buffer)
-        {
-            if (!buffer.empty())
-                std::cout << l2cpp::hexdump(buffer.data(), buffer.size()) << std::endl;
-        };
-    }
-
     auto & player = players.emplace_back(std::move(socket));
     auto & conn   = player.connection();
 
@@ -171,20 +168,20 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
         {
             auto const & [handler, handlerName] = it->second;
 
-            SPDLOG_INFO("'{}' → 0x{:02x} ({}) ({} bytes)", player.connection().id(), opCode, handlerName, size);
-            if constexpr (Config::hexdumpPackets)
-                hexdump(body);
+            SPDLOG_INFO("'{}' → 0x{:02x} ({:4} bytes) ({})", player.connection().id(), opCode, size, handlerName);
+            hexdump(body);
 
-            try { (*handler)(player); } catch (l2cpp::Exception const & e)
+            try { (*handler)(player); }
+            catch (l2cpp::Exception const & e)
             {
-                SPDLOG_ERROR("Packet {} handler failed:\n{}", handlerName, l2cpp::formatExceptionStack(e));
+                SPDLOG_ERROR("'{}' → handler '{}' failed:\n{}",
+                             player.connection().id(), handlerName, l2cpp::formatExceptionStack(e));
             }
         }
         else
         {
-            SPDLOG_WARN("'{}' → 0x{:02x} (?) ({} bytes)", player.connection().id(), opCode, size);
-            if constexpr (Config::hexdumpPackets)
-                hexdump(body);
+            SPDLOG_WARN("'{}' → 0x{:02x} ({:4} bytes) (?)", player.connection().id(), size, opCode);
+            hexdump(body);
         }
 
         if (player.connection().isAlive())
@@ -212,4 +209,4 @@ Application::Application(std::vector<std::string_view> args): _impl(std::move(ar
 Application::~Application() = default;
 
 bool Application::load() { return _impl->load(); }
-bool Application::run()  { return _impl->run();  }
+int  Application::run()  { return _impl->run();  }

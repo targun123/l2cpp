@@ -6,7 +6,7 @@
 using Network::Packet::Server::ClientGoBackToCharacterSelectionPacket;
 
 ClientGoBackToCharacterSelectionPacket::ClientGoBackToCharacterSelectionPacket(bool const ok)
-    : Packet(0x5f)
+    : Packet(0x5f, "ClientGoBackToCharacterSelection")
 {
     *this << static_cast<u32>(ok);
 }

@@ -14,7 +14,7 @@
 using namespace Network::Packet::Server;
 
 CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Character const & c)
-    : Packet(0x03)
+    : Packet(0x03, "CharacterStatusUpdateBroadcast")
 {
     using enum GearSlot;
 

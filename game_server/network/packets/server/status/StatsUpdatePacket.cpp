@@ -9,25 +9,15 @@
 using Network::Packet::Server::StatsUpdatePacket;
 
 StatsUpdatePacket::StatsUpdatePacket(Actor const & emitter)
-    : Packet(0x0e)
+    : Packet(0x0e, "StatsUpdate")
 {
-    *this
-        << emitter.id()
-    ;
+    *this << emitter.id();
+
+    _statsCountOffset = appendSize(0);
 }
 
-StatsUpdatePacket & StatsUpdatePacket::addStat(Stat const id, s32 const value)
+auto StatsUpdatePacket::addStat(Stat const id, s32 const value) -> Packet &
 {
-    _statValues[id] = value;
-    return *this;
-}
-
-void StatsUpdatePacket::finalizeImpl()
-{
-    *this
-        << static_cast<u32>(_statValues.size())
-    ;
-
-    for (auto const [id, value] : _statValues)
-        *this << id << value;
+    sizeAtOffset<u32>(_statsCountOffset) += 1;
+    return *this << id << value;
 }

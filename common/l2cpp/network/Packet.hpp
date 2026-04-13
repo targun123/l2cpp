@@ -16,7 +16,10 @@ namespace l2cpp::Network { class Packet; template<u16> struct HeaderOnlyPacket; 
 class l2cpp::Network::Packet
 {
 public:
-    explicit Packet(PacketOpCode opCode);
+    explicit Packet(PacketOpCode opCode, std::string_view name = {});
+
+    /// Enables shallow copy.
+    Packet(Packet const & other);
 
     /// Permits conversion from any Packet enumerations that has the correct underlying type size
     template<typename E>
@@ -28,8 +31,6 @@ public:
     virtual ~Packet();
 
 public:
-    bool isFinalized() const;
-
     /// @returns A read-only span of the whole buffer.
     auto buffer() const -> std::span<byte const>;
 
@@ -48,14 +49,12 @@ public:
     /// @returns Size of the body (buffer size minus the initial size).
     auto bodySize() const -> size_t;
 
-public:
-    /// Writes the last bits of data into the packet, then writes the size of the packet at the very beginning.
-    /// @warning Calling more than once won't do anything.
-    void finalize();
+    auto name() const -> std::string_view;
 
+public:
     /// Appends a span of bytes to the packet.
     /// @warning Appending to a finalized packet won't work!
-    Packet & operator<<(std::span<byte const> span);
+    Packet & operator<<(std::span<byte const>);
 
     /// Allows to append any "basic" type as bytes to the packet.
     template<typename T> requires std::integral<T> || std::floating_point<T> || std::is_enum_v<T>
@@ -76,17 +75,26 @@ public:
     template<typename Rep, typename Period>
     Packet & operator<<(std::chrono::duration<Rep, Period> const & d) { return *this << static_cast<u32>(d.count()); }
 
-private:
-    template<typename T>
-    Packet & append(T const * ptr, size_t const sz)
+protected:
+    template<typename T> requires std::integral<T>
+    auto appendSize(T t) -> size_t
     {
-        return operator<<({reinterpret_cast<byte const *>(ptr), sz});
+        auto const sz = size();
+        *this << t;
+        return sz;
     }
 
-    /// Writes the total size at the beginning.
-    void writeSize();
+    template<typename T> requires std::integral<T>
+    auto sizeAtOffset(size_t const offset) -> T & { return *static_cast<T *>(sizeAtOffset(offset)); }
 
-    virtual void finalizeImpl() {}
+    void erase(size_t size);
+
+private:
+    auto append(void const * ptr, size_t const sz) -> Packet & {
+        return operator<<({static_cast<byte const *>(ptr), sz});
+    }
+
+    auto sizeAtOffset(size_t offset) -> void *;
 
 private:
     struct PacketImpl;

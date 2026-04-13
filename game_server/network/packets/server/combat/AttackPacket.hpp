@@ -18,13 +18,10 @@ public:
     explicit AttackPacket(Actor const & attacker, Actor const & mainTarget);
 
 public:
-    void addHit(Hit hit);
-
-private:
-    void finalizeImpl() override;
+    void addHit(Hit const & hit);
 
 private:
     Actor const & _attacker;
     Actor const & _mainTarget;
-    std::vector<Hit> _hits;
+    size_t        _hitsCountOffset;
 };

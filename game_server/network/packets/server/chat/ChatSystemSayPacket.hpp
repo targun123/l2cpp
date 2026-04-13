@@ -26,7 +26,7 @@ namespace details
         explicit SystemMessageArgument(SystemMessageArgumentType const t) noexcept: type(t) {}
         virtual ~SystemMessageArgument() = default;
 
-        virtual void serialize(l2cpp::Network::Packet &) = 0;
+        virtual void serialize(l2cpp::Network::Packet &) const = 0;
     };
 
     template<SystemMessageArgumentType t, typename Value>
@@ -38,7 +38,7 @@ namespace details
             : SystemMessageArgument(t), value(std::forward<decltype(args)>(args)...)
         {}
 
-        void serialize(l2cpp::Network::Packet & p) override { p << type << value; }
+        void serialize(l2cpp::Network::Packet & p) const override { p << type << value; }
     };
 }
 
@@ -66,13 +66,12 @@ public:
 public:
     template<class T> requires std::is_base_of_v<details::SystemMessageArgument, T>
     ChatSystemSayPacket & appendArg(auto &&... args) {
-        return appendArg(std::make_unique<T>(std::forward<decltype(args)>(args)...));
+        return appendArg(T{std::forward<decltype(args)>(args)...});
     }
 
 private:
-    ChatSystemSayPacket & appendArg(std::unique_ptr<details::SystemMessageArgument> arg);
-    void finalizeImpl() override;
+    ChatSystemSayPacket & appendArg(details::SystemMessageArgument const && arg);
 
 private:
-    std::vector<std::unique_ptr<details::SystemMessageArgument>> _args;
+    size_t _argsCountOffset;
 };

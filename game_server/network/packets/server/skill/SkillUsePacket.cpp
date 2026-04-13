@@ -11,7 +11,7 @@
 using Network::Packet::Server::SkillUsePacket;
 
 SkillUsePacket::SkillUsePacket(Actor const & caster, Skill const & skill, bool const isCritical)
-    : Packet(0x48)
+    : Packet(0x48, "SkillUse")
 {
     // This is not the skill target, only the target for the skill animation during casting
     Actor const & target = caster.target() ? caster.target() : caster;

@@ -11,7 +11,7 @@ using Network::Packet::Server::SkillSetTargetsPacket;
 
 SkillSetTargetsPacket::SkillSetTargetsPacket(Actor const & caster, Skill const & skill,
                                              std::span<Ref<Actor const> const> const targets)
-    : Packet(0x76)
+    : Packet(0x76, "SkillSetTargets")
 {
     *this
         << caster.id()

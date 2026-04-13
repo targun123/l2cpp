@@ -9,7 +9,7 @@
 using Network::Packet::Server::SkillCancelPacket;
 
 SkillCancelPacket::SkillCancelPacket(Actor const & caster)
-    : Packet(0x49)
+    : Packet(0x49, "SkillCancel")
 {
     *this
         << caster.id()

@@ -61,7 +61,6 @@ void Connection::send(Packet & p, bool const encryptPacket)
         p << std::span(pad.data(), 8 - overflow);
 
     p << Checksum::calculate({p.body().data(), p.bodySize()});
-    p.finalize();
 
     if (encryptPacket)
         Blowfish::encrypt(p.body());
@@ -72,7 +71,7 @@ void Connection::send(Packet & p, bool const encryptPacket)
 
 void Connection::onSizeRead(boost::system::error_code const & ec)
 {
-    if (!handleError(ec))
+    if (!handleError(ec, "size"))
         return close();
 
     readBuffer.resize(*reinterpret_cast<PacketHeader const *>(readBuffer.data()));
@@ -83,14 +82,14 @@ void Connection::onSizeRead(boost::system::error_code const & ec)
 
 void Connection::onBodyRead(boost::system::error_code const & ec)
 {
-    if (!handleError(ec))
+    if (!handleError(ec, "body"))
         return close();
 
     if (onPacketRead)
         onPacketRead(readBuffer);
 }
 
-bool Connection::handleError(boost::system::error_code const & ec) const
+bool Connection::handleError(boost::system::error_code const & ec, std::string_view src) const
 {
     switch (auto const code = ec.value())
     {
@@ -98,7 +97,8 @@ bool Connection::handleError(boost::system::error_code const & ec) const
             return true;
 
         case boost::asio::error::eof:
-            SPDLOG_INFO("Client {} disconnected by themselves", sessionId);
+        case boost::asio::error::connection_reset:
+            SPDLOG_INFO("Client {} disconnected", sessionId);
             break;
 
         case boost::asio::error::operation_aborted:
@@ -106,7 +106,7 @@ bool Connection::handleError(boost::system::error_code const & ec) const
             break;
 
         default:
-            SPDLOG_ERROR("Something went wrong during packet body reading (code {}): {}", code, ec.message());
+            SPDLOG_ERROR("Something went wrong during packet {} reading (code {}): {}", src, code, ec.message());
             break;
     }
     return false;

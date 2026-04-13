@@ -51,13 +51,11 @@ public:
     explicit StatsUpdatePacket(Actor const & emitter);
 
 public:
-    StatsUpdatePacket & addStat(Stat id, s32 value);
+    auto addStat(Stat id, s32 value) -> Packet &;
+
     template<typename T> requires std::integral<T> || std::floating_point<T>
-    StatsUpdatePacket & addStat(Stat const id, T const value) { return addStat(id, static_cast<s32>(value)); }
+    auto addStat(Stat const id, T const value) -> Packet & { return addStat(id, static_cast<s32>(value)); }
 
 private:
-    void finalizeImpl() override;
-
-private:
-    std::unordered_map<Stat, s32> _statValues;
+    size_t _statsCountOffset;
 };

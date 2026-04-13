@@ -15,7 +15,7 @@
 using Network::Packet::Server::CharacterSelectPacket;
 
 CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encryptionKey)
-    : Packet(0x15)
+    : Packet(0x15, "CharacterSelect")
 {
     *this
         << c.name()

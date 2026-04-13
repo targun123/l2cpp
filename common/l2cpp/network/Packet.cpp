@@ -14,48 +14,68 @@ using l2cpp::Network::Packet;
 struct Packet::PacketImpl
 {
     std::vector<byte> buffer;
-    bool              isFinalized = false;
     PacketOpCode      opCode;
+    std::string_view  name;
 
-    explicit PacketImpl(PacketOpCode opCode_);
+    PacketImpl(PacketOpCode opCode_, std::string_view name_);
+    PacketImpl(PacketImpl const & other);
 
-    template<typename T> requires(std::integral<T> || std::floating_point<T>)
-    PacketImpl & append(T t)
-    {
-        buffer.append_range(std::span{reinterpret_cast<byte const *>(&t), sizeof(T)});
-        return *this;
-    }
+    void append(std::span<byte const> data);
+    void erase(size_t size);
 
-    template<typename T, typename U = T> requires(std::integral<U> || std::floating_point<U>)
-    PacketImpl & append(U u)
-    {
-        return append(static_cast<T>(u));
-    }
+private:
+    void writeSize();
 };
 
 template class Pimpl<Packet::PacketImpl>;
 
-Packet::PacketImpl::PacketImpl(PacketOpCode const opCode_)
-    : opCode(opCode_)
-{
-    buffer.reserve(256);
-    append<u16>(0); // placeholder for final packet size
+Packet::PacketImpl::PacketImpl(PacketOpCode const opCode_, std::string_view const name_)
+    : buffer(sizeof(PacketHeader))
+    , opCode(opCode_)
+    , name(name_)
+{}
 
-    if (opCode > 0xff)
-        append(opCode);
-    else
-        append<u8>(opCode);
+Packet::PacketImpl::PacketImpl(PacketImpl const & other)
+    : buffer(other.buffer)
+    , opCode(other.opCode)
+    , name(other.name)
+{}
+
+void Packet::PacketImpl::append(std::span<byte const> const data)
+{
+    buffer.append_range(data);
+    writeSize();
+}
+
+void Packet::PacketImpl::erase(size_t const size)
+{
+    buffer.erase(buffer.cend() - size);
+    writeSize();
+}
+
+void Packet::PacketImpl::writeSize()
+{
+    // Write total size on the first two bytes of the buffer
+    *reinterpret_cast<PacketHeader *>(buffer.data()) = static_cast<PacketHeader>(buffer.size());
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Packet::Packet(PacketOpCode const opCode)
-    : _impl(opCode)
+Packet::Packet(PacketOpCode const opCode, std::string_view name)
+    : _impl(opCode, name)
+{
+    if (opCode > 0xff)
+        *this << opCode;
+    else
+        *this << static_cast<byte>(opCode);
+}
+
+Packet::Packet(Packet const & other)
+    : _impl(*other._impl)
 {}
 
 Packet::~Packet() = default;
 
-bool Packet::isFinalized() const                          { return _impl->isFinalized;   }
 auto Packet::buffer()      const -> std::span<byte const> { return _impl->buffer;        }
 auto Packet::size()        const -> size_t                { return _impl->buffer.size(); }
 auto Packet::opCode()      const -> PacketOpCode          { return _impl->opCode;        }
@@ -64,26 +84,20 @@ auto Packet::body()       -> std::span<byte>       { return {_impl->buffer.data(
 auto Packet::body() const -> std::span<byte const> { return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()}; }
 auto Packet::bodySize() const -> size_t            { return  _impl->buffer.size() - sizeof(PacketHeader);              }
 
-void Packet::finalize()
-{
-    if (!_impl->isFinalized)
-    {
-        finalizeImpl();
-        writeSize();
-        _impl->isFinalized = true;
-    }
-}
+auto Packet::name() const -> std::string_view { return _impl->name; }
 
-Packet & Packet::operator<<(std::span<byte const> span)
+Packet & Packet::operator<<(std::span<byte const> const data)
 {
-    if (!_impl->isFinalized)
-        _impl->buffer.append_range(span);
-
+    _impl->append(data);
     return *this;
 }
 
-void Packet::writeSize()
+void Packet::erase(size_t const size)
 {
-    // Write total size on the first two bytes of the buffer
-    *reinterpret_cast<PacketHeader *>(_impl->buffer.data()) = static_cast<PacketHeader>(_impl->buffer.size());
+    _impl->erase(std::max(size, this->size() - sizeof(PacketHeader) - (_impl->opCode > 0xff ? 2 : 1)));
+}
+
+auto Packet::sizeAtOffset(size_t const offset) -> void *
+{
+    return _impl->buffer.data() + offset;
 }
