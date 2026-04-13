@@ -14,10 +14,10 @@ void ActorAutoRegenSystem::updateImpl(ClockDuration const elapsed, Actor & actor
     auto const autoRegen = actor.component<ActorAutoRegen>();
     if (autoRegen && (autoRegen->elapsedSinceLastUpdate += elapsed) >= 1s)
     {
-        autoRegen->elapsedSinceLastUpdate %= 1s;
-
         // A lot of time could have elapsed since last update, account for that
         auto const ticks = std::chrono::floor<std::chrono::seconds>(autoRegen->elapsedSinceLastUpdate).count();
+
+        autoRegen->elapsedSinceLastUpdate %= 1s;
 
         auto & stats = *actor.component<ComputedStats>();
 
