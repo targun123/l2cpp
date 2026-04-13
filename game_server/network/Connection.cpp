@@ -173,8 +173,6 @@ void Connection::send(l2cpp::Network::Packet & p, std::source_location const & s
     if (!isAlive())
         return;
 
-    p.finalize();
-
     [[maybe_unused]] std::string hexdump;
     if constexpr (Config::hexdumpPackets)
         hexdump = l2cpp::hexdump(p.body());
@@ -191,7 +189,7 @@ void Connection::send(l2cpp::Network::Packet & p, std::source_location const & s
     else
     {
         auto const name = p.name().empty() ? "?" : p.name();
-        SPDLOG_INFO("'{}' ← 0x{:0{}x} ({:4} bytes) ({} from {}:{})",
+        SPDLOG_INFO("'{}' ← 0x{:0{}x} ({:4} bytes) ({}) (from {}:{})",
                     _impl->id, p.opCode(), p.opCode() > 0xff ? 4 : 2, p.size(), name,
                     std::filesystem::path(src.file_name()).filename().string(), src.line());
 

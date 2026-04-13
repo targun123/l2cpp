@@ -61,7 +61,6 @@ void Connection::send(Packet & p, bool const encryptPacket)
         p << std::span(pad.data(), 8 - overflow);
 
     p << Checksum::calculate({p.body().data(), p.bodySize()});
-    p.finalize();
 
     if (encryptPacket)
         Blowfish::encrypt(p.body());

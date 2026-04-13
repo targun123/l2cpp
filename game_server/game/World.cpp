@@ -228,8 +228,6 @@ void World::send(Actor const & to, Packet & packet, std::source_location const &
 
 void World::broadcast(Packet && packet, std::source_location const & src)
 {
-    packet.finalize();
-
     for (auto const & c : _characters | std::views::values)
     {
         if (c.player)
@@ -240,8 +238,6 @@ void World::broadcast(Packet && packet, std::source_location const & src)
 void World::broadcastAround(Actor const & emitter, Packet && packet, bool const includeEmitter,
                             std::source_location const & src)
 {
-    packet.finalize();
-
     auto const charHasDriver      = [ ] (Character const & c) { return c.player.has_value();           };
     auto const charIsInRange      = [&] (Character const & c) { return isInBroadcastRange(emitter, c); };
     auto const emitterIfRequested = [&] (Character const & c) { return c != emitter || includeEmitter; };
@@ -257,8 +253,6 @@ void World::broadcastAround(Actor const & emitter, Packet && packet, bool const 
 void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool const includeEmitter,
                                    std::source_location const & src)
 {
-    packet.finalize();
-
     for (auto const id : _targetSubscribers[emitter.id()])
     {
         // Ensure we find an active player
