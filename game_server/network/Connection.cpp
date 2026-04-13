@@ -18,7 +18,8 @@
 
 // C++ includes
 #include <algorithm>
-#include <iostream>
+#include <filesystem>
+#include <print>
 
 using Network::Connection;
 
@@ -61,7 +62,7 @@ void Connection::ConnectionImpl::encrypt(std::span<byte> data, EncryptionKey & k
     for (size_t i = 0; i < data.size(); tmp = data[i++])
         data[i] ^= key[i & 7] ^ tmp;
 
-    *reinterpret_cast<u32 *>(key.data()) += data.size();
+    *reinterpret_cast<u32 *>(key.data()) += static_cast<u32>(data.size());
 }
 
 void Connection::ConnectionImpl::decrypt(std::span<byte> data, EncryptionKey & key) const
@@ -74,7 +75,7 @@ void Connection::ConnectionImpl::decrypt(std::span<byte> data, EncryptionKey & k
         tmp2     = tmp1;
     }
 
-    *reinterpret_cast<u32 *>(key.data()) += data.size();
+    *reinterpret_cast<u32 *>(key.data()) += static_cast<u32>(data.size());
 }
 
 void Connection::ConnectionImpl::close()
@@ -167,23 +168,16 @@ void Connection::asyncReadNextPacket()
                             [this] (auto const & ec, auto) { _impl->onSizeRead(ec); });
 }
 
-void Connection::send(l2cpp::Network::Packet & p)
+void Connection::send(l2cpp::Network::Packet & p, std::source_location const & src)
 {
     if (!isAlive())
         return;
 
-    bool logged = false;
-    if (!p.isFinalized())
-    {
-        p.finalize();
+    p.finalize();
 
-        if constexpr (Config::hexdumpPackets)
-        {
-            SPDLOG_INFO("'{}' ← 0x{:0{}x} ({} bytes)", _impl->id, p.opCode(), p.opCode() > 0xff ? 4 : 2, p.size());
-            std::cout << l2cpp::hexdump(p.body().data(), p.bodySize()) << std::endl;
-            logged = true;
-        }
-    }
+    [[maybe_unused]] std::string hexdump;
+    if constexpr (Config::hexdumpPackets)
+        hexdump = l2cpp::hexdump(p.body());
 
     if (_impl->encryptionKey) [[likely]]
         _impl->encrypt(p.body(), *_impl->encryptionKey);
@@ -194,8 +188,16 @@ void Connection::send(l2cpp::Network::Packet & p)
     boost::asio::write(_impl->socket, boost::asio::buffer(p.buffer()), ec);
     if (ec)
         SPDLOG_ERROR("send error {} (category: {}): {}", ec.value(), ec.category().name(), ec.message());
-    else if (!logged)
-        SPDLOG_INFO("'{}' ← 0x{:0{}x} ({} bytes)", _impl->id, p.opCode(), p.opCode() > 0xff ? 4 : 2, p.size());
+    else
+    {
+        auto const name = p.name().empty() ? "?" : p.name();
+        SPDLOG_INFO("'{}' ← 0x{:0{}x} ({:4} bytes) ({}) (from {}:{})",
+                    _impl->id, p.opCode(), p.opCode() > 0xff ? 4 : 2, p.size(), name,
+                    std::filesystem::path(src.file_name()).filename().string(), src.line());
+
+        if constexpr (Config::hexdumpPackets)
+            std::println("{}", hexdump);
+    }
 }
 
 void Connection::close()                                             { _impl->close();                      }

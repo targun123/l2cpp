@@ -16,7 +16,7 @@ namespace l2cpp::Network { class Packet; template<u16> struct HeaderOnlyPacket; 
 class l2cpp::Network::Packet
 {
 public:
-    explicit Packet(PacketOpCode opCode);
+    explicit Packet(PacketOpCode opCode, std::string_view name = {});
 
     /// Enables shallow copy.
     Packet(Packet const & other);
@@ -50,6 +50,8 @@ public:
 
     /// @returns Size of the body (buffer size minus the initial size).
     auto bodySize() const -> size_t;
+
+    auto name() const -> std::string_view;
 
 public:
     /// Writes the last bits of data into the packet, then writes the size of the packet at the very beginning.

@@ -16,8 +16,9 @@ struct Packet::PacketImpl
     std::vector<byte> buffer;
     bool              isFinalized = false;
     PacketOpCode      opCode;
+    std::string_view  name;
 
-    explicit PacketImpl(PacketOpCode opCode_);
+    explicit PacketImpl(PacketOpCode opCode_, std::string_view name_);
     PacketImpl(PacketImpl const & other);
 
     template<typename T> requires std::integral<T> || std::floating_point<T>
@@ -36,8 +37,9 @@ struct Packet::PacketImpl
 
 template class Pimpl<Packet::PacketImpl>;
 
-Packet::PacketImpl::PacketImpl(PacketOpCode const opCode_)
+Packet::PacketImpl::PacketImpl(PacketOpCode const opCode_, std::string_view name_)
     : opCode(opCode_)
+    , name(name_)
 {
     buffer.reserve(256);
     append<u16>(0); // placeholder for final packet size
@@ -56,8 +58,8 @@ Packet::PacketImpl::PacketImpl(PacketImpl const & other)
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-Packet::Packet(PacketOpCode const opCode)
-    : _impl(opCode)
+Packet::Packet(PacketOpCode const opCode, std::string_view name)
+    : _impl(opCode, name)
 {}
 
 Packet::Packet(Packet const & other)
@@ -74,6 +76,8 @@ auto Packet::opCode()      const -> PacketOpCode          { return _impl->opCode
 auto Packet::body()       -> std::span<byte>       { return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()}; }
 auto Packet::body() const -> std::span<byte const> { return {_impl->buffer.data() + sizeof(PacketHeader), bodySize()}; }
 auto Packet::bodySize() const -> size_t            { return  _impl->buffer.size() - sizeof(PacketHeader);              }
+
+auto Packet::name() const -> std::string_view { return _impl->name; }
 
 void Packet::finalize()
 {

@@ -44,10 +44,6 @@ int main(int const argc, char const * const argv[])
 
 void setupLogger()
 {
-    if constexpr (Config::isDebugMode)
-        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#] [%!()]");
-    else
-        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
-
+    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
     spdlog::set_level(spdlog::level::trace);
 }

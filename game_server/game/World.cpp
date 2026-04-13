@@ -217,27 +217,28 @@ bool World::isInBroadcastRange(Actor const & source, Actor const & target)
     return Utils::Maths::distance(source, target) <= 1000;
 }
 
-void World::send(Actor const & to, Packet & packet)
+void World::send(Actor const & to, Packet & packet, std::source_location const & src)
 {
     if (to.type() == ActorType::Character)
     {
         if (auto const & c = static_cast<Character const &>(to); c.player)
-            c.player->connection().send(packet);
+            c.player->connection().send(packet, src);
     }
 }
 
-void World::broadcast(Packet && packet)
+void World::broadcast(Packet && packet, std::source_location const & src)
 {
     packet.finalize();
 
     for (auto const & c : _characters | std::views::values)
     {
         if (c.player)
-            c.player->connection().send(Packet(packet));
+            c.player->connection().send(Packet(packet), src);
     }
 }
 
-void World::broadcastAround(Actor const & emitter, Packet && packet, bool const includeEmitter)
+void World::broadcastAround(Actor const & emitter, Packet && packet, bool const includeEmitter,
+                            std::source_location const & src)
 {
     packet.finalize();
 
@@ -250,10 +251,11 @@ void World::broadcastAround(Actor const & emitter, Packet && packet, bool const 
     auto view = _characters | values | filter(charHasDriver) | filter(charIsInRange) | filter(emitterIfRequested);
 
     for (auto const & c : view)
-        c.player->connection().send(Packet(packet));
+        c.player->connection().send(Packet(packet), src);
 }
 
-void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool const includeEmitter)
+void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool const includeEmitter,
+                                   std::source_location const & src)
 {
     packet.finalize();
 
@@ -261,7 +263,7 @@ void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool
     {
         // Ensure we find an active player
         if (auto const it = _characters.find(id); it != _characters.end() && it->second.player)
-            it->second.player->connection().send(Packet(packet));
+            it->second.player->connection().send(Packet(packet), src);
     }
 
     if (includeEmitter)
