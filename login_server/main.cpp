@@ -145,8 +145,6 @@ int main() try
 #endif
 
     if constexpr (Config::isDebugMode)
-        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#] [%!()]");
-    else
         spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
 
     spdlog::set_level(spdlog::level::trace);
@@ -190,9 +188,14 @@ int main() try
     SPDLOG_INFO("Goodbye!");
     return EXIT_SUCCESS;
 }
+catch (l2cpp::Exception const & e)
+{
+    SPDLOG_CRITICAL("Exception caught:\n{}", l2cpp::formatExceptionStack(e));
+    return EXIT_FAILURE;
+}
 catch (std::exception const & e)
 {
-    SPDLOG_CRITICAL("Exception caught: '{}'", e.what());
+    SPDLOG_CRITICAL("Exception caught:\n{}", l2cpp::formatExceptionStack(e));
     return EXIT_FAILURE;
 }
 catch (...)
