@@ -10,6 +10,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Loading basic NPC table;
 - Store/Load data in-between runs.
 
+## [0.19.0] - 2026-04-14
+
+### Added
+- Check all RSA operations
+- Show packet sending source location (login server)
+
+### Changed
+- Improved exception logs (login server)
+
 ## [0.18.1] - 2026-04-13
 
 ### Fixed
