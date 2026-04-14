@@ -32,7 +32,8 @@ struct Connection
 
     void asyncReadNextPacket();
 
-    void send(l2cpp::Network::Packet & p, bool encryptPacket = true);
+    void send(l2cpp::Network::Packet & p, bool encryptPacket = true,
+              std::source_location src = std::source_location::current());
 
 private:
     void onSizeRead(boost::system::error_code const & ec);
