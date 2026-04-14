@@ -15,6 +15,9 @@
 #include <boost/asio/write.hpp>
 #include <spdlog/spdlog.h>
 
+// C++ includes
+#include <filesystem>
+
 using boost::asio::ip::tcp;
 using l2cpp::Network::Packet;
 
@@ -52,7 +55,7 @@ void Connection::asyncReadNextPacket()
                             [this] (auto const & ec, auto) { onSizeRead(ec); });
 }
 
-void Connection::send(Packet & p, bool const encryptPacket)
+void Connection::send(Packet & p, bool const encryptPacket, std::source_location src)
 {
     static std::array<byte, 7> pad{};
 
@@ -60,13 +63,14 @@ void Connection::send(Packet & p, bool const encryptPacket)
     if (auto const overflow = p.bodySize() % 8)
         p << std::span(pad.data(), 8 - overflow);
 
-    p << Checksum::calculate({p.body().data(), p.bodySize()});
+    p << Checksum::calculate(p.body());
 
     if (encryptPacket)
         Blowfish::encrypt(p.body());
 
     boost::asio::write(socket, boost::asio::buffer(p.buffer()));
-    SPDLOG_INFO("'{}' ← 0x{:02x} ({:>3} bytes)", sessionId, p.opCode(), p.size());
+    SPDLOG_INFO("'{}' ← 0x{:02x} ({:>3} bytes) (from {}:{})", sessionId, p.opCode(), p.size(),
+                std::filesystem::path(src.file_name()).filename().string(), src.line());
 }
 
 void Connection::onSizeRead(boost::system::error_code const & ec)
