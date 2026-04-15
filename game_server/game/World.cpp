@@ -24,24 +24,23 @@ namespace SC = Network::Packet::Server; // Server -> Client
 
 using l2cpp::Network::Packet;
 
+auto World::actor(GameObjectId const id) -> OptRef<Actor>
+{
+    /**/ if (auto const c = character(id)) return c;
+    else if (auto const m = monster(id))   return m;
+    else                                   return std::nullopt;
+}
+
 auto World::character(GameObjectId const id) -> OptRef<Character>
 {
-    OptRef<Character> result;
-
-    if (auto const it = _characters.find(id); it != _characters.end())
-        result = it->second;
-
-    return result;
+    auto const it = _characters.find(id);
+    return it != _characters.end() ? OptRef(it->second) : std::nullopt;
 }
 
 auto World::monster(GameObjectId const id) -> OptRef<Monster>
 {
-    OptRef<Monster> result;
-
-    if (auto const it = _monsters.find(id); it != _monsters.end())
-        result = it->second;
-
-    return result;
+    auto const it = _monsters.find(id);
+    return it != _monsters.end() ? OptRef(it->second) : std::nullopt;
 }
 
 void World::init()
