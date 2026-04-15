@@ -60,18 +60,19 @@ void World::update(ClockDuration const elapsed)
 
     for (auto & c : _characters | std::views::values)
     {
-        if (auto const action = c.currentAction(); action)
+        if (auto const action = c.currentAction())
             action->update(elapsed);
     }
 
     for (auto const & system : _systems)
     {
-        for (auto & c : _characters | std::views::values)
-            system->update(elapsed, c);
-
-        for (auto & m : _monsters | std::views::values)
-            system->update(elapsed, m);
+        for (auto & c : _characters | std::views::values) system->update(elapsed, c);
+        for (auto & m : _monsters   | std::views::values) system->update(elapsed, m);
     }
+
+    // Death is handled outside the system loops because internals are modified upon death
+    for (auto & c : _characters | std::views::values) if (c.dying()) c.die();
+    for (auto & m : _monsters   | std::views::values) if (m.dying()) m.die();
 
     for (Actor & a : _scheduledForDeletion | std::views::values)
         delActor(a);

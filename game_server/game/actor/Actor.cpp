@@ -21,6 +21,8 @@ struct Actor::ActorImpl
 {
     ActorType type;
     Team team = Team::None;
+
+    bool dying = false;
     bool isInCombatStance = false;
 
     OptRef<Actor> target;
@@ -101,6 +103,7 @@ auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDi
 
 auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
+bool Actor::dying()            const { return _impl->dying;            }
 bool Actor::isAlive()          const { return stats().curHp > 0;       }
 bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
@@ -146,25 +149,25 @@ void Actor::takeDamage(double const amount)
     if (amount <= 0)
         return;
 
-    bool dying = false;
-
     auto & stats = *component<ComputedStats>();
+    if (stats.curHp == 0)
+        return;
+
     if ((stats.curHp -= amount) <= 0)
     {
         stats.curHp = 0;
-        dying = true;
+        _impl->dying = true;
     }
 
     Network::Packet::Server::StatsUpdatePacket p(*this);
     p.addStat(Stat::CurHp, static_cast<u32>(stats.curHp));
-    World::broadcastToSubscribers(*this, std::move(p));
-
-    if (dying)
-        die();
+    World::broadcastToSubscribers(*this, std::move(p), true);
 }
 
 void Actor::die()
 {
+    _impl->dying = false;
+
     delComponent<ActorAutoRegen>();
 
     World::broadcastAround(*this, Network::Packet::Server::ActorDiePacket(*this), true);
