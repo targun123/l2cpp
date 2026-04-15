@@ -59,10 +59,8 @@ namespace
         for (size_t i = 1; std::getline(file, line) && !line.empty(); ++i) try
         {
             boost::algorithm::split(parts, line, boost::algorithm::is_any_of("\t"));
-            if (parts.size() != 17)
-            {
-                L2CPP_THROW("Found {} parts instead of 17:\nParts found: {::?}", parts.size(), parts);
-            }
+            L2CPP_B_ASSERT(parts.size() == 17,
+                           "Found {} parts instead of 17:\nParts found: {::?}", parts.size(), parts);
 
             auto const id  = Utils::stringViewTo<u16>(parts[0]);
             auto const lvl = Utils::stringViewTo<u16>(parts[1]);
@@ -74,8 +72,19 @@ namespace
                 continue;
             }
 
+            auto & skill = it->second;
+
             std::chrono::duration<double> const duration{Utils::stringViewTo<double>(parts[6])};
-            it->second.setCastDuration(std::chrono::floor<std::chrono::milliseconds>(duration));
+            skill.setCastDuration(std::chrono::floor<std::chrono::milliseconds>(duration));
+
+            enum class SkillOperateType : u8 { ActiveTarget, ActiveNoTarget, Passive, Toggle };
+            switch (static_cast<SkillOperateType>(Utils::stringViewTo<u8>(parts[2])))
+            {
+                case SkillOperateType::ActiveTarget:
+                case SkillOperateType::ActiveNoTarget: skill.setType(SkillType::Active);  break;
+                case SkillOperateType::Passive:        skill.setType(SkillType::Passive); break;
+                case SkillOperateType::Toggle:         skill.setType(SkillType::Toggle);  break;
+            }
         }
         catch  (l2cpp::Exception const & e)
         {
@@ -89,24 +98,16 @@ namespace
 }
 
 void SkillTemplateDirectory::load(std::filesystem::path const & skillNamesFile,
-                             std::filesystem::path const & skillGroupsFile)
+                                  std::filesystem::path const & skillGroupsFile)
 {
-
     loadSkillNames(_templates, skillNamesFile);
     loadSkillGroups(_templates, skillGroupsFile);
 }
 
-auto SkillTemplateDirectory::size() -> size_t
-{
-    return _templates.size();
-}
+auto SkillTemplateDirectory::size() -> size_t { return _templates.size(); }
 
 auto SkillTemplateDirectory::skill(SkillUid const uid) -> OptRef<SkillTemplate>
 {
-    OptRef<SkillTemplate> skill;
-
-    if (auto const it = _templates.find(uid); it != _templates.end())
-        skill = it->second;
-
-    return skill;
+    auto const it = _templates.find(uid);
+    return it != _templates.end() ? OptRef(it->second) : std::nullopt;
 }

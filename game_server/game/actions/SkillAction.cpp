@@ -22,10 +22,10 @@ namespace SC = Network::Packet::Server;
 
 struct SkillAction::SkillActionImpl
 {
-    Skill &                 skill;
-    ClockDuration           castingElapsed = ClockDuration::zero();
-    ClockDuration           ninetyPercenCast;
-    std::once_flag          targetsSentFlag;
+    Skill &        skill;
+    ClockDuration  castingElapsed = ClockDuration::zero();
+    ClockDuration  ninetyPercenCast;
+    std::once_flag targetsSentFlag;
     std::vector<Ref<Actor const>> targets;
 };
 
@@ -47,8 +47,7 @@ bool SkillAction::canBeInterruptedByAnotherAction() const { return false; }
 
 void SkillAction::onStarted()
 {
-    // TODO: if skill is not toggle either because there's no animation and that will crash the client
-    // if (_impl->skill.tmplate().type() == SkillType::Active)
+    if (_impl->skill.tmplate().type() == SkillType::Active)
     {
         World::send(performer(), SC::UiGaugePacket{GaugeColor::Blue, _impl->skill.tmplate().castDuration()});
         World::broadcastAround(performer(), SC::SkillUsePacket{performer(), _impl->skill, false}, true);

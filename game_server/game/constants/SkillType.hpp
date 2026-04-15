@@ -8,4 +8,5 @@ enum class SkillType
     Unknown = -1,
     Active,
     Passive,
+    Toggle,
 };
