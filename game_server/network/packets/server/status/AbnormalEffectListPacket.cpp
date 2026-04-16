@@ -18,10 +18,13 @@ AbnormalEffectListPacket::AbnormalEffectListPacket(Actor const & actor)
     uniqueSkillEffects.reserve(effects.size());
 
     for (auto const & effect : effects)
-        uniqueSkillEffects.emplace_back(std::make_pair(effect->skillUid(), effect->remainingDuration()));
+    {
+        if (effect->remainingDuration() > ClockDuration::zero())
+            uniqueSkillEffects.emplace_back(std::make_pair(effect->skillUid(), effect->remainingDuration()));
+    }
 
     *this
-        << static_cast<u16>(effects.size())
+        << static_cast<u16>(uniqueSkillEffects.size())
     ;
 
     for (auto const [skillUid, remainingDuration] : uniqueSkillEffects)
