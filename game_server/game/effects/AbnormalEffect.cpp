@@ -5,10 +5,11 @@
 
 // Project includes
 #include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
-#include "../../utils/Chrono.hpp"
-#include "../World.hpp"
 #include "../../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
+#include "../../utils/Chrono.hpp"
+#include "../World.hpp"
+#include "../components/Stats.hpp"
 #include "../skill/Skill.hpp"
 
 AbnormalEffect::AbnormalEffect(
@@ -130,11 +131,12 @@ void BuffEffect::onFinished()
 
 void BuffEffect::modifyStat(double const newValue) const
 {
-    auto const & baseStats = *target().component<Stats>();
-    auto       & stats     = *target().component<ComputedStats>();
+    auto & stats = *target().component<Stats>();
 
-    stats.runSpeed           += static_cast<StatValue>(newValue);
-    stats.moveSpeedMultiplier = static_cast<double>(stats.runSpeed) / baseStats.runSpeed;
+    if (_modifiedStat == StatId::BonusMoveSpeed)
+        stats.moveSpeedBonus += static_cast<StatValue>(newValue);
+
+    target().stats().compute(target());
 
     namespace SC   = Network::Packet::Server;
     auto const & c = static_cast<Character &>(target());

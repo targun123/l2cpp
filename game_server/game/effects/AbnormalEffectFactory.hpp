@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include "../components/Stats.hpp"
+#include "../constants/StatId.hpp"
 #include "AbnormalEffectType.hpp"
 #include "DamageElementType.hpp"
 

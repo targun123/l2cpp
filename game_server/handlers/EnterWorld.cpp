@@ -6,6 +6,7 @@
 #include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/SkillDirectory.hpp"
+#include "../game/components/Stats.hpp"
 #include "../network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "../network/packets/server/client/ClientForceDisconnectPacket.hpp"
 #include "../network/packets/server/inventory/InventoryListPacket.hpp"
@@ -25,7 +26,7 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
 
     conn.send(ChatSystemSayPacket(34)); // Welcome to the world of Lineage II
 
-    c.computeStats();
+    c.stats().compute(c);
     conn.send(CharacterStatusUpdatePacket(c));
     World::broadcastAround(c, CharacterStatusUpdateBroadcastPacket(c));
     World::forEachActorAround(c, [&] (Actor & a)

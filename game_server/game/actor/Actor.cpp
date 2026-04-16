@@ -50,41 +50,37 @@ Actor::Actor(ActorType const type)
     skills.learn(1204, 1); // Wind Walk
     skills.learn(1177, 1); // Wind Strike
 
-    auto & baseStats = addComponent<Stats>();
-    baseStats.maxCp         = 500;
-    baseStats.maxHp         = 500;
-    baseStats.maxMp         = 500;
-    baseStats.STR           = 40;
-    baseStats.DEX           = 30;
-    baseStats.CON           = 43;
-    baseStats.INT           = 21;
-    baseStats.WIT           = 11;
-    baseStats.MEN           = 25;
-    baseStats.pAtk          = 10;
-    baseStats.pDef          = 80;
-    baseStats.mAtk          = 6;
-    baseStats.mDef          = 40;
-    baseStats.pAtkSpeed     = 300;
-    baseStats.mAtkSpeed     = 333;
-    baseStats.pAtkRange     = 20;
-    baseStats.pAtkRandom    = 10;
-    baseStats.accuracy      = 10;
-    baseStats.evasion       = 10;
-    baseStats.pCritRate     = 10;
-    baseStats.mCritRate     = 10;
-    baseStats.runSpeed      = 115;
-    baseStats.walkSpeed     = 80;
-    baseStats.swimRunSpeed  = 50;
-    baseStats.swimWalkSpeed = 50;
+    auto & stats = addComponent<Stats>();
+    stats.baseSTR           = 40;
+    stats.baseDEX           = 30;
+    stats.baseCON           = 43;
+    stats.baseINT           = 21;
+    stats.baseWIT           = 11;
+    stats.baseMEN           = 25;
+    stats.pAtkBase          = 10;
+    stats.pDefBase          = 80;
+    stats.mAtkBase          = 6;
+    stats.mDefBase          = 40;
+    stats.pAtkSpeedBase     = 300;
+    stats.mAtkSpeedBase     = 333;
+    stats.pAtkRangeBase     = 20;
+    stats.pAtkRandomBase    = 10;
+    stats.accuracyBase      = 10;
+    stats.evasionBase       = 10;
+    stats.pCritRateBase     = 10;
+    stats.mCritRateBase     = 10;
+    stats.runSpeedBase      = 115;
+    stats.walkSpeedBase     = 80;
+    stats.swimRunSpeedBase  = 50;
+    stats.swimWalkSpeedBase = 50;
 
-    baseStats.hpRegen = 2.0;
-    baseStats.mpRegen = 0.8;
-    baseStats.cpRegen = 1.4;
+    stats.hpRegenBase = 2.0;
+    stats.mpRegenBase = 0.8;
+    stats.cpRegenBase = 1.4;
 
-    auto & stats = addComponent<ComputedStats>(baseStats);
-    stats.curCp = stats.maxCp;
-    stats.curHp = stats.maxHp;
-    stats.curMp = stats.maxMp;
+    stats.curCp = stats.maxCpBase = 500;
+    stats.curHp = stats.maxHpBase = 500;
+    stats.curMp = stats.maxMpBase = 500;
 }
 
 Actor::Actor(Actor &&) noexcept = default;
@@ -99,8 +95,8 @@ auto Actor::title()    const -> std::wstring_view { return component<ActorIdenti
 auto Actor::position() const -> Position const &  { return component<Position>();             }
 auto Actor::team()     const -> Team              { return _impl->team;                       }
 
-auto Actor::baseStats()  const -> Stats         const & { return *component<Stats>();         }
-auto Actor::stats()      const -> ComputedStats const & { return *component<ComputedStats>(); }
+auto Actor::stats()       -> Stats       & { return *component<Stats>(); }
+auto Actor::stats() const -> Stats const & { return *component<Stats>(); }
 
 auto Actor::gear()       -> Gear       & { return *component<Gear>(); }
 auto Actor::gear() const -> Gear const & { return *component<Gear>(); }
@@ -163,7 +159,7 @@ void Actor::takeDamage(double const amount)
     if (amount <= 0)
         return;
 
-    auto & stats = *component<ComputedStats>();
+    auto & stats = *component<Stats>();
     if (stats.curHp == 0)
         return;
 

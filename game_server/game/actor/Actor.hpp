@@ -42,8 +42,8 @@ public:
     auto position() const -> Position const &;
     auto team() const -> Team;
 
-    auto baseStats() const -> Stats const &;
-    auto stats() const -> ComputedStats const &;
+    auto stats()       -> Stats       &;
+    auto stats() const -> Stats const &;
 
     auto gear()       -> Gear       &;
     auto gear() const -> Gear const &;

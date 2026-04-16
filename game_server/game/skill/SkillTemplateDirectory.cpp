@@ -93,7 +93,7 @@ namespace
                 skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Wind);
 
             if (id == 1204) // Wind Walk
-                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeed, 33);
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::BonusMoveSpeed, 33);
         }
         catch (l2cpp::Exception const & e)
         {

@@ -85,20 +85,20 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << c.stats().pCritRate
         << c.stats().mAtk
         << c.stats().mAtkSpeed
-        << c.baseStats().pAtkSpeed
+        << c.stats().pAtkSpeedBase
         << c.stats().mDef
         << 0 // (c.isPvpFlagged ? 1 : 0)
         << c.status().karma
-        << c.baseStats().runSpeed
-        << c.baseStats().walkSpeed
-        << c.baseStats().swimRunSpeed
-        << c.baseStats().swimWalkSpeed
-        << c.baseStats().flyRunSpeed
-        << c.baseStats().flyWalkSpeed
-        << c.baseStats().flyRunSpeed
-        << c.baseStats().flyWalkSpeed
-        << c.stats().moveSpeedMultiplier
-        << c.stats().pAtkSpeedMultiplier
+        << c.stats().runSpeedBase
+        << c.stats().walkSpeedBase
+        << c.stats().swimRunSpeedBase
+        << c.stats().swimWalkSpeedBase
+        << c.stats().flyRunSpeedBase
+        << c.stats().flyWalkSpeedBase
+        << c.stats().flyRunSpeedBase
+        << c.stats().flyWalkSpeedBase
+        << static_cast<double>(c.stats().runSpeed)  / c.stats().runSpeedBase
+        << static_cast<double>(c.stats().pAtkSpeed) / c.stats().pAtkSpeedBase
         << c.appearance().collisionRadius
         << c.appearance().collisionHeight
         << c.appearance().hairStyleId
