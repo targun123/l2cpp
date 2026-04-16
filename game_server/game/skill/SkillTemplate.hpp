@@ -6,7 +6,7 @@
 // Project includes
 #include "../constants/SkillTargetType.hpp"
 #include "../constants/SkillType.hpp"
-#include "../effects/AbnormalEffect.hpp"
+#include "../effects/AbnormalEffectFactory.hpp"
 #include "SkillUid.hpp"
 
 // C++ includes
@@ -27,12 +27,16 @@ public:
     auto level()        const -> SkillLevel;
     auto type()         const -> SkillType;
     auto castDuration() const -> MSec;
-    auto effects()      const -> std::span<AbnormalEffectType const>;
+    auto effects()      const -> std::span<std::unique_ptr<AbnormalEffectFactory> const>;
 
 public:
     void setCastDuration(MSec castDuration);
     void setType(SkillType type);
-    void setEffectTypes(std::vector<AbnormalEffectType> effects);
+
+    template<class T> requires std::is_base_of_v<AbnormalEffectFactory, T>
+    void addAbnormalEffectFactory(auto &&... args) {
+        _effects.emplace_back(std::make_unique<T>(std::forward<decltype(args)>(args)...));
+    }
 
 private:
     SkillId         _id;
@@ -45,5 +49,5 @@ private:
     MSec            _castDuration;
     MSec            _cooldownDuration;
 
-    std::vector<AbnormalEffectType> _effects;
+    std::vector<std::unique_ptr<AbnormalEffectFactory>> _effects;
 };

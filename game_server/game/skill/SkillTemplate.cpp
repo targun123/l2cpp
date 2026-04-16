@@ -39,9 +39,7 @@ auto SkillTemplate::level()        const -> SkillLevel       { return _level;   
 auto SkillTemplate::type()         const -> SkillType        { return _type;         }
 auto SkillTemplate::castDuration() const -> MSec             { return _castDuration; }
 
-auto SkillTemplate::effects() const -> std::span<AbnormalEffectType const> { return _effects; }
+auto SkillTemplate::effects() const -> std::span<std::unique_ptr<AbnormalEffectFactory> const> { return _effects; }
 
 void SkillTemplate::setCastDuration(MSec const castDuration) { _castDuration = castDuration; }
 void SkillTemplate::setType(SkillType const type)            { _type = type;                 }
-
-void SkillTemplate::setEffectTypes(std::vector<AbnormalEffectType> effects) { _effects = std::move(effects); }

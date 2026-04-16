@@ -86,13 +86,16 @@ namespace
                 case SkillOperateType::Toggle:         skill.setType(SkillType::Toggle);  break;
             }
 
+            if (id == 129) // Poison
+                skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Poison);
+
             if (id == 1177) // Wind Strike
-                skill.setEffectTypes({AbnormalEffectType::Damage});
+                skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Wind);
 
             if (id == 1204) // Wind Walk
-                skill.setEffectTypes({AbnormalEffectType::Buff});
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeed, 33);
         }
-        catch  (l2cpp::Exception const & e)
+        catch (l2cpp::Exception const & e)
         {
             SPDLOG_ERROR("Failed to load skill from '{}:{}':\n{}", path.string(), i, l2cpp::formatExceptionStack(e));
         }

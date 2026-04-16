@@ -4,11 +4,12 @@
 #include "AbnormalEffect.hpp"
 
 // Project includes
-#include "../World.hpp"
 #include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../../utils/Chrono.hpp"
+#include "../World.hpp"
+#include "../../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
+#include "../../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
 #include "../skill/Skill.hpp"
-#include "network/Packet.hpp"
 
 AbnormalEffect::AbnormalEffect(
     AbnormalEffectType const type
@@ -105,11 +106,35 @@ void DamageEffect::onTick()
 
 // ----------
 
-BuffEffect::BuffEffect(Actor & target, SkillUid const skillUid, ClockDuration const duration)
+BuffEffect::BuffEffect(Actor & target, SkillUid const skillUid, ClockDuration const duration,
+                       StatId const modifiedStat, double const value)
     : AbnormalEffect(AbnormalEffectType::Buff, target, skillUid, duration)
+    , _modifiedStat(modifiedStat)
+    , _value(value)
 {}
 
 void BuffEffect::onStarted()
 {
-    World::send(target(), Network::Packet::Server::AbnormalEffectListPacket{target()});
+    modifyStat(_value);
+}
+
+void BuffEffect::onFinished()
+{
+    modifyStat(-_value);
+}
+
+void BuffEffect::modifyStat(double const newValue) const
+{
+    auto const & baseStats = *target().component<Stats>();
+    auto       & stats     = *target().component<ComputedStats>();
+
+    stats.runSpeed        += static_cast<u32>(newValue);
+    stats.moveSpeedMultiplier = static_cast<double>(stats.runSpeed) / baseStats.runSpeed;
+
+    namespace SC   = Network::Packet::Server;
+    auto const & c = static_cast<Character &>(target());
+
+    World::send           (target(), Network::Packet::Server::AbnormalEffectListPacket{target()});
+    World::send           (target(), SC::CharacterStatusUpdatePacket{c});
+    World::broadcastAround(target(), SC::CharacterStatusUpdateBroadcastPacket{c});
 }

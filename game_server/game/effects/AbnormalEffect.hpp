@@ -4,17 +4,12 @@
 #pragma once
 
 // Project includes
+#include "../components/Stats.hpp"
 #include "../skill/SkillUid.hpp"
+#include "AbnormalEffectType.hpp"
+#include "DamageElementType.hpp"
 
 class Actor;
-
-enum class AbnormalEffectType
-{
-    Buff,
-    Debuff,
-    Damage,
-    Heal,
-};
 
 class AbnormalEffect
 {
@@ -53,17 +48,6 @@ private:
     ClockDuration      _duration, _elapsed, _elapsedSinceLastTick, _tickDuration, _initialTriggerDuration;
 };
 
-enum class DamageElementType
-{
-    Neutral,
-    Earth,
-    Wind,
-    Fire,
-    Water,
-    Poison,
-    Bleed,
-};
-
 class DamageEffect : public AbnormalEffect
 {
 public:
@@ -88,10 +72,16 @@ private:
 class BuffEffect : public AbnormalEffect
 {
 public:
-    BuffEffect(Actor & target, SkillUid skillUid, ClockDuration duration);
+    BuffEffect(Actor & target, SkillUid skillUid, ClockDuration duration, StatId modifiedStat, double value);
 
 private:
     void onStarted() override;
+    void onFinished() override;
+    void modifyStat(double newValue) const;
+
+private:
+    StatId _modifiedStat;
+    double _value;
 };
 
 /*

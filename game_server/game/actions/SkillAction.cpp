@@ -75,26 +75,9 @@ void SkillAction::onFinished()
     // skill animation done, apply effects now
     if (auto const target = performer().target())
     {
-        for (auto const effect : _impl->skill.tmplate().effects())
+        for (auto const & effect : _impl->skill.tmplate().effects())
         {
-            switch (effect)
-            {
-                case AbnormalEffectType::Buff:
-                {
-                    target->addAbnormalEffect<BuffEffect>(target, _impl->skill.tmplate().uid(), 10s);
-                    break;
-                }
-                case AbnormalEffectType::Debuff:
-                    break;
-                case AbnormalEffectType::Damage:
-                {
-                    target->addAbnormalEffect<DamageEffect>(target, _impl->skill.tmplate().uid(),
-                                                            DamageElementType::Wind, 250);
-                    break;
-                }
-                case AbnormalEffectType::Heal:
-                    break;
-            }
+            effect->make(performer(), target);
         }
     }
 }

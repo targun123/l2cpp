@@ -42,3 +42,5 @@ struct ComputedStats : public Stats
 
     u32 curWeight = 0;
 };
+
+enum class StatId { MoveSpeed };
