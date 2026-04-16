@@ -41,9 +41,6 @@ public:
     /// @returns Whether the effect needs to be removed after this update.
     bool update(ClockDuration elapsed);
 
-protected:
-    void setFinished(bool finished);
-
 private:
     virtual void onStarted()  {}
     virtual void onTick()     {}
@@ -54,7 +51,6 @@ private:
     Actor &            _target;
     SkillUid           _skillUid;
     ClockDuration      _duration, _elapsed, _elapsedSinceLastTick, _tickDuration, _initialTriggerDuration;
-    bool               _finished;
 };
 
 enum class DamageElementType

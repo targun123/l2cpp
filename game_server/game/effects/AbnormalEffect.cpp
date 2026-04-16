@@ -26,7 +26,6 @@ AbnormalEffect::AbnormalEffect(
     , _elapsedSinceLastTick(ClockDuration::zero())
     , _tickDuration(tickDuration)
     , _initialTriggerDuration(initialTriggerDuration)
-    , _finished(false)
 {}
 
 AbnormalEffect::~AbnormalEffect() = default;
@@ -45,6 +44,8 @@ auto AbnormalEffect::target() const -> Actor & { return _target; }
 
 bool AbnormalEffect::update(ClockDuration const elapsed)
 {
+    bool finished = false;
+
     if (_elapsed == ClockDuration::zero())
     {
         onStarted();
@@ -52,13 +53,13 @@ bool AbnormalEffect::update(ClockDuration const elapsed)
         if (_initialTriggerDuration == ClockDuration::zero())
             onTick();
 
-        _elapsed += ClockDuration(1); // ensure we don't step inside this block again by making _elapsed non-zero
-        return _finished;
+        if (_duration > ClockDuration::zero())
+            _elapsed  = ClockDuration(1); // ensure we don't step inside this block again by making _elapsed non-zero
     }
 
     /**/ if (Utils::Chrono::thresholdCrossed(_elapsed, elapsed, _duration))
     {
-        setFinished(true);
+        finished = true;
     }
     else if (Utils::Chrono::thresholdCrossed(_elapsed, elapsed, _initialTriggerDuration))
     {
@@ -70,16 +71,16 @@ bool AbnormalEffect::update(ClockDuration const elapsed)
         onTick();
         _elapsedSinceLastTick += elapsed - _tickDuration;
     }
+    else
+        _elapsedSinceLastTick += elapsed;
 
-    if (_finished)
+    if (finished)
         onFinished();
     else
         _elapsed += elapsed;
 
-    return _finished;
+    return finished;
 }
-
-void AbnormalEffect::setFinished(bool const finished) { _finished = finished; }
 
 // ----------
 
