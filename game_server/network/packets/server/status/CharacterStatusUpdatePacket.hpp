@@ -13,5 +13,5 @@ namespace Network::Packet::Server { class CharacterStatusUpdatePacket; }
 class Network::Packet::Server::CharacterStatusUpdatePacket final : public l2cpp::Network::Packet
 {
 public:
-    explicit CharacterStatusUpdatePacket(Character &);
+    explicit CharacterStatusUpdatePacket(Character const &);
 };
