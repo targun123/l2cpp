@@ -4,14 +4,13 @@
 #pragma once
 
 // Project includes
-#include "SkillUid.hpp"
-#include "../constants/SkillType.hpp"
 #include "../constants/SkillTargetType.hpp"
+#include "../constants/SkillType.hpp"
+#include "../effects/AbnormalEffect.hpp"
+#include "SkillUid.hpp"
 
 // C++ includes
-#include <chrono>
-#include <format>
-#include <string>
+#include <span>
 
 class SkillTemplate
 {
@@ -28,9 +27,12 @@ public:
     auto level()        const -> SkillLevel;
     auto type()         const -> SkillType;
     auto castDuration() const -> MSec;
+    auto effects()      const -> std::span<AbnormalEffectType const>;
 
 public:
     void setCastDuration(MSec castDuration);
+    void setType(SkillType type);
+    void setEffectTypes(std::vector<AbnormalEffectType> effects);
 
 private:
     SkillId         _id;
@@ -42,4 +44,6 @@ private:
     std::string     _icon;
     MSec            _castDuration;
     MSec            _cooldownDuration;
+
+    std::vector<AbnormalEffectType> _effects;
 };

@@ -13,6 +13,7 @@
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
+#include "systems/ActorSkillEffectSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/network/Packet.hpp>
@@ -46,8 +47,9 @@ auto World::monster(GameObjectId const id) -> OptRef<Monster>
 void World::init()
 {
     registerSystem<ActorAttackStanceTimerSystem>();
-    registerSystem<ActorDeletionTimerSystem>();
     registerSystem<ActorAutoRegenSystem>();
+    registerSystem<ActorDeletionTimerSystem>();
+    registerSystem<ActorSkillEffectSystem>();
 
     auto & c = addCharacterPreview(L"Admin");
     c.setName(L"test" + std::to_wstring(c.id()));

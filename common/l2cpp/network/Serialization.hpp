@@ -6,14 +6,23 @@
 // Forward-declare for the macros to work with no additional includes
 namespace l2cpp::Network { class Packet; class PacketReader; }
 
+#define DEFINE_CUSTOM_PACKET_SERIALIZATION_OPERATOR(P, T, t) \
+    l2cpp::Network::Packet & operator<<(P & p, T const & t)
+
 #define DEFINE_PACKET_SERIALIZATION_OPERATOR(T, t) \
-    l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, T const & t)
+    DEFINE_CUSTOM_PACKET_SERIALIZATION_OPERATOR(l2cpp::Network::Packet, T, t)
 
 #define DEFINE_PACKET_DESERIALIZATION_OPERATOR(T, t) \
     l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader & r, T & t)
 
-#define DECLARE_PACKET_SERIALIZATION_OPERATOR(T)   friend DEFINE_PACKET_SERIALIZATION_OPERATOR(T,)
-#define DECLARE_PACKET_DESERIALIZATION_OPERATOR(T) friend DEFINE_PACKET_DESERIALIZATION_OPERATOR(T,)
+#define DECLARE_CUSTOM_PACKET_SERIALIZATION_OPERATOR(P, T) \
+    friend DEFINE_CUSTOM_PACKET_SERIALIZATION_OPERATOR(P, T,)
+
+#define DECLARE_PACKET_SERIALIZATION_OPERATOR(T) \
+    friend DEFINE_PACKET_SERIALIZATION_OPERATOR(T,)
+
+#define DECLARE_PACKET_DESERIALIZATION_OPERATOR(T) \
+    friend DEFINE_PACKET_DESERIALIZATION_OPERATOR(T,)
 
 #define DECLARE_PACKET_SERIALIZATION_OPERATORS(T) \
     DECLARE_PACKET_SERIALIZATION_OPERATOR(T);     \

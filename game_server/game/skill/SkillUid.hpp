@@ -7,9 +7,12 @@
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Serialization.hpp>
 
+namespace Network::Packet::Server { struct AbnormalEffectListPacket; }
+
 class SkillUid
 {
     DECLARE_PACKET_SERIALIZATION_OPERATOR(SkillUid);
+    DECLARE_CUSTOM_PACKET_SERIALIZATION_OPERATOR(Network::Packet::Server::AbnormalEffectListPacket, SkillUid);
 
 public:
     SkillUid(SkillId const id, SkillLevel const level) noexcept: _uid(id | level << 24) {}

@@ -85,6 +85,12 @@ namespace
                 case SkillOperateType::Passive:        skill.setType(SkillType::Passive); break;
                 case SkillOperateType::Toggle:         skill.setType(SkillType::Toggle);  break;
             }
+
+            if (id == 1177) // Wind Strike
+                skill.setEffectTypes({AbnormalEffectType::Damage});
+
+            if (id == 1204) // Wind Walk
+                skill.setEffectTypes({AbnormalEffectType::Buff});
         }
         catch  (l2cpp::Exception const & e)
         {

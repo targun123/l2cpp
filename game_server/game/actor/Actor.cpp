@@ -4,6 +4,7 @@
 #include "Actor.hpp"
 
 // Project includes
+#include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../../network/packets/server/status/ActorDiePacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../World.hpp"
@@ -27,6 +28,8 @@ struct Actor::ActorImpl
 
     OptRef<Actor> target;
     std::unique_ptr<Action> currentAction, nextAction;
+
+    std::list<std::unique_ptr<AbnormalEffect>> _abnormalEffects;
 };
 
 template class Pimpl<Actor::ActorImpl>;
@@ -41,7 +44,10 @@ Actor::Actor(ActorType const type)
     addComponent<ActorIdentity>();
     addComponent<Gear>();
     addComponent<Position>();
-    addComponent<SkillDirectory>();
+
+    auto & skills = addComponent<SkillDirectory>();
+    skills.learn(1204, 1); // Wind Walk
+    skills.learn(1177, 1); // Wind Strike
 
     auto & baseStats = addComponent<Stats>();
     baseStats.maxCp         = 500;
@@ -122,6 +128,13 @@ auto Actor::currentAction() -> OptRef<Action>
 
 auto Actor::nextAction() -> OptRef<Action> { return _impl->nextAction ? OptRef(*_impl->nextAction) : std::nullopt; }
 
+auto Actor::abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> & { return _impl->_abnormalEffects; }
+auto Actor::abnormalEffects() const -> std::list<std::unique_ptr<AbnormalEffect>> const & {
+    return _impl->_abnormalEffects;
+}
+
+// SETTERS -------------------------------------------------------------------------------------------------------------
+
 void Actor::setName (std::wstring name)  { component<ActorIdentity>()->name  = std::move(name);  }
 void Actor::setTitle(std::wstring title) { component<ActorIdentity>()->title = std::move(title); }
 
@@ -168,6 +181,9 @@ void Actor::die()
 {
     _impl->dying = false;
 
+    _impl->_abnormalEffects.clear();
+    World::send(*this, Network::Packet::Server::AbnormalEffectListPacket{*this});
+
     delComponent<ActorAutoRegen>();
 
     World::broadcastAround(*this, Network::Packet::Server::ActorDiePacket(*this), true);
@@ -195,3 +211,5 @@ void Actor::doNext(std::unique_ptr<Action> action)
     else
         _impl->nextAction = std::move(action);
 }
+
+void Actor::addAbnormalEffect(std::unique_ptr<AbnormalEffect> e) { _impl->_abnormalEffects.emplace_back(std::move(e)); }
