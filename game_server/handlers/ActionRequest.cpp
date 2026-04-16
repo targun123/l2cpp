@@ -32,12 +32,12 @@ DEFINE_PACKET_HANDLER(ActionRequest)
         {
             character.setTarget(c);
             player.connection().send(TargetSelectPacket(character, c));
+            World::subscribeToTarget(c, character);
         }
         else if (auto const m = World::monster(targetId))
         {
             character.setTarget(m);
             player.connection().send(TargetMonsterSelectPacket(character, m));
-
             World::subscribeToTarget(m, character);
 
             StatsUpdatePacket p(m);
