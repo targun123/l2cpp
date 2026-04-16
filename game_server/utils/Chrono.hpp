@@ -32,13 +32,13 @@ namespace Utils::Chrono
                                     ClockDuration const elapsed,
                                     ClockDuration const elapsedThreshold)
     {
-        return totalElapsed < elapsedThreshold && totalElapsed + elapsed >= elapsedThreshold;
+        return totalElapsed <= elapsedThreshold && totalElapsed + elapsed >= elapsedThreshold;
     }
 
     constexpr bool thresholdCrossed(ClockTimePoint const currentTimePoint,
                                     ClockDuration  const elapsed,
                                     ClockTimePoint const thresholdTimePoint)
     {
-        return currentTimePoint < thresholdTimePoint && currentTimePoint + elapsed >= thresholdTimePoint;
+        return currentTimePoint <= thresholdTimePoint && currentTimePoint + elapsed >= thresholdTimePoint;
     }
 }
