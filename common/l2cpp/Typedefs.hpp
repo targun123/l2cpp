@@ -41,6 +41,7 @@ using PacketOpCode = u16;
 
 using SkillId    = u16;
 using SkillLevel = u16;
+using StatValue  = s32;
 
 constexpr u8  operator""_u8 (u64 const nbr) { return static_cast<u8> (nbr); }
 constexpr u16 operator""_u16(u64 const nbr) { return static_cast<u16>(nbr); }

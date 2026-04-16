@@ -54,7 +54,7 @@ public:
     explicit DamageEffect(Actor &           target,
                           SkillUid          skillUid,
                           DamageElementType type,
-                          double            damage,
+                          StatValue         damage,
                           ClockDuration     effectDuration         = ClockDuration::zero(),
                           ClockDuration     tickDuration           = ClockDuration::zero(),
                           ClockDuration     initialTriggerDuration = ClockDuration::zero());
@@ -64,7 +64,7 @@ private:
 
 private:
     DamageElementType _elementType;
-    double            _damage;
+    StatValue         _damage;
     ClockDuration     _initialTriggerDuration;
     ClockDuration     _tick, _elapsedSinceLastTick;
 };

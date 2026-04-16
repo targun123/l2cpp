@@ -31,10 +31,10 @@ AbnormalEffect::AbnormalEffect(
 
 AbnormalEffect::~AbnormalEffect() = default;
 
-auto AbnormalEffect::type() const -> AbnormalEffectType { return _type;     }
-auto AbnormalEffect::skillUid() const -> SkillUid       { return _skillUid; }
-auto AbnormalEffect::duration() const -> ClockDuration  { return _duration; }
-auto AbnormalEffect::elapsed()  const -> ClockDuration  { return _elapsed;  }
+auto AbnormalEffect::type()     const -> AbnormalEffectType { return _type;     }
+auto AbnormalEffect::skillUid() const -> SkillUid           { return _skillUid; }
+auto AbnormalEffect::duration() const -> ClockDuration      { return _duration; }
+auto AbnormalEffect::elapsed()  const -> ClockDuration      { return _elapsed;  }
 
 auto AbnormalEffect::remainingDuration() const -> ClockDuration
 {
@@ -89,7 +89,7 @@ DamageEffect::DamageEffect(
     Actor &                   target
     , SkillUid          const skillUid
     , DamageElementType const type
-    , double            const damage
+    , StatValue         const damage
     , ClockDuration     const effectDuration
     , ClockDuration     const tickDuration
     , ClockDuration     const initialTriggerDuration
@@ -106,8 +106,13 @@ void DamageEffect::onTick()
 
 // ----------
 
-BuffEffect::BuffEffect(Actor & target, SkillUid const skillUid, ClockDuration const duration,
-                       StatId const modifiedStat, double const value)
+BuffEffect::BuffEffect(
+    Actor &               target
+    , SkillUid      const skillUid
+    , ClockDuration const duration
+    , StatId        const modifiedStat
+    , double        const value
+)
     : AbnormalEffect(AbnormalEffectType::Buff, target, skillUid, duration)
     , _modifiedStat(modifiedStat)
     , _value(value)
@@ -128,7 +133,7 @@ void BuffEffect::modifyStat(double const newValue) const
     auto const & baseStats = *target().component<Stats>();
     auto       & stats     = *target().component<ComputedStats>();
 
-    stats.runSpeed        += static_cast<u32>(newValue);
+    stats.runSpeed           += static_cast<StatValue>(newValue);
     stats.moveSpeedMultiplier = static_cast<double>(stats.runSpeed) / baseStats.runSpeed;
 
     namespace SC   = Network::Packet::Server;
