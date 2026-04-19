@@ -39,7 +39,7 @@ auto AbnormalEffect::elapsed()  const -> ClockDuration      { return _elapsed;  
 
 auto AbnormalEffect::remainingDuration() const -> ClockDuration
 {
-    return _duration == ClockDuration::zero() ? ClockDuration::zero() : _duration - _elapsed;
+    return _duration > ClockDuration::zero() ? _duration - _elapsed : _duration;
 }
 
 auto AbnormalEffect::target() const -> Actor & { return _target; }

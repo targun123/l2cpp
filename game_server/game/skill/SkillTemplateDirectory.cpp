@@ -94,6 +94,14 @@ namespace
 
             if (id == 1204) // Wind Walk
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedBonus, 33);
+
+            if (id == 7029) // Super Haste
+            {
+                skill.setType(SkillType::Toggle);
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedMultiplier, 5);
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::PAtkSpeedMultiplier, 5);
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MAtkSpeedMultiplier, 5);
+            }
         }
         catch (l2cpp::Exception const & e)
         {

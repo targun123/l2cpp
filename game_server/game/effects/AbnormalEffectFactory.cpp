@@ -16,5 +16,6 @@ void DamageEffectFactory::make(Actor const &, Actor & target)
 
 void BuffEffectFactory::make(Actor const &, Actor & target)
 {
-    target.addAbnormalEffect<BuffEffect>(target, _skillTemplate.uid(), 20s, _modifiedStat, _value);
+    target.addAbnormalEffect<BuffEffect>(target, _skillTemplate.uid(),
+        _skillTemplate.type() == SkillType::Toggle ? -1s : 20s, _modifiedStat, _value);
 }
