@@ -62,8 +62,10 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
     {
         Actor const & a = performer();
 
-        _impl->targets.emplace_back(a.target());
-        World::forEachActorAround(a.target(), [&] (Actor const & actor) { _impl->targets.emplace_back(actor); });
+        if (auto const target = a.target())
+            _impl->targets.emplace_back(target);
+
+        World::forEachActorAround(a, [&] (Actor const & actor) { _impl->targets.emplace_back(actor); });
         World::broadcastAround(a, SC::SkillSetTargetsPacket{a, _impl->skill, _impl->targets}, true);
     });
 
