@@ -14,14 +14,15 @@ AbnormalEffectListPacket::AbnormalEffectListPacket(Actor const & actor)
 {
     auto const & effects = actor.abnormalEffects();
 
-    std::vector<std::pair<SkillUid, ClockDuration>> uniqueSkillEffects;
-    uniqueSkillEffects.reserve(effects.size());
+    std::list<std::pair<SkillUid, ClockDuration>> uniqueSkillEffects;
 
     for (auto const & effect : effects)
     {
         if (effect->remainingDuration() > ClockDuration::zero())
             uniqueSkillEffects.emplace_back(std::make_pair(effect->skillUid(), effect->remainingDuration()));
     }
+
+    uniqueSkillEffects.unique();
 
     *this
         << static_cast<u16>(uniqueSkillEffects.size())
