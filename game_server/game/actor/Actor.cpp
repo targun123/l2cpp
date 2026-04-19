@@ -51,36 +51,42 @@ Actor::Actor(ActorType const type)
     skills.learn(1177, 1); // Wind Strike
 
     auto & stats = addComponent<Stats>();
-    stats.baseSTR           = 40;
-    stats.baseDEX           = 30;
-    stats.baseCON           = 43;
-    stats.baseINT           = 21;
-    stats.baseWIT           = 11;
-    stats.baseMEN           = 25;
-    stats.pAtkBase          = 10;
-    stats.pDefBase          = 80;
-    stats.mAtkBase          = 6;
-    stats.mDefBase          = 40;
-    stats.pAtkSpeedBase     = 300;
-    stats.mAtkSpeedBase     = 333;
-    stats.pAtkRangeBase     = 20;
-    stats.pAtkRandomBase    = 10;
-    stats.accuracyBase      = 10;
-    stats.evasionBase       = 10;
-    stats.pCritRateBase     = 10;
-    stats.mCritRateBase     = 10;
-    stats.runSpeedBase      = 115;
-    stats.walkSpeedBase     = 80;
-    stats.swimRunSpeedBase  = 50;
-    stats.swimWalkSpeedBase = 50;
+    stats[StatId::BaseStr]           = 40;
+    stats[StatId::BaseDex]           = 30;
+    stats[StatId::BaseCon]           = 43;
+    stats[StatId::BaseInt]           = 21;
+    stats[StatId::BaseWit]           = 11;
+    stats[StatId::BaseMen]           = 25;
+    stats[StatId::BasePAtk]          = 10;
+    stats[StatId::BasePDef]          = 80;
+    stats[StatId::BaseMAtk]          = 6;
+    stats[StatId::BaseMDef]          = 40;
+    stats[StatId::BasePAtkSpeed]     = 300;
+    stats[StatId::BaseMAtkSpeed]     = 333;
+    stats[StatId::BasePAtkRange]     = 20;
+    stats[StatId::BasePAtkRandom]    = 10;
+    stats[StatId::BaseAccuracy]      = 10;
+    stats[StatId::BaseEvasion]       = 10;
+    stats[StatId::BasePCritRate]     = 10;
+    stats[StatId::BaseMCritRate]     = 10;
+    stats[StatId::BaseRunSpeed]      = 115;
+    stats[StatId::BaseWalkSpeed]     = 80;
+    stats[StatId::BaseSwimRunSpeed]  = 50;
+    stats[StatId::BaseSwimWalkSpeed] = 50;
 
-    stats.hpRegenBase = 2.0;
-    stats.mpRegenBase = 0.8;
-    stats.cpRegenBase = 1.4;
+    stats[StatId::BaseHpRegen] = 2.0;
+    stats[StatId::BaseMpRegen] = 0.8;
+    stats[StatId::BaseCpRegen] = 1.4;
 
-    stats.curCp = stats.maxCpBase = 500;
-    stats.curHp = stats.maxHpBase = 500;
-    stats.curMp = stats.maxMpBase = 500;
+    stats[StatId::BaseMaxCp] = 500;
+    stats[StatId::BaseMaxHp] = 500;
+    stats[StatId::BaseMaxMp] = 500;
+
+    stats.compute(*this);
+
+    stats[StatId::CurCp] = stats[StatId::MaxCp];
+    stats[StatId::CurHp] = stats[StatId::MaxHp];
+    stats[StatId::CurMp] = stats[StatId::MaxMp];
 }
 
 Actor::Actor(Actor &&) noexcept = default;
@@ -106,9 +112,9 @@ auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDi
 
 auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
-bool Actor::dying()            const { return _impl->dying;            }
-bool Actor::isAlive()          const { return stats().curHp > 0;       }
-bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
+bool Actor::dying()            const { return _impl->dying;               }
+bool Actor::isAlive()          const { return stats()[StatId::CurHp] > 0; }
+bool Actor::isInCombatStance() const { return _impl->isInCombatStance;    }
 
 auto Actor::currentAction() -> OptRef<Action>
 {
@@ -160,17 +166,17 @@ void Actor::takeDamage(double const amount)
         return;
 
     auto & stats = *component<Stats>();
-    if (stats.curHp == 0)
+    if (stats[StatId::CurHp] == 0)
         return;
 
-    if ((stats.curHp -= amount) <= 0)
+    if ((stats[StatId::CurHp] -= amount) <= 0)
     {
-        stats.curHp = 0;
+        stats[StatId::CurHp] = 0;
         _impl->dying = true;
     }
 
     Network::Packet::Server::StatsUpdatePacket p(*this);
-    p.addStat(Stat::CurHp, static_cast<u32>(stats.curHp));
+    p.addStat(Stat::CurHp, static_cast<u32>(stats[StatId::CurHp]));
     World::broadcastToSubscribers(*this, std::move(p), true);
 }
 

@@ -3,45 +3,73 @@
 
 #include "Stats.hpp"
 
+Stats::Stats()
+{
+    using enum StatId;
+#define INIT_MULTIPLIER(stat) _stats[std::to_underlying(stat##Multiplier)] = 1.
+
+    INIT_MULTIPLIER(MaxHp); INIT_MULTIPLIER(HpRegen);
+    INIT_MULTIPLIER(MaxMp); INIT_MULTIPLIER(MpRegen);
+    INIT_MULTIPLIER(MaxCp); INIT_MULTIPLIER(CpRegen);
+
+    INIT_MULTIPLIER(PAtk);      INIT_MULTIPLIER(PDef);
+    INIT_MULTIPLIER(MAtk);      INIT_MULTIPLIER(MDef);
+    INIT_MULTIPLIER(PAtkSpeed); INIT_MULTIPLIER(MAtkSpeed);
+    INIT_MULTIPLIER(PAtkRange); INIT_MULTIPLIER(PAtkRandom);
+    INIT_MULTIPLIER(Accuracy);  INIT_MULTIPLIER(Evasion);
+    INIT_MULTIPLIER(PCritRate); INIT_MULTIPLIER(MCritRate);
+
+    INIT_MULTIPLIER(MoveSpeed);
+
+    INIT_MULTIPLIER(MaxWeight);
+
+    INIT_MULTIPLIER(InventoryLimit);
+    INIT_MULTIPLIER(WharehouseLimit);
+    INIT_MULTIPLIER(FreightLimit);
+    INIT_MULTIPLIER(StoreLimit);
+    INIT_MULTIPLIER(CommonCraftLimit);
+    INIT_MULTIPLIER(DwarvenCraftLimit);
+
+#undef INIT_MULTIPLIER
+}
+
 void Stats::compute(Actor const &)
 {
-    STR = baseSTR + bonusSTR;
-    DEX = baseDEX + bonusDEX;
-    CON = baseCON + bonusCON;
-    INT = baseINT + bonusINT;
-    WIT = baseWIT + bonusWIT;
-    MEN = baseMEN + bonusMEN;
+    using enum StatId;
 
-    pAtkSpeedMultiplier = 1. + (DEX - 20) / 100.;
-    moveSpeedMultiplier = 1. + (DEX - 20) / 100.;
+#define CALCULATE_CORE_STAT(s)  (*this)[s] = (*this)[Base##s] + (*this)[Bonus##s           ]
+#define CALCULATE_STAT(s)       (*this)[s] = (*this)[Base##s] * (*this)[s##Multiplier      ] + (*this)[s##Bonus]
+#define CALCULATE_SPEED_STAT(s) (*this)[s] = (*this)[Base##s] * (*this)[MoveSpeedMultiplier] + (*this)[MoveSpeedBonus]
 
-    pAtkSpeed = static_cast<StatValue>(pAtkSpeedBase * pAtkSpeedMultiplier + pAtkSpeedBonus);
-    runSpeed  = static_cast<StatValue>(runSpeedBase  * moveSpeedMultiplier + moveSpeedBonus);
+    CALCULATE_CORE_STAT(Str); CALCULATE_CORE_STAT(Dex); CALCULATE_CORE_STAT(Con);
+    CALCULATE_CORE_STAT(Int); CALCULATE_CORE_STAT(Wit); CALCULATE_CORE_STAT(Men);
 
-    maxHp             = static_cast<StatValue>(maxHpBase             * maxHpMultiplier             + maxHpBonus);
-    hpRegen           = static_cast<StatValue>(hpRegenBase           * hpRegenMultiplier           + hpRegenBonus);
-    maxMp             = static_cast<StatValue>(maxMpBase             * maxMpMultiplier             + maxMpBonus);
-    mpRegen           = static_cast<StatValue>(mpRegenBase           * mpRegenMultiplier           + mpRegenBonus);
-    maxCp             = static_cast<StatValue>(maxCpBase             * maxCpMultiplier             + maxCpBonus);
-    cpRegen           = static_cast<StatValue>(cpRegenBase           * cpRegenMultiplier           + cpRegenBonus);
-    pAtk              = static_cast<StatValue>(pAtkBase              * pAtkMultiplier              + pAtkBonus);
-    pDef              = static_cast<StatValue>(pDefBase              * pDefMultiplier              + pDefBonus);
-    mAtk              = static_cast<StatValue>(mAtkBase              * mAtkMultiplier              + mAtkBonus);
-    mDef              = static_cast<StatValue>(mDefBase              * mDefMultiplier              + mDefBonus);
-    pAtkSpeed         = static_cast<StatValue>(pAtkSpeedBase         * pAtkSpeedMultiplier         + pAtkSpeedBonus);
-    mAtkSpeed         = static_cast<StatValue>(mAtkSpeedBase         * mAtkSpeedMultiplier         + mAtkSpeedBonus);
-    pAtkRange         = static_cast<StatValue>(pAtkRangeBase         * pAtkRangeMultiplier         + pAtkRangeBonus);
-    pAtkRandom        = static_cast<StatValue>(pAtkRandomBase        * pAtkRandomMultiplier        + pAtkRandomBonus);
-    accuracy          = static_cast<StatValue>(accuracyBase          * accuracyMultiplier          + accuracyBonus);
-    evasion           = static_cast<StatValue>(evasionBase           * evasionMultiplier           + evasionBonus);
-    pCritRate         = static_cast<StatValue>(pCritRateBase         * pCritRateMultiplier         + pCritRateBonus);
-    mCritRate         = static_cast<StatValue>(mCritRateBase         * mCritRateMultiplier         + mCritRateBonus);
-    moveSpeed         = static_cast<StatValue>(moveSpeedBase         * moveSpeedMultiplier         + moveSpeedBonus);
-    maxWeight         = static_cast<StatValue>(maxWeightBase         * maxWeightMultiplier         + maxWeightBonus);
-    inventoryLimit    = static_cast<StatValue>(inventoryLimitBase    * inventoryLimitMultiplier    + inventoryLimitBonus);
-    wharehouseLimit   = static_cast<StatValue>(wharehouseLimitBase   * wharehouseLimitMultiplier   + wharehouseLimitBonus);
-    freightLimit      = static_cast<StatValue>(freightLimitBase      * freightLimitMultiplier      + freightLimitBonus);
-    storeLimit        = static_cast<StatValue>(storeLimitBase        * storeLimitMultiplier        + storeLimitBonus);
-    commonCraftLimit  = static_cast<StatValue>(commonCraftLimitBase  * commonCraftLimitMultiplier  + commonCraftLimitBonus);
-    dwarvenCraftLimit = static_cast<StatValue>(dwarvenCraftLimitBase * dwarvenCraftLimitMultiplier + dwarvenCraftLimitBonus);
+    CALCULATE_STAT(MaxHp); CALCULATE_STAT(HpRegen);
+    CALCULATE_STAT(MaxMp); CALCULATE_STAT(MpRegen);
+    CALCULATE_STAT(MaxCp); CALCULATE_STAT(CpRegen);
+
+    CALCULATE_STAT(PAtk);      CALCULATE_STAT(PDef);
+    CALCULATE_STAT(MAtk);      CALCULATE_STAT(MDef);
+    CALCULATE_STAT(PAtkSpeed); CALCULATE_STAT(MAtkSpeed);
+    CALCULATE_STAT(PAtkRange); CALCULATE_STAT(PAtkRandom);
+    CALCULATE_STAT(Accuracy);  CALCULATE_STAT(Evasion);
+    CALCULATE_STAT(PCritRate); CALCULATE_STAT(MCritRate);
+
+    CALCULATE_STAT(MoveSpeed);
+    CALCULATE_SPEED_STAT(RunSpeed),     CALCULATE_SPEED_STAT(WalkSpeed),
+    CALCULATE_SPEED_STAT(SwimRunSpeed), CALCULATE_SPEED_STAT(SwimWalkSpeed),
+    CALCULATE_SPEED_STAT(FlyRunSpeed),  CALCULATE_SPEED_STAT(FlyWalkSpeed),
+
+    CALCULATE_STAT(MaxWeight);
+
+    CALCULATE_STAT(InventoryLimit);
+    CALCULATE_STAT(WharehouseLimit);
+    CALCULATE_STAT(FreightLimit);
+    CALCULATE_STAT(StoreLimit);
+    CALCULATE_STAT(CommonCraftLimit);
+    CALCULATE_STAT(DwarvenCraftLimit);
+
+#undef CALCULATE_CORE_STAT
+#undef CALCULATE_STAT
+#undef CALCULATE_SPEED_STAT
 }

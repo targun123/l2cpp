@@ -112,7 +112,7 @@ BuffEffect::BuffEffect(
     , SkillUid      const skillUid
     , ClockDuration const duration
     , StatId        const modifiedStat
-    , double        const value
+    , StatValue     const value
 )
     : AbnormalEffect(AbnormalEffectType::Buff, target, skillUid, duration)
     , _modifiedStat(modifiedStat)
@@ -129,14 +129,11 @@ void BuffEffect::onFinished()
     modifyStat(-_value);
 }
 
-void BuffEffect::modifyStat(double const newValue) const
+void BuffEffect::modifyStat(StatValue const newValue) const
 {
     auto & stats = *target().component<Stats>();
-
-    if (_modifiedStat == StatId::BonusMoveSpeed)
-        stats.moveSpeedBonus += static_cast<StatValue>(newValue);
-
-    target().stats().compute(target());
+    stats[_modifiedStat] += newValue;
+    stats.compute(target());
 
     namespace SC   = Network::Packet::Server;
     auto const & c = static_cast<Character &>(target());

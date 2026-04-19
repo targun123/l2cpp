@@ -38,8 +38,8 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << c.profession()
             << 1 // active (?)
             << c.position()
-            << c.stats().curHp
-            << c.stats().curMp
+            << c.stats()[StatId::CurHp]
+            << c.stats()[StatId::CurMp]
             << c.status().sp
             << c.status().xp
             << c.status().level()
@@ -80,8 +80,8 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << c.appearance().hairStyleId
             << c.appearance().hairColorId
             << c.appearance().faceId
-            << c.stats().maxHp
-            << c.stats().maxMp
+            << c.stats()[StatId::MaxHp]
+            << c.stats()[StatId::MaxMp]
             << c.deleteTime
             << c.profession()
             << c.selected

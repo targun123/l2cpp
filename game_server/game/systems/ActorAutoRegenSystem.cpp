@@ -29,15 +29,17 @@ void ActorAutoRegenSystem::updateImpl(ClockDuration const elapsed, Actor & actor
 
         std::unordered_map<Stat, double> updates;
 
+        using enum StatId;
+
         auto & stats = *actor.component<Stats>();
-        if (stats.curHp < stats.maxHp && addRegenTicks(stats.curHp, stats.hpRegen, ticks, stats.maxHp))
-            updates.try_emplace(Stat::CurHp, stats.curHp);
+        if (stats[CurHp] < stats[MaxHp] && addRegenTicks(stats[CurHp], stats[HpRegen], ticks, stats[MaxHp]))
+            updates.try_emplace(Stat::CurHp, stats[CurHp]);
 
-        if (stats.curMp < stats.maxMp && addRegenTicks(stats.curMp, stats.hpRegen, ticks, stats.maxMp))
-            updates.try_emplace(Stat::CurMp, stats.curMp);
+        if (stats[CurMp] < stats[MaxMp] && addRegenTicks(stats[CurMp], stats[HpRegen], ticks, stats[MaxMp]))
+            updates.try_emplace(Stat::CurMp, stats[CurMp]);
 
-        if (stats.curCp < stats.maxCp && addRegenTicks(stats.curCp, stats.hpRegen, ticks, stats.maxCp))
-            updates.try_emplace(Stat::CurCp, stats.curCp);
+        if (stats[CurCp] < stats[MaxCp] && addRegenTicks(stats[CurCp], stats[HpRegen], ticks, stats[MaxCp]))
+            updates.try_emplace(Stat::CurCp, stats[CurCp]);
 
         if (!updates.empty())
         {

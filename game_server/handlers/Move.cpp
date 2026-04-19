@@ -13,7 +13,7 @@
 // float const distanceZ = targetZ - c.position().z;
 //
 // float const distance = sqrt(distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ);
-// float const speed    = c.baseStats().runSpeed;
+// float const speed    = c.stats()[StatId::RunSpeed];
 //
 // float const ticksPerSecond = 10;
 // u64   const ticksToMove    = ticksPerSecond * distance / speed;
@@ -47,11 +47,12 @@ DEFINE_PACKET_HANDLER(Move)
     // float const distanceZ = action.targetZ - c.position().z;
     // action.totalDistance = std::sqrt(distanceX * distanceX + distanceY * distanceY/* + distanceZ * distanceZ*/);
     //
-    // float const distanceCoveredInOneMs = c.stats().runSpeed / 1000.f;
+    // float const distanceCoveredInOneMs = c.stats()[StatId::RunSpeed] / 1000.f;
     //
     // std::chrono::duration<float, std::milli> const totalDuration(action.totalDistance / distanceCoveredInOneMs);
     // SPDLOG_TRACE("Character must travel through {} units. At a speed of {} units per 1s, it will take {:%Q%q}",
-    //              action.totalDistance, c.stats().runSpeed, std::chrono::duration_cast<std::chrono::milliseconds>(totalDuration));
+    //              action.totalDistance, c.stats()[StatId::RunSpeed],
+    //              std::chrono::duration_cast<std::chrono::milliseconds>(totalDuration));
     //
     c.doNext<MoveAction>(origin, target, input);
 }

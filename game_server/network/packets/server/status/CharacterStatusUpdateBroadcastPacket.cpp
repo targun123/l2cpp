@@ -18,48 +18,51 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
 {
     using enum GearSlot;
 
-    auto const weapon = c.gear().weapon();
+    auto const & appearance = c.appearance();
+    auto const & gear       = c.gear();
+    auto const & stats      = c.stats();
+    auto const weapon       = gear.weapon();
 
     *this
         << c.position()
         << 0 // vehicleId
         << c.id()
         << c.name()
-        << c.appearance().race()
-        << c.appearance().sex
+        << appearance.race()
+        << appearance.sex
         << c.profession()
         << 0 // ?
-        << c.gear().itemTemplateId(Head)
-        << c.gear().itemTemplateId(RightHand)
-        << (weapon && weapon->tmplate.gearSlot == Hands ? 0 : c.gear().itemTemplateId(LeftHand))
-        << c.gear().itemTemplateId(Gloves)
-        << c.gear().itemTemplateId(Chest)
-        << c.gear().itemTemplateId(Legs)
-        << c.gear().itemTemplateId(Feet)
-        << c.gear().itemTemplateId(Back)
-        << c.gear().itemTemplateId(RightHand)
-        << c.gear().itemTemplateId(Hair)
+        << gear.itemTemplateId(Head)
+        << gear.itemTemplateId(RightHand)
+        << (weapon && weapon->tmplate.gearSlot == Hands ? 0 : gear.itemTemplateId(LeftHand))
+        << gear.itemTemplateId(Gloves)
+        << gear.itemTemplateId(Chest)
+        << gear.itemTemplateId(Legs)
+        << gear.itemTemplateId(Feet)
+        << gear.itemTemplateId(Back)
+        << gear.itemTemplateId(RightHand)
+        << gear.itemTemplateId(Hair)
         << 0 // (c.isPvpFlagged ? 1 : 0)
         << c.status().karma
-        << c.stats().mAtkSpeed
-        << c.stats().pAtkSpeed
+        << static_cast<u32>(stats[StatId::MAtkSpeed])
+        << static_cast<u32>(stats[StatId::PAtkSpeed])
         << 0 // (c.isPvpFlagged ? 1 : 0) // repeated
         << c.status().karma              // repeated
-        << c.stats().runSpeedBase
-        << c.stats().walkSpeedBase
-        << c.stats().swimRunSpeedBase
-        << c.stats().swimWalkSpeedBase
-        << c.stats().flyRunSpeedBase
-        << c.stats().flyWalkSpeedBase
-        << c.stats().flyRunSpeedBase
-        << c.stats().flyWalkSpeedBase
-        << static_cast<double>(c.stats().runSpeed)  / c.stats().runSpeedBase
-        << static_cast<double>(c.stats().pAtkSpeed) / c.stats().pAtkSpeedBase
-        << c.appearance().collisionRadius
-        << c.appearance().collisionHeight
-        << c.appearance().hairStyleId
-        << c.appearance().hairColorId
-        << c.appearance().faceId
+        << static_cast<u32>(stats[StatId::BaseRunSpeed])
+        << static_cast<u32>(stats[StatId::BaseWalkSpeed])
+        << static_cast<u32>(stats[StatId::BaseSwimRunSpeed])
+        << static_cast<u32>(stats[StatId::BaseSwimWalkSpeed])
+        << static_cast<u32>(stats[StatId::BaseFlyRunSpeed])
+        << static_cast<u32>(stats[StatId::BaseFlyWalkSpeed])
+        << static_cast<u32>(stats[StatId::BaseFlyRunSpeed])
+        << static_cast<u32>(stats[StatId::BaseFlyWalkSpeed])
+        << stats[StatId::RunSpeed ] / stats[StatId::BaseRunSpeed ]
+        << stats[StatId::PAtkSpeed] / stats[StatId::BasePAtkSpeed]
+        << appearance.collisionRadius
+        << appearance.collisionHeight
+        << appearance.hairStyleId
+        << appearance.hairColorId
+        << appearance.faceId
         << c.title()
         << 0     // clanId
         << 0     // clan crest id
@@ -85,8 +88,8 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << static_cast<u8>(c.evalAmount)
         << c.evalScore
         << c.profession()
-        << static_cast<u32>(c.stats().maxCp)
-        << static_cast<u32>(c.stats().curCp)
+        << static_cast<u32>(stats[StatId::MaxCp])
+        << static_cast<u32>(stats[StatId::CurCp])
         << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan large crest id
@@ -96,6 +99,6 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z
-        << c.appearance().nameColor
+        << appearance.nameColor
     ;
 }

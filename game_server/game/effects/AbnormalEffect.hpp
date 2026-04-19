@@ -72,16 +72,16 @@ private:
 class BuffEffect : public AbnormalEffect
 {
 public:
-    BuffEffect(Actor & target, SkillUid skillUid, ClockDuration duration, StatId modifiedStat, double value);
+    BuffEffect(Actor & target, SkillUid skillUid, ClockDuration duration, StatId modifiedStat, StatValue value);
 
 private:
     void onStarted() override;
     void onFinished() override;
-    void modifyStat(double newValue) const;
+    void modifyStat(StatValue newValue) const;
 
 private:
-    StatId _modifiedStat;
-    double _value;
+    StatId    _modifiedStat;
+    StatValue _value;
 };
 
 /*

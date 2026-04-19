@@ -41,14 +41,14 @@ DEFINE_PACKET_HANDLER(ActionRequest)
             World::subscribeToTarget(m, character);
 
             StatsUpdatePacket p(m);
-            p.addStat(Stat::MaxHp, m->stats().maxHp);
-            p.addStat(Stat::CurHp, m->stats().curHp);
+            p.addStat(Stat::MaxHp, m->stats()[StatId::MaxHp]);
+            p.addStat(Stat::CurHp, m->stats()[StatId::CurHp]);
             player.connection().send(p);
         }
     }
     else if (targetId != character.id()) // second request on target other than self, launch attack!
     {
         character.state = ActorState::Attacking;
-        character.doNext<AttackAction>(character.target(), character.stats().pAtkSpeed);
+        character.doNext<AttackAction>(character.target(), character.stats()[StatId::PAtkSpeed]);
     }
 }

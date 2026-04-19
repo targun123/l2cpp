@@ -17,6 +17,9 @@ using Network::Packet::Server::CharacterSelectPacket;
 CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encryptionKey)
     : Packet(0x15, "CharacterSelect")
 {
+    auto const & stats  = c.stats();
+    auto const & status = c.status();
+
     *this
         << c.name()
         << c.id()
@@ -29,19 +32,19 @@ CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encr
         << c.profession()
         << 1 // active (?)
         << c.position()
-        << c.stats().curHp
-        << c.stats().curMp
-        << c.status().sp
-        << c.status().xp
-        << c.status().level()
-        << c.status().karma
-        << c.status().pkCount
-        << c.stats().INT
-        << c.stats().STR
-        << c.stats().CON
-        << c.stats().MEN
-        << c.stats().DEX
-        << c.stats().WIT
+        << stats[StatId::CurHp]
+        << stats[StatId::CurMp]
+        << status.sp
+        << status.xp
+        << status.level()
+        << status.karma
+        << status.pkCount
+        << static_cast<u32>(stats[StatId::Int])
+        << static_cast<u32>(stats[StatId::Str])
+        << static_cast<u32>(stats[StatId::Con])
+        << static_cast<u32>(stats[StatId::Men])
+        << static_cast<u32>(stats[StatId::Dex])
+        << static_cast<u32>(stats[StatId::Wit])
         << std::array<u32, 32>{} // ?
         << World::inGameTime()
         << 0
