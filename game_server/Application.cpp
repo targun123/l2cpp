@@ -95,6 +95,8 @@ int Application::ApplicationImpl::run()
     Utils::Chrono::Clock loopClock, worldClock, ioClock;
     while (!ioContext.stopped())
     {
+        loopClock.restart();
+
         ioClock.restart();
         if (auto const count = ioContext.poll(); count)
         {
