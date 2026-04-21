@@ -6,5 +6,5 @@
 using namespace Network::Packet::Server;
 
 ClientForceDisconnectPacket::ClientForceDisconnectPacket()
-    : Packet(0x7e, "ClientForceDisconnect")
+    : Packet(0x26, "ClientForceDisconnect")
 {}

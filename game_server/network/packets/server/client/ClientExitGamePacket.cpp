@@ -6,5 +6,5 @@
 using namespace Network::Packet::Server;
 
 ClientExitGamePacket::ClientExitGamePacket()
-    : Packet(0x26, "ClientExitGame")
+    : Packet(0x7e, "ClientExitGame")
 {}
