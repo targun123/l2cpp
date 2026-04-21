@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include "../../../game/components/SkillDirectory.hpp"
+#include "../../../../game/components/SkillDirectory.hpp"
 
 #include <l2cpp/network/Packet.hpp>
 

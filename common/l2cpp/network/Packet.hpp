@@ -101,14 +101,6 @@ private:
     Pimpl<PacketImpl> _impl;
 };
 
-template<u16 OpCode>
-struct l2cpp::Network::HeaderOnlyPacket : public Packet
-{
-    HeaderOnlyPacket()
-        : Packet(OpCode)
-    {}
-};
-
 template<typename T> requires std::is_class_v<T>
 l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet && p, T const & t)
 {
