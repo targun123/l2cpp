@@ -37,9 +37,12 @@ auto SkillTemplate::name()         const -> std::string_view { return _name;    
 auto SkillTemplate::fullName()     const -> std::string_view { return _fullName;     }
 auto SkillTemplate::level()        const -> SkillLevel       { return _level;        }
 auto SkillTemplate::type()         const -> SkillType        { return _type;         }
+auto SkillTemplate::targetType()   const -> SkillTargetType  { return _targetType;   }
+
 auto SkillTemplate::castDuration() const -> MSec             { return _castDuration; }
 
 auto SkillTemplate::effects() const -> std::span<std::unique_ptr<AbnormalEffectFactory> const> { return _effects; }
 
-void SkillTemplate::setCastDuration(MSec const castDuration) { _castDuration = castDuration; }
-void SkillTemplate::setType(SkillType const type)            { _type = type;                 }
+void SkillTemplate::setCastDuration(MSec const castDuration)  { _castDuration = castDuration; }
+void SkillTemplate::setType(SkillType const type)             { _type = type;                 }
+void SkillTemplate::setTargetType(SkillTargetType const type) { _targetType = type;           }

@@ -26,12 +26,14 @@ public:
     auto fullName()     const -> std::string_view;
     auto level()        const -> SkillLevel;
     auto type()         const -> SkillType;
+    auto targetType()   const -> SkillTargetType;
     auto castDuration() const -> MSec;
     auto effects()      const -> std::span<std::unique_ptr<AbnormalEffectFactory> const>;
 
 public:
     void setCastDuration(MSec castDuration);
     void setType(SkillType type);
+    void setTargetType(SkillTargetType type);
 
     template<class T> requires std::is_base_of_v<AbnormalEffectFactory, T>
     void addAbnormalEffectFactory(auto &&... args) {

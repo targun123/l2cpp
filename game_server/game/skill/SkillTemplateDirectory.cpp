@@ -77,27 +77,49 @@ namespace
             std::chrono::duration<double> const duration{Utils::stringViewTo<double>(parts[6])};
             skill.setCastDuration(std::chrono::floor<std::chrono::milliseconds>(duration));
 
+            // oper_type: 0=active_target 1=active_no_target 2=passive 3=toggle
             enum class SkillOperateType : u8 { ActiveTarget, ActiveNoTarget, Passive, Toggle };
             switch (static_cast<SkillOperateType>(Utils::stringViewTo<u8>(parts[2])))
             {
                 case SkillOperateType::ActiveTarget:
-                case SkillOperateType::ActiveNoTarget: skill.setType(SkillType::Active);  break;
-                case SkillOperateType::Passive:        skill.setType(SkillType::Passive); break;
-                case SkillOperateType::Toggle:         skill.setType(SkillType::Toggle);  break;
+                    skill.setType(SkillType::Active);
+                    [[fallthrough]];
+
+                case SkillOperateType::ActiveNoTarget:
+                    skill.setTargetType(SkillTargetType::Self);
+                    break;
+
+                case SkillOperateType::Passive:
+                    skill.setType(SkillType::Passive);
+                    skill.setTargetType(SkillTargetType::None);
+                    break;
+
+                case SkillOperateType::Toggle:
+                    skill.setType(SkillType::Toggle);
+                    skill.setTargetType(SkillTargetType::Self);
+                    break;
             }
 
             if (id == 129) // Poison
+            {
+                skill.setTargetType(SkillTargetType::Single);
                 skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Poison);
+            }
 
             if (id == 1177) // Wind Strike
+            {
+                skill.setTargetType(SkillTargetType::Single);
                 skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Wind);
+            }
 
             if (id == 1204) // Wind Walk
+            {
+                skill.setTargetType(SkillTargetType::Single);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedBonus, 33);
+            }
 
             if (id == 7029) // Super Haste
             {
-                skill.setType(SkillType::Toggle);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedMultiplier, 5);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::PAtkSpeedMultiplier, 5);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MAtkSpeedMultiplier, 5);
@@ -107,7 +129,6 @@ namespace
         {
             SPDLOG_ERROR("Failed to load skill from '{}:{}':\n{}", path.string(), i, l2cpp::formatExceptionStack(e));
         }
-        // oper_type: 0=active_target 1=active_no_target 2=passive 3=toggle
         // cast_style: 0=instant/passive 1=cast_time_non_zero 2=magic_skills_only 3=physical_skills_only
         //             4=hp_drain_magic 5=bow_skill 6=seal_of_ruler 7=physical_projectile 8=double_attack
         //             9=dual_weapon(dual/fists) 10=force_discharge

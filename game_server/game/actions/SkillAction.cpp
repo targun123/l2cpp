@@ -14,9 +14,7 @@
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
-
-// C++ includes
-#include <mutex>
+#include <l2cpp/utils/Enum.hpp>
 
 namespace SC = Network::Packet::Server;
 
@@ -25,7 +23,6 @@ struct SkillAction::SkillActionImpl
     Skill &        skill;
     ClockDuration  castingElapsed = ClockDuration::zero();
     ClockDuration  ninetyPercenCast;
-    std::once_flag targetsSentFlag;
     std::vector<Ref<Actor const>> targets;
 };
 
@@ -52,36 +49,41 @@ void SkillAction::onStarted()
         World::send(performer(), SC::UiGaugePacket{GaugeColor::Blue, _impl->skill.tmplate().castDuration()});
         World::broadcastAround(performer(), SC::SkillUsePacket{performer(), _impl->skill, false}, true);
     }
+    else // Toggle
+        setFinished(true);
 }
 
 void SkillAction::updateImpl(ClockDuration const elapsed)
 {
-    _impl->castingElapsed += elapsed;
-
-    if (_impl->castingElapsed >= _impl->ninetyPercenCast) std::call_once(_impl->targetsSentFlag, [&]
+    if (Utils::Chrono::thresholdCrossed(_impl->castingElapsed, elapsed, _impl->ninetyPercenCast))
     {
         Actor const & a = performer();
 
         if (auto const target = a.target())
             _impl->targets.emplace_back(target);
 
-        World::forEachActorAround(a, [&] (Actor const & actor) { _impl->targets.emplace_back(actor); });
+        using enum SkillTargetType;
+        if (l2cpp::Utils::Enum::isAnyOf(_impl->skill.tmplate().targetType(), Area/*, ...*/))
+            World::forEachActorAround(a, [&] (Actor const & actor) { _impl->targets.emplace_back(actor); });
+
         World::broadcastAround(a, SC::SkillSetTargetsPacket{a, _impl->skill, _impl->targets}, true);
-    });
+    }
+    _impl->castingElapsed += elapsed;
+
+    // TODO: ensure target is still valid
 
     setFinished(_impl->castingElapsed >= _impl->skill.tmplate().castDuration());
 }
 
 void SkillAction::onFinished()
 {
-    // skill animation done, apply effects now
-    if (auto const target = performer().target())
-    {
-        for (auto const & effect : _impl->skill.tmplate().effects())
-        {
-            effect->make(performer(), target);
-        }
-    }
+    // skill animation ended (or no animation), apply effects now
+
+    auto & target = _impl->skill.tmplate().targetType() == SkillTargetType::Self
+                  ? performer() : *performer().target();
+
+    for (auto const & effect : _impl->skill.tmplate().effects())
+        effect->apply(performer(), target);
 }
 
 void SkillAction::onCancelled()
