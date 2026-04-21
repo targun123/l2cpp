@@ -55,6 +55,8 @@ void SkillAction::onStarted()
 
 void SkillAction::updateImpl(ClockDuration const elapsed)
 {
+    // TODO: ensure target is still valid
+
     if (Utils::Chrono::thresholdCrossed(_impl->castingElapsed, elapsed, _impl->ninetyPercenCast))
     {
         Actor const & a = performer();
@@ -70,8 +72,6 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
     }
     _impl->castingElapsed += elapsed;
 
-    // TODO: ensure target is still valid
-
     setFinished(_impl->castingElapsed >= _impl->skill.tmplate().castDuration());
 }
 
@@ -79,14 +79,15 @@ void SkillAction::onFinished()
 {
     // skill animation ended (or no animation), apply effects now
 
-    auto & target = _impl->skill.tmplate().targetType() == SkillTargetType::Self
-                  ? performer() : *performer().target();
+    OptRef const target = _impl->skill.tmplate().targetType() == SkillTargetType::Self
+                        ? OptRef(performer()) : performer().target();
 
-    for (auto const & effect : _impl->skill.tmplate().effects())
-        effect->apply(performer(), target);
+    L2CPP_B_ASSERT(target, "No target at the end of skill casting, cannot apply effects");
+
+    _impl->skill.tmplate().applyEffects(performer(), target);
 }
 
-void SkillAction::onCancelled()
+void SkillAction::onCanceled()
 {
     World::broadcastAround(performer(), SC::SkillCancelPacket{performer()}, true);
 }

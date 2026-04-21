@@ -18,6 +18,9 @@
 #include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/network/Packet.hpp>
 
+// Third-party
+#include <spdlog/spdlog.h>
+
 // C++ includes
 #include <ranges>
 
@@ -62,8 +65,15 @@ void World::update(ClockDuration const elapsed)
 
     for (auto & c : _characters | std::views::values)
     {
-        if (auto const action = c.currentAction())
-            action->update(elapsed);
+        try
+        {
+            if (auto const action = c.currentAction())
+                action->update(elapsed);
+        }
+        catch (l2cpp::Exception const & e)
+        {
+            SPDLOG_ERROR("Failed to update action for character '{}':\n{}", c.id(), l2cpp::formatExceptionStack(e));
+        }
     }
 
     for (auto const & system : _systems)

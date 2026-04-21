@@ -3,6 +3,13 @@
 
 #include "SkillTemplate.hpp"
 
+// Project includes
+#include "../actor/Actor.hpp"
+
+// C++ includes
+#include <algorithm>
+#include <ranges>
+
 SkillTemplate::SkillTemplate(SkillId const id, std::string name, SkillLevel const lvl)
     : _id(id)
     , _level(lvl)
@@ -46,3 +53,19 @@ auto SkillTemplate::effects() const -> std::span<std::unique_ptr<AbnormalEffectF
 void SkillTemplate::setCastDuration(MSec const castDuration)  { _castDuration = castDuration; }
 void SkillTemplate::setType(SkillType const type)             { _type = type;                 }
 void SkillTemplate::setTargetType(SkillTargetType const type) { _targetType = type;           }
+
+void SkillTemplate::applyEffects(Actor & source, Actor & target) const
+{
+    auto & effects = target.abnormalEffects();
+
+    // FIXME: do not apply buff if already applied but applied power is superior than the one we try to apply (got it?)
+
+    auto v = effects | std::views::filter([this] (auto const & effect) { return effect->skillUid() == uid(); });
+    std::ranges::for_each(v, [] (auto const & effect) { return effect->cancel(); });
+
+    if (!v.empty() && _type == SkillType::Toggle)
+        return; // Avoid restarting a skill we just toggled off
+
+    for (auto const & e : _effects)
+        e->apply(source, target);
+}

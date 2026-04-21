@@ -40,6 +40,9 @@ public:
         _effects.emplace_back(std::make_unique<T>(std::forward<decltype(args)>(args)...));
     }
 
+public:
+    void applyEffects(Actor & source, Actor & target) const;
+
 private:
     SkillId         _id;
     SkillLevel      _level;

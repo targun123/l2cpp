@@ -36,6 +36,8 @@ public:
     /// @returns Whether the effect needs to be removed after this update.
     bool update(ClockDuration elapsed);
 
+    void cancel();
+
 private:
     virtual void onStarted()  {}
     virtual void onTick()     {}
@@ -46,6 +48,7 @@ private:
     Actor &            _target;
     SkillUid           _skillUid;
     ClockDuration      _duration, _elapsed, _elapsedSinceLastTick, _tickDuration, _initialTriggerDuration;
+    bool               _finished;
 };
 
 class DamageEffect : public AbnormalEffect
@@ -88,7 +91,6 @@ private:
 {
   "Wind Walk": {
     "id": 1204,
-    "levels": 2,
     "category": "active/magic",
     "target_type": "single/character",
     "cast_duration": 4000,

@@ -82,11 +82,8 @@ namespace
             switch (static_cast<SkillOperateType>(Utils::stringViewTo<u8>(parts[2])))
             {
                 case SkillOperateType::ActiveTarget:
-                    skill.setType(SkillType::Active);
-                    [[fallthrough]];
-
                 case SkillOperateType::ActiveNoTarget:
-                    skill.setTargetType(SkillTargetType::Self);
+                    skill.setType(SkillType::Active);
                     break;
 
                 case SkillOperateType::Passive:
@@ -96,7 +93,7 @@ namespace
 
                 case SkillOperateType::Toggle:
                     skill.setType(SkillType::Toggle);
-                    skill.setTargetType(SkillTargetType::Self);
+                    skill.setTargetType(SkillTargetType::None);
                     break;
             }
 
@@ -120,6 +117,7 @@ namespace
 
             if (id == 7029) // Super Haste
             {
+                skill.setType(SkillType::Toggle);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedMultiplier, 5);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::PAtkSpeedMultiplier, 5);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MAtkSpeedMultiplier, 5);

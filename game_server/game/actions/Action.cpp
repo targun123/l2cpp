@@ -50,7 +50,7 @@ void Action::cancel()
     if (performer().currentAction())
         performer().cancelAction();
     else
-        onCancelled();
+        onCanceled();
 }
 
 void Action::setFinished(bool const finished)
