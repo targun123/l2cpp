@@ -49,6 +49,7 @@ Actor::Actor(ActorType const type)
     skills.learn(129,  1); // Poison
     skills.learn(1204, 1); // Wind Walk
     skills.learn(1177, 1); // Wind Strike
+    skills.learn(1295, 1); // Aqua Splash
 
     auto & stats = addComponent<Stats>();
     stats[StatId::BaseStr]           = 40;

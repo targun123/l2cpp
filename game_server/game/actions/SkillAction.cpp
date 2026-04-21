@@ -20,10 +20,10 @@ namespace SC = Network::Packet::Server;
 
 struct SkillAction::SkillActionImpl
 {
-    Skill &        skill;
-    ClockDuration  castingElapsed = ClockDuration::zero();
-    ClockDuration  ninetyPercenCast;
-    std::vector<Ref<Actor const>> targets;
+    Skill &                 skill;
+    ClockDuration           castingElapsed = ClockDuration::zero();
+    ClockDuration           ninetyPercenCast;
+    std::vector<Ref<Actor>> targets;
 };
 
 template class Pimpl<SkillAction::SkillActionImpl>;
@@ -34,6 +34,9 @@ SkillAction::SkillAction(Actor & performer, Skill & skill)
     : Action(ActionType::Skill, performer)
     , _impl(skill)
 {
+    L2CPP_B_ASSERT(!l2cpp::Utils::Enum::isAnyOf(skill.tmplate().type(), SkillType::Passive, SkillType::Unknown),
+                   "Unsupported skill type '{}'", std::to_underlying(skill.tmplate().type()));
+
     _impl->ninetyPercenCast = Utils::Chrono::Clock::toDuration(skill.tmplate().castDuration() * 0.9);
 }
 
@@ -50,7 +53,10 @@ void SkillAction::onStarted()
         World::broadcastAround(performer(), SC::SkillUsePacket{performer(), _impl->skill, false}, true);
     }
     else // Toggle
+    {
+        _impl->targets.emplace_back(performer());
         setFinished(true);
+    }
 }
 
 void SkillAction::updateImpl(ClockDuration const elapsed)
@@ -59,35 +65,52 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
 
     if (Utils::Chrono::thresholdCrossed(_impl->castingElapsed, elapsed, _impl->ninetyPercenCast))
     {
-        Actor const & a = performer();
+        selectTargets();
 
-        if (auto const target = a.target())
-            _impl->targets.emplace_back(target);
+        std::vector<Ref<Actor const>> targets;
+        targets.assign_range(_impl->targets);
 
-        using enum SkillTargetType;
-        if (l2cpp::Utils::Enum::isAnyOf(_impl->skill.tmplate().targetType(), Area/*, ...*/))
-            World::forEachActorAround(a, [&] (Actor const & actor) { _impl->targets.emplace_back(actor); });
-
-        World::broadcastAround(a, SC::SkillSetTargetsPacket{a, _impl->skill, _impl->targets}, true);
+        World::broadcastAround(_impl->targets.at(0),
+                               SC::SkillSetTargetsPacket{performer(), _impl->skill, targets}, true);
     }
-    _impl->castingElapsed += elapsed;
 
-    setFinished(_impl->castingElapsed >= _impl->skill.tmplate().castDuration());
+    setFinished((_impl->castingElapsed += elapsed) >= _impl->skill.tmplate().castDuration());
 }
 
 void SkillAction::onFinished()
 {
     // skill animation ended (or no animation), apply effects now
-
-    OptRef const target = _impl->skill.tmplate().targetType() == SkillTargetType::Self
-                        ? OptRef(performer()) : performer().target();
-
-    L2CPP_B_ASSERT(target, "No target at the end of skill casting, cannot apply effects");
-
-    _impl->skill.tmplate().applyEffects(performer(), target);
+    L2CPP_B_ASSERT(!_impl->targets.empty(), "No target at the end of skill casting, cannot apply effects");
+    for (auto & target : _impl->targets)
+        _impl->skill.tmplate().applyEffects(performer(), target);
 }
 
 void SkillAction::onCanceled()
 {
     World::broadcastAround(performer(), SC::SkillCancelPacket{performer()}, true);
+}
+
+void SkillAction::selectTargets()
+{
+    L2CPP_B_ASSERT(_impl->skill.tmplate().type() == SkillType::Active,
+                   "Skill whose type is not Active inside {}", __FUNCTION__);
+
+    switch (_impl->skill.tmplate().targetType())
+    {
+        case SkillTargetType::Self:
+            _impl->targets.emplace_back(performer());
+            break;
+
+        case SkillTargetType::AoE:
+            World::forEachActorAround(performer().target(),
+                                      [&] (auto & actor) { _impl->targets.emplace_back(actor); });
+            [[fallthrough]];
+
+        case SkillTargetType::Single:
+            _impl->targets.emplace_back(performer().target());
+            break;
+
+        case SkillTargetType::None:
+            L2CPP_THROW("Skill with SkillTargetType::None inside {}", __FUNCTION__);
+    }
 }

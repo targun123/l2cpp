@@ -25,6 +25,7 @@ private:
     void updateImpl(ClockDuration) override;
     void onFinished() override;
     void onCanceled() override;
+    void selectTargets();
 
 private:
     struct SkillActionImpl;

@@ -115,6 +115,12 @@ namespace
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedBonus, 33);
             }
 
+            if (id == 1295) // Aqua Splash
+            {
+                skill.setTargetType(SkillTargetType::AoE);
+                skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Water);
+            }
+
             if (id == 7029) // Super Haste
             {
                 skill.setType(SkillType::Toggle);
