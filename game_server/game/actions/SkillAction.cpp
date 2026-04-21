@@ -22,7 +22,7 @@ struct SkillAction::SkillActionImpl
 {
     Skill &                 skill;
     ClockDuration           castingElapsed = ClockDuration::zero();
-    ClockDuration           ninetyPercenCast;
+    ClockDuration           ninetyPercentCast;
     std::vector<Ref<Actor>> targets;
 };
 
@@ -34,10 +34,17 @@ SkillAction::SkillAction(Actor & performer, Skill & skill)
     : Action(ActionType::Skill, performer)
     , _impl(skill)
 {
-    L2CPP_B_ASSERT(!l2cpp::Utils::Enum::isAnyOf(skill.tmplate().type(), SkillType::Passive, SkillType::Unknown),
+    L2CPP_B_ASSERT(l2cpp::Utils::Enum::isAnyOf(skill.tmplate().type(), SkillType::Active, SkillType::Toggle),
                    "Unsupported skill type '{}'", std::to_underlying(skill.tmplate().type()));
 
-    _impl->ninetyPercenCast = Utils::Chrono::Clock::toDuration(skill.tmplate().castDuration() * 0.9);
+    _impl->ninetyPercentCast = Utils::Chrono::Clock::toDuration(skill.tmplate().castDuration() * 0.9);
+
+    if (skill.tmplate().targetType() == SkillTargetType::None)
+        _impl->targets.emplace_back(performer);
+    else if (auto const target = performer.target())
+        _impl->targets.emplace_back(target);
+    else
+        L2CPP_THROW("Skill '{}' needs a target to be performed", static_cast<u32>(skill.tmplate().uid()));
 }
 
 SkillAction::SkillAction(SkillAction &&) noexcept = default;
@@ -53,17 +60,14 @@ void SkillAction::onStarted()
         World::broadcastAround(performer(), SC::SkillUsePacket{performer(), _impl->skill, false}, true);
     }
     else // Toggle
-    {
-        _impl->targets.emplace_back(performer());
         setFinished(true);
-    }
 }
 
 void SkillAction::updateImpl(ClockDuration const elapsed)
 {
     // TODO: ensure target is still valid
 
-    if (Utils::Chrono::thresholdCrossed(_impl->castingElapsed, elapsed, _impl->ninetyPercenCast))
+    if (Utils::Chrono::thresholdCrossed(_impl->castingElapsed, elapsed, _impl->ninetyPercentCast))
     {
         selectTargets();
 
@@ -79,8 +83,8 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
 
 void SkillAction::onFinished()
 {
-    // skill animation ended (or no animation), apply effects now
     L2CPP_B_ASSERT(!_impl->targets.empty(), "No target at the end of skill casting, cannot apply effects");
+
     for (auto & target : _impl->targets)
         _impl->skill.tmplate().applyEffects(performer(), target);
 }
@@ -98,15 +102,10 @@ void SkillAction::selectTargets()
     switch (_impl->skill.tmplate().targetType())
     {
         case SkillTargetType::AoE:
-            World::forEachActorAround(performer().target(),
-                                      [&] (auto & actor) { _impl->targets.emplace_back(actor); });
-            [[fallthrough]];
-
-        case SkillTargetType::Single:
-            _impl->targets.emplace_back(performer().target());
+            World::forEachActorAround(_impl->targets.at(0), [&] (auto & a) { _impl->targets.emplace_back(a); });
             break;
 
-        case SkillTargetType::None:
-            _impl->targets.emplace_back(performer());
+        default:
+            break;
     }
 }

@@ -22,33 +22,30 @@ DEFINE_PACKET_HANDLER(ActionRequest)
 
     u32 targetId;
     Position origin;
-    bool disallowMovement; // 0=click 1=shift+click
+    bool disallowMovement;
     reader >> targetId >> origin >> disallowMovement;
 
     auto & character = *player.currentCharacter();
     if (!character.target() || character.target()->id() != targetId) // No current target or trying to change target?
     {
-        if (auto const action = character.currentAction(); !action || action->type() != ActionType::Skill)
+        /**/ if (auto const c = World::character(targetId))
         {
-            /**/ if (auto const c = World::character(targetId))
-            {
-                character.setTarget(c);
-                player.connection().send(TargetSelectPacket(character, c));
-                World::subscribeToTarget(c, character);
-                return;
-            }
-            else if (auto const m = World::monster(targetId))
-            {
-                character.setTarget(m);
-                player.connection().send(TargetMonsterSelectPacket(character, m));
-                World::subscribeToTarget(m, character);
+            character.setTarget(c);
+            player.connection().send(TargetSelectPacket(character, c));
+            World::subscribeToTarget(c, character);
+            return;
+        }
+        else if (auto const m = World::monster(targetId))
+        {
+            character.setTarget(m);
+            player.connection().send(TargetMonsterSelectPacket(character, m));
+            World::subscribeToTarget(m, character);
 
-                StatsUpdatePacket p(m);
-                p.addStat(Stat::MaxHp, m->stats()[StatId::MaxHp]);
-                p.addStat(Stat::CurHp, m->stats()[StatId::CurHp]);
-                player.connection().send(p);
-                return;
-            }
+            StatsUpdatePacket p(m);
+            p.addStat(Stat::MaxHp, m->stats()[StatId::MaxHp]);
+            p.addStat(Stat::CurHp, m->stats()[StatId::CurHp]);
+            player.connection().send(p);
+            return;
         }
     }
     else if (targetId != character.id()) // second request on target other than self, launch attack!

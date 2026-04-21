@@ -2,10 +2,11 @@
 /// @date      Created on 2026-02-27
 
 // Project includes
-#include "_Common.hpp"
 #include "../game/actions/SkillAction.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/SkillDirectory.hpp"
+#include "../network/packets/server/ActionFailedPacket.hpp"
+#include "_Common.hpp"
 
 DEFINE_PACKET_HANDLER(SkillUse)
 {
@@ -98,5 +99,5 @@ DEFINE_PACKET_HANDLER(SkillUse)
     if (canCast)
         c.doNext<SkillAction>(skill);
     else
-        player.connection().send(Packet(0x25, "ActionFailed"));
+        player.connection().send(ActionFailedPacket{});
 }
