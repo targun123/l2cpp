@@ -4,6 +4,7 @@
 #pragma once
 
 // Project includes
+#include "../constants/SkillTargetNature.hpp"
 #include "../constants/SkillTargetType.hpp"
 #include "../constants/SkillType.hpp"
 #include "../effects/AbnormalEffectFactory.hpp"
@@ -16,7 +17,8 @@ class SkillTemplate
 {
 public:
     SkillTemplate(SkillId id, std::string name, SkillLevel lvl);
-    SkillTemplate(SkillId id, std::string name, SkillLevel lvl, SkillType type, SkillTargetType targetType,
+    SkillTemplate(SkillId id, std::string name, SkillLevel lvl,
+                  SkillType type, SkillTargetType targetType, SkillTargetNature targetNature,
                   MSec castDuration, MSec cdDuration);
 
 public:
@@ -27,6 +29,7 @@ public:
     auto level()        const -> SkillLevel;
     auto type()         const -> SkillType;
     auto targetType()   const -> SkillTargetType;
+    auto targetNature() const -> SkillTargetNature;
     auto castDuration() const -> MSec;
     auto effects()      const -> std::span<std::unique_ptr<AbnormalEffectFactory> const>;
 
@@ -34,6 +37,7 @@ public:
     void setCastDuration(MSec castDuration);
     void setType(SkillType type);
     void setTargetType(SkillTargetType type);
+    void setTargetNature(SkillTargetNature nature);
 
     template<class T> requires std::is_base_of_v<AbnormalEffectFactory, T>
     void addAbnormalEffectFactory(auto &&... args) {
@@ -44,15 +48,16 @@ public:
     void applyEffects(Actor & source, Actor & target) const;
 
 private:
-    SkillId         _id;
-    SkillLevel      _level;
-    SkillType       _type;
-    SkillTargetType _targetType;
-    std::string     _name;
-    std::string     _fullName;
-    std::string     _icon;
-    MSec            _castDuration;
-    MSec            _cooldownDuration;
+    SkillId           _id;
+    SkillLevel        _level;
+    SkillType         _type;
+    SkillTargetType   _targetType;
+    SkillTargetNature _targetNature;
+    std::string       _name;
+    std::string       _fullName;
+    std::string       _icon;
+    MSec              _castDuration;
+    MSec              _cooldownDuration;
 
     std::vector<std::unique_ptr<AbnormalEffectFactory>> _effects;
 };

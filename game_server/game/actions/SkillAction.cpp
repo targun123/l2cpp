@@ -97,10 +97,6 @@ void SkillAction::selectTargets()
 
     switch (_impl->skill.tmplate().targetType())
     {
-        case SkillTargetType::Self:
-            _impl->targets.emplace_back(performer());
-            break;
-
         case SkillTargetType::AoE:
             World::forEachActorAround(performer().target(),
                                       [&] (auto & actor) { _impl->targets.emplace_back(actor); });
@@ -111,6 +107,6 @@ void SkillAction::selectTargets()
             break;
 
         case SkillTargetType::None:
-            L2CPP_THROW("Skill with SkillTargetType::None inside {}", __FUNCTION__);
+            _impl->targets.emplace_back(performer());
     }
 }

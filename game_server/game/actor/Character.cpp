@@ -44,6 +44,9 @@ Character::Character(OptRef<Player> p)
 
     addComponent<CharacterStatus>();
 
+    if (accessLevel > 0)
+        skills().learn(7029, 4); // Super Haste
+
     auto & gear = *component<Gear>();
 
     Item formalWear;

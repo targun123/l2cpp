@@ -100,30 +100,36 @@ namespace
             if (id == 129) // Poison
             {
                 skill.setTargetType(SkillTargetType::Single);
+                skill.setTargetNature(SkillTargetNature::Ennemy);
                 skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Poison);
             }
 
             if (id == 1177) // Wind Strike
             {
                 skill.setTargetType(SkillTargetType::Single);
+                skill.setTargetNature(SkillTargetNature::Ennemy);
                 skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Wind);
             }
 
             if (id == 1204) // Wind Walk
             {
                 skill.setTargetType(SkillTargetType::Single);
+                skill.setTargetNature(SkillTargetNature::Any); // can be casted on anything, but doesn't always apply
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedBonus, 33);
             }
 
             if (id == 1295) // Aqua Splash
             {
                 skill.setTargetType(SkillTargetType::AoE);
+                skill.setTargetNature(SkillTargetNature::Ennemy);
                 skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Water);
             }
 
             if (id == 7029) // Super Haste
             {
                 skill.setType(SkillType::Toggle);
+                skill.setTargetType(SkillTargetType::None);
+                skill.setTargetNature(SkillTargetNature::Self);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedMultiplier, 5);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::PAtkSpeedMultiplier, 5);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MAtkSpeedMultiplier, 5);

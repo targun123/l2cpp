@@ -20,15 +20,10 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
     auto & conn = player.connection();
 
     conn.send(InventoryListPacket(false, c.inventory()));
-
-    if (c.accessLevel > 0)
-        c.skills().learn(7029, 4); // Super Haste
-
     conn.send(ChatSystemSayPacket(34)); // Welcome to the world of Lineage II
 
     c.stats().compute(c);
-    conn.send(CharacterStatusUpdatePacket(c));
-    World::broadcastAround(c, CharacterStatusUpdateBroadcastPacket(c));
+
     World::forEachActorAround(c, [&] (Actor & a)
     {
         if (a.type() == ActorType::Character)
@@ -36,6 +31,8 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
         else
             conn.send(NpcStatusUpdatePacket{static_cast<NonPlayableActor &>(a)});
     });
+    conn.send(CharacterStatusUpdatePacket(c));
+    World::broadcastAround(c, CharacterStatusUpdateBroadcastPacket(c));
 }
 catch (...)
 {

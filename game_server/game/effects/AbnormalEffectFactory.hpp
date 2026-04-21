@@ -24,7 +24,7 @@ public:
     auto type() const -> AbnormalEffectType { return _type; }
 
 public:
-    virtual void apply(Actor const & source, Actor & target) = 0;
+    virtual void apply(Actor & source, Actor & target) = 0;
 
 protected:
     AbnormalEffectType _type;
@@ -40,7 +40,7 @@ public:
     {}
 
 public:
-    void apply(Actor const & source, Actor & target) override;
+    void apply(Actor & source, Actor & target) override;
 
 private:
     DamageElementType _elementType;
@@ -56,7 +56,7 @@ public:
     {}
 
 public:
-    void apply(Actor const & source, Actor & target) override;
+    void apply(Actor & source, Actor & target) override;
 
 private:
     StatId _modifiedStat;
