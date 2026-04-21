@@ -3,6 +3,9 @@
 
 #include "Stats.hpp"
 
+// Project includes
+#include "../actor/Character.hpp"
+
 Stats::Stats()
 {
     using enum StatId;
@@ -33,13 +36,14 @@ Stats::Stats()
 #undef INIT_MULTIPLIER
 }
 
-void Stats::compute(Actor const &)
+void Stats::compute(Actor const & a)
 {
     using enum StatId;
 
-#define CALCULATE_CORE_STAT(s)  (*this)[s] = (*this)[Base##s] + (*this)[Bonus##s           ]
-#define CALCULATE_STAT(s)       (*this)[s] = (*this)[Base##s] * (*this)[s##Multiplier      ] + (*this)[s##Bonus]
-#define CALCULATE_SPEED_STAT(s) (*this)[s] = (*this)[Base##s] * (*this)[MoveSpeedMultiplier] + (*this)[MoveSpeedBonus]
+#define STAT(s)                 (*this)[s]
+#define CALCULATE_CORE_STAT(s)  STAT(s) = STAT(Base##s) + STAT(Bonus##s           )
+#define CALCULATE_STAT(s)       STAT(s) = STAT(Base##s) * STAT(s##Multiplier      ) + STAT(s##Bonus)
+#define CALCULATE_SPEED_STAT(s) STAT(s) = STAT(Base##s) * STAT(MoveSpeedMultiplier) + STAT(MoveSpeedBonus)
 
     CALCULATE_CORE_STAT(Str); CALCULATE_CORE_STAT(Dex); CALCULATE_CORE_STAT(Con);
     CALCULATE_CORE_STAT(Int); CALCULATE_CORE_STAT(Wit); CALCULATE_CORE_STAT(Men);
@@ -72,4 +76,10 @@ void Stats::compute(Actor const &)
 #undef CALCULATE_CORE_STAT
 #undef CALCULATE_STAT
 #undef CALCULATE_SPEED_STAT
+
+    STAT(PAtkSpeed) = std::min(STAT(PAtkSpeed), 1500.);
+    STAT(MAtkSpeed) = std::min(STAT(MAtkSpeed), 1999.);
+
+    if (a.type() != ActorType::Character || static_cast<Character const &>(a).accessLevel == 0) // GMs can speed up
+        STAT(RunSpeed) = std::min(STAT(RunSpeed), 250.);
 }
