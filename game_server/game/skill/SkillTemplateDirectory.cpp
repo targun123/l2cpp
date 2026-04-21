@@ -76,6 +76,7 @@ namespace
 
             std::chrono::duration<double> const duration{Utils::stringViewTo<double>(parts[6])};
             skill.setCastDuration(std::chrono::floor<std::chrono::milliseconds>(duration));
+            skill.setIsMagic(parts[7] == "1");
 
             // oper_type: 0=active_target 1=active_no_target 2=passive 3=toggle
             enum class SkillOperateType : u8 { ActiveTarget, ActiveNoTarget, Passive, Toggle };

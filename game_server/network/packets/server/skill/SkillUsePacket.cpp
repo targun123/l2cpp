@@ -10,7 +10,13 @@
 
 using Network::Packet::Server::SkillUsePacket;
 
-SkillUsePacket::SkillUsePacket(Actor const & caster, Skill const & skill, bool const isCritical)
+SkillUsePacket::SkillUsePacket(
+    Actor           const & caster
+    , SkillUid      const   skillUid
+    , ClockDuration const   castDuration
+    , ClockDuration const   cooldown
+    , bool          const   isCritical
+)
     : Packet(0x48, "SkillUse")
 {
     // This is not the skill target, only the target for the skill animation during casting
@@ -19,10 +25,9 @@ SkillUsePacket::SkillUsePacket(Actor const & caster, Skill const & skill, bool c
     *this
         << caster.id()
         << target.id()
-        << static_cast<u32>(skill.tmplate().id())
-        << static_cast<u32>(skill.tmplate().level())
-        << skill.tmplate().castDuration()
-        << 1000 // reuse delay (in ms)
+        << skillUid
+        << std::chrono::floor<std::chrono::milliseconds>(castDuration)
+        << std::chrono::floor<std::chrono::milliseconds>(cooldown)
         << caster.position()
         << (isCritical ? 1 : 0)
     ;

@@ -10,6 +10,7 @@
 #include "../../network/packets/server/ui/UiGaugePacket.hpp"
 #include "../../utils/Chrono.hpp"
 #include "../World.hpp"
+#include "../components/Stats.hpp"
 #include "../skill/Skill.hpp"
 
 // ReSharper disable once CppUnusedIncludeDirective
@@ -21,8 +22,9 @@ namespace SC = Network::Packet::Server;
 struct SkillAction::SkillActionImpl
 {
     Skill &                 skill;
-    ClockDuration           castingElapsed = ClockDuration::zero();
-    ClockDuration           ninetyPercentCast;
+    ClockDuration           castingElapsed    = ClockDuration::zero();
+    ClockDuration           castingDuration   = ClockDuration::zero();
+    ClockDuration           ninetyPercentCast = ClockDuration::zero();
     std::vector<Ref<Actor>> targets;
 };
 
@@ -34,12 +36,34 @@ SkillAction::SkillAction(Actor & performer, Skill & skill)
     : Action(ActionType::Skill, performer)
     , _impl(skill)
 {
-    L2CPP_B_ASSERT(l2cpp::Utils::Enum::isAnyOf(skill.tmplate().type(), SkillType::Active, SkillType::Toggle),
-                   "Unsupported skill type '{}'", std::to_underlying(skill.tmplate().type()));
+    auto const & tmpl = skill.tmplate();
 
-    _impl->ninetyPercentCast = Utils::Chrono::Clock::toDuration(skill.tmplate().castDuration() * 0.9);
+    L2CPP_B_ASSERT(l2cpp::Utils::Enum::isAnyOf(tmpl.type(), SkillType::Active, SkillType::Toggle),
+                   "Unsupported skill type '{}'", std::to_underlying(tmpl.type()));
 
-    if (skill.tmplate().targetType() == SkillTargetType::None)
+    if (tmpl.castDuration() != ClockDuration::zero())
+    {
+        if (tmpl.isMagic())
+        {
+            auto const mAtkSpeedRatio = performer.stats()[StatId::MAtkSpeed] / 333;
+            _impl->castingDuration    = Utils::Chrono::Clock::toDuration(tmpl.castDuration() / mAtkSpeedRatio);
+
+            if (_impl->castingDuration <= 550ms)
+                _impl->castingDuration  = 550ms;
+        }
+        else
+        {
+            auto const pAtkSpeedRatio = performer.stats()[StatId::PAtkSpeed] / 300;
+            _impl->castingDuration    = Utils::Chrono::Clock::toDuration(tmpl.castDuration() / pAtkSpeedRatio);
+
+            if (_impl->castingDuration < 500ms)
+                _impl->castingDuration = 500ms;
+        }
+    }
+
+    _impl->ninetyPercentCast = Utils::Chrono::Clock::toDuration(_impl->castingDuration * 0.9);
+
+    if (tmpl.targetType() == SkillTargetType::None)
         _impl->targets.emplace_back(performer);
     else if (auto const target = performer.target())
         _impl->targets.emplace_back(target);
@@ -56,8 +80,9 @@ void SkillAction::onStarted()
 {
     if (_impl->skill.tmplate().type() == SkillType::Active)
     {
-        World::send(performer(), SC::UiGaugePacket{GaugeColor::Blue, _impl->skill.tmplate().castDuration()});
-        World::broadcastAround(performer(), SC::SkillUsePacket{performer(), _impl->skill, false}, true);
+        World::send(performer(), SC::UiGaugePacket{GaugeColor::Blue, _impl->castingDuration});
+        SC::SkillUsePacket p{performer(), _impl->skill.tmplate().uid(), _impl->castingDuration, /*FIXME*/1s, false};
+        World::broadcastAround(performer(), std::move(p), true);
     }
     else // Toggle
         setFinished(true);
@@ -78,7 +103,7 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
                                SC::SkillSetTargetsPacket{performer(), _impl->skill, targets}, true);
     }
 
-    setFinished((_impl->castingElapsed += elapsed) >= _impl->skill.tmplate().castDuration());
+    setFinished((_impl->castingElapsed += elapsed) >= _impl->castingDuration);
 }
 
 void SkillAction::onFinished()
