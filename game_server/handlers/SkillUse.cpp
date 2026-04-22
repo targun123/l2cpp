@@ -25,10 +25,9 @@ DEFINE_PACKET_HANDLER(SkillUse)
 
     auto const target = c.target();
 
-    // must have a target or not require one
-    if (bool canCast = target.has_value() || skill->tmplate().targetType() == SkillTargetType::None)
+    if (bool canCast = c.isAlive() && (target || !skill->tmplate().needsTarget()))
     {
-        if (skill->tmplate().targetType() != SkillTargetType::None)
+        if (skill->tmplate().needsTarget())
             canCast = Utils::Target::isValidTarget(c, skill->tmplate(), target, forceAttack);
 
         if (canCast)

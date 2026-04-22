@@ -93,10 +93,18 @@ namespace
 
                 case SkillOperateType::Toggle:
                     skill.setType(SkillType::Toggle);
+                    skill.setTargetNature(SkillTargetNature::Self);
                     break;
             }
 
             using enum SkillTargetNature;
+
+            if (id == 18) // Hate Aura
+            {
+                skill.setTargetType(SkillTargetType::Aura);
+                skill.setTargetNature(Ennemy);
+                skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Neutral);
+            }
 
             if (id == 78) // War Cry
             {
@@ -134,8 +142,7 @@ namespace
 
             if (id == 7029) // Super Haste
             {
-                skill.setType(SkillType::Toggle);
-                skill.setTargetNature(Self);
+                skill.setType(SkillType::Toggle); // Enforce toggle mode for this one because it makes more sense
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedMultiplier, 5);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::PAtkSpeedMultiplier, 5);
                 skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MAtkSpeedMultiplier, 5);

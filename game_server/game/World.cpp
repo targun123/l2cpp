@@ -74,6 +74,10 @@ void World::update(ClockDuration const elapsed)
         {
             SPDLOG_ERROR("Failed to update action for character '{}':\n{}", c.id(), l2cpp::formatExceptionStack(e));
         }
+        catch (std::exception const & e)
+        {
+            SPDLOG_ERROR("Failed to update action for character '{}':\n{}", c.id(), l2cpp::formatExceptionStack(e));
+        }
     }
 
     for (auto const & system : _systems)

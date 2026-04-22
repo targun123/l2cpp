@@ -28,6 +28,7 @@ public:
     auto targetType()       const -> SkillTargetType;
     auto targetNature()     const -> SkillTargetNature;
     auto isMagic()          const -> bool;
+    auto needsTarget()      const -> bool;
     auto castDuration()     const -> ClockDuration;
     auto cooldownDuration() const -> ClockDuration;
     auto effects()          const -> std::span<std::unique_ptr<AbnormalEffectFactory> const>;

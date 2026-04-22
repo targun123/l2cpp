@@ -6,6 +6,8 @@
 // Project includes
 #include "../actor/Actor.hpp"
 
+#include <l2cpp/utils/Enum.hpp>
+
 // C++ includes
 #include <algorithm>
 #include <ranges>
@@ -14,7 +16,7 @@ SkillTemplate::SkillTemplate(SkillId const id, std::string name, SkillLevel cons
     : _id(id)
     , _level(lvl)
     , _type(SkillType::Unknown)
-    , _targetType(SkillTargetType::None)
+    , _targetType(SkillTargetType::Self)
     , _targetNature(SkillTargetNature::None)
     , _name(std::move(name))
     , _fullName(std::format("{} lv. {}", _name, _level))
@@ -33,6 +35,12 @@ auto SkillTemplate::type()             const -> SkillType         { return _type
 auto SkillTemplate::targetType()       const -> SkillTargetType   { return _targetType;       }
 auto SkillTemplate::targetNature()     const -> SkillTargetNature { return _targetNature;     }
 auto SkillTemplate::isMagic()          const -> bool              { return _isMagic;          }
+
+auto SkillTemplate::needsTarget() const -> bool
+{
+    return l2cpp::Utils::Enum::isAnyOf(_targetType, SkillTargetType::Single, SkillTargetType::AoE);
+}
+
 auto SkillTemplate::castDuration()     const -> ClockDuration     { return _castDuration;     }
 auto SkillTemplate::cooldownDuration() const -> ClockDuration     { return _cooldownDuration; }
 

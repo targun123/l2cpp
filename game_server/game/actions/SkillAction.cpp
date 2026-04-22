@@ -60,16 +60,21 @@ SkillAction::SkillAction(Actor & performer, SkillTemplate const & skill, bool co
                 _impl->castingDuration = 500ms;
         }
 
-        // Skill targets must be notified at least 300ms before the end of the animation to display correctly
-        _impl->notifyTargetsTrigger = _impl->castingDuration - 300ms;
+        // Skill targets must be notified 350ms (including latency) before the end of the animation to display correctly
+        _impl->notifyTargetsTrigger = _impl->castingDuration - 350ms;
     }
 
-    if (_impl->skill.targetType() == SkillTargetType::None)
+    if (_impl->skill.targetType() == SkillTargetType::Self)
+    {
         _impl->targets.emplace_back(performer);
-    else if (auto const target = performer.target())
-        _impl->targets.emplace_back(target);
-    else
-        L2CPP_THROW("Skill '{}' needs a target to be performed", _impl->skill.fullName());
+    }
+    else if (_impl->skill.targetType() != SkillTargetType::Aura)
+    {
+        if (auto const target = performer.target())
+            _impl->targets.emplace_back(target);
+        else
+            L2CPP_THROW("Skill '{}' needs a target to be performed", _impl->skill.fullName());
+    }
 }
 
 SkillAction::SkillAction(SkillAction &&) noexcept = default;
@@ -82,7 +87,8 @@ void SkillAction::onStarted()
     if (_impl->skill.type() == SkillType::Active)
     {
         World::send(performer(), SC::UiGaugePacket{GaugeColor::Blue, _impl->castingDuration});
-        SC::SkillUsePacket p{performer(), _impl->targets.at(0), _impl->skill.uid(), _impl->castingDuration, 1s, false};
+        SC::SkillUsePacket p{performer(), _impl->targets.empty() ? performer() : _impl->targets.at(0).get(),
+                             _impl->skill.uid(), _impl->castingDuration, 1s, false};
         World::broadcastAround(performer(), std::move(p), true);
     }
     else // Toggle
@@ -93,7 +99,8 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
 {
     // TODO: ensure target is still valid
 
-    if (_impl->skill.targetType() == SkillTargetType::AoE &&
+    using enum SkillTargetType;
+    if (l2cpp::Utils::Enum::isAnyOf(_impl->skill.targetType(), AoE, Aura) &&
         Utils::Chrono::thresholdCrossed(_impl->castingElapsed, elapsed, _impl->notifyTargetsTrigger))
     {
         selectTargets();
@@ -101,7 +108,7 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
         std::vector<Ref<Actor const>> targets;
         targets.assign_range(_impl->targets);
 
-        World::broadcastAround(_impl->targets.at(0),
+        World::broadcastAround(performer(),
                                SC::SkillSetTargetsPacket{performer(), _impl->skill, targets}, true);
     }
 
@@ -126,17 +133,11 @@ void SkillAction::selectTargets()
     L2CPP_B_ASSERT(_impl->skill.type() == SkillType::Active,
                    "Skill whose type is not Active inside {}", __FUNCTION__);
 
-    switch (_impl->skill.targetType())
-    {
-        case SkillTargetType::AoE:
-            World::forEachActorAround(_impl->targets.at(0), [&] (auto & a)
-            {
-                if (Utils::Target::isValidTarget(performer(), _impl->skill, a, _impl->forceAttack))
-                    _impl->targets.emplace_back(a);
-            });
-            break;
+    auto const & target = _impl->targets.empty() ? performer() : _impl->targets.at(0).get();
 
-        default:
-            break;
-    }
+    World::forEachActorAround(target, [&] (auto & a)
+    {
+        if (Utils::Target::isValidTarget(performer(), _impl->skill, a, _impl->forceAttack))
+            _impl->targets.emplace_back(a);
+    });
 }
