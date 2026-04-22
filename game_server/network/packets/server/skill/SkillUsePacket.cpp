@@ -11,17 +11,15 @@
 using Network::Packet::Server::SkillUsePacket;
 
 SkillUsePacket::SkillUsePacket(
-    Actor           const & caster
-    , SkillUid      const   skillUid
-    , ClockDuration const   castDuration
-    , ClockDuration const   cooldown
-    , bool          const   isCritical
+    Actor         const & caster
+  , Actor         const & target
+  , SkillUid      const   skillUid
+  , ClockDuration const   castDuration
+  , ClockDuration const   cooldown
+  , bool          const   isCritical
 )
     : Packet(0x48, "SkillUse")
 {
-    // This is not the skill target, only the target for the skill animation during casting
-    Actor const & target = caster.target() ? caster.target() : caster;
-
     *this
         << caster.id()
         << target.id()

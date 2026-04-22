@@ -15,6 +15,6 @@ namespace Network::Packet::Server { struct SkillUsePacket; }
 
 struct Network::Packet::Server::SkillUsePacket final : public l2cpp::Network::Packet
 {
-    SkillUsePacket(Actor const & caster, SkillUid skillUid,
+    SkillUsePacket(Actor const & caster, Actor const & target, SkillUid skillUid,
                    ClockDuration castDuration, ClockDuration cooldown, bool isCritical);
 };

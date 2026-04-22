@@ -80,7 +80,7 @@ void SkillAction::onStarted()
     if (_impl->skill.type() == SkillType::Active)
     {
         World::send(performer(), SC::UiGaugePacket{GaugeColor::Blue, _impl->castingDuration});
-        SC::SkillUsePacket p{performer(), _impl->skill.uid(), _impl->castingDuration, /*FIXME*/1s, false};
+        SC::SkillUsePacket p{performer(), _impl->targets.at(0), _impl->skill.uid(), _impl->castingDuration, 1s, false};
         World::broadcastAround(performer(), std::move(p), true);
     }
     else // Toggle
