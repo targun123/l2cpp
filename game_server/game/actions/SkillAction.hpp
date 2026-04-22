@@ -13,7 +13,7 @@ class SkillTemplate;
 class SkillAction final : public Action
 {
 public:
-    explicit SkillAction(Actor & performer, SkillTemplate const & skill);
+    explicit SkillAction(Actor & performer, SkillTemplate const & skill, bool forceAttack);
     SkillAction(SkillAction &&) noexcept;
     SkillAction & operator=(SkillAction &&) noexcept;
 

@@ -9,6 +9,7 @@
 #include "../../network/packets/server/skill/SkillUsePacket.hpp"
 #include "../../network/packets/server/ui/UiGaugePacket.hpp"
 #include "../../utils/Chrono.hpp"
+#include "../../utils/Target.hpp"
 #include "../World.hpp"
 #include "../components/Stats.hpp"
 #include "../skill/Skill.hpp"
@@ -22,6 +23,7 @@ namespace SC = Network::Packet::Server;
 struct SkillAction::SkillActionImpl
 {
     SkillTemplate const &   skill;
+    bool                    forceAttack;
     ClockDuration           castingElapsed       = ClockDuration::zero();
     ClockDuration           castingDuration      = ClockDuration::zero();
     ClockDuration           notifyTargetsTrigger = ClockDuration::zero();
@@ -32,9 +34,9 @@ template class Pimpl<SkillAction::SkillActionImpl>;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-SkillAction::SkillAction(Actor & performer, SkillTemplate const & skill)
+SkillAction::SkillAction(Actor & performer, SkillTemplate const & skill, bool const forceAttack)
     : Action(ActionType::Skill, performer)
-    , _impl(skill)
+    , _impl(skill, forceAttack)
 {
     L2CPP_B_ASSERT(l2cpp::Utils::Enum::isAnyOf(_impl->skill.type(), SkillType::Active, SkillType::Toggle),
                    "Unsupported skill type '{}'", std::to_underlying(_impl->skill.type()));
@@ -91,7 +93,8 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
 {
     // TODO: ensure target is still valid
 
-    if (Utils::Chrono::thresholdCrossed(_impl->castingElapsed, elapsed, _impl->notifyTargetsTrigger))
+    if (_impl->skill.targetType() == SkillTargetType::AoE &&
+        Utils::Chrono::thresholdCrossed(_impl->castingElapsed, elapsed, _impl->notifyTargetsTrigger))
     {
         selectTargets();
 
@@ -126,7 +129,11 @@ void SkillAction::selectTargets()
     switch (_impl->skill.targetType())
     {
         case SkillTargetType::AoE:
-            World::forEachActorAround(_impl->targets.at(0), [&] (auto & a) { _impl->targets.emplace_back(a); });
+            World::forEachActorAround(_impl->targets.at(0), [&] (auto & a)
+            {
+                if (Utils::Target::isValidTarget(performer(), _impl->skill, a, _impl->forceAttack))
+                    _impl->targets.emplace_back(a);
+            });
             break;
 
         default:

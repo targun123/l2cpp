@@ -15,7 +15,7 @@ SkillTemplate::SkillTemplate(SkillId const id, std::string name, SkillLevel cons
     , _level(lvl)
     , _type(SkillType::Unknown)
     , _targetType(SkillTargetType::None)
-    , _targetNature(SkillTargetNature::Any)
+    , _targetNature(SkillTargetNature::None)
     , _name(std::move(name))
     , _fullName(std::format("{} lv. {}", _name, _level))
     , _icon(std::format("icon.skill{:04}", _id))

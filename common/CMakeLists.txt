@@ -24,6 +24,7 @@ target_sources(${PROJECT_NAME} PUBLIC
         l2cpp/Pimpl.hpp
         l2cpp/Typedefs.hpp
         l2cpp/utils/Enum.hpp
+        l2cpp/utils/EnumMask.hpp
         l2cpp/utils/Traits.hpp
         l2cpp/network/Packet.hpp
         l2cpp/network/PacketReader.hpp

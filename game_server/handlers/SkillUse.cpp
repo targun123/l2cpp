@@ -6,6 +6,7 @@
 #include "../game/actor/Character.hpp"
 #include "../game/components/SkillDirectory.hpp"
 #include "../network/packets/server/ActionFailedPacket.hpp"
+#include "../utils/Target.hpp"
 #include "_Common.hpp"
 
 DEFINE_PACKET_HANDLER(SkillUse)
@@ -25,79 +26,14 @@ DEFINE_PACKET_HANDLER(SkillUse)
     auto const target = c.target();
 
     // must have a target or not require one
-    bool canCast = target.has_value() || skill->tmplate().targetType() == SkillTargetType::None;
-
-    if (canCast && skill->tmplate().targetType() != SkillTargetType::None)
+    if (bool canCast = target.has_value() || skill->tmplate().targetType() == SkillTargetType::None)
     {
-        switch (skill->tmplate().targetNature())
-        {
-            case SkillTargetNature::None: break;
-            case SkillTargetNature::Any:  break;
+        if (skill->tmplate().targetType() != SkillTargetType::None)
+            canCast = Utils::Target::isValidTarget(c, skill->tmplate(), target, forceAttack);
 
-            case SkillTargetNature::Self:
-                canCast = *target == c;
-                break;
-
-            case SkillTargetNature::Other:
-                canCast = *target != c;
-                break;
-
-            case SkillTargetNature::Friendly:
-                canCast = target->type() != ActorType::Monster;
-                break;
-
-            case SkillTargetNature::Ennemy:
-                canCast = target->type() == ActorType::Monster || forceAttack;
-                break;
-
-            case SkillTargetNature::Monster:
-                canCast = target->type() == ActorType::Monster || forceAttack;
-                break;
-
-            case SkillTargetNature::Character:
-                canCast = target->type() == ActorType::Character;
-                break;
-
-            case SkillTargetNature::PartyMember:
-                canCast = target->type() == ActorType::Character;
-                break;
-
-            case SkillTargetNature::ClanMember:
-                canCast = target->type() == ActorType::Character;
-                break;
-
-            case SkillTargetNature::Corpse:
-                canCast = !target->isAlive();
-                break;
-
-            case SkillTargetNature::Undead:
-                canCast = target.has_value();
-                break;
-
-            case SkillTargetNature::Summon:
-                canCast = target.has_value();
-                break;
-
-            case SkillTargetNature::Pet:
-                canCast = target.has_value();
-                break;
-
-            case SkillTargetNature::Servitor:
-                canCast = target.has_value();
-                break;
-
-            case SkillTargetNature::SummonOwner:
-                canCast = target.has_value();
-                break;
-
-            case SkillTargetNature::Unlockable:
-                canCast = target.has_value();
-                break;
-        }
+        if (canCast)
+            return c.doNext<SkillAction>(skill->tmplate(), forceAttack);
     }
 
-    if (canCast)
-        c.doNext<SkillAction>(skill->tmplate());
-    else
-        player.connection().send(ActionFailedPacket{});
+    player.connection().send(ActionFailedPacket{});
 }

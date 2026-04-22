@@ -46,6 +46,7 @@ Actor::Actor(ActorType const type)
     addComponent<Position>();
 
     auto & skills = addComponent<SkillDirectory>();
+    skills.learn(78,   1); // War Cry
     skills.learn(129,  1); // Poison
     skills.learn(1204, 1); // Wind Walk
     skills.learn(1177, 1); // Wind Strike
