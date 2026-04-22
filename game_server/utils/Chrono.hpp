@@ -8,24 +8,31 @@
 
 namespace Utils::Chrono
 {
-    struct Clock
+    class Clock
     {
-        std::chrono::steady_clock::time_point start;
+        using UnderlyingClock = std::chrono::steady_clock;
 
-        Clock() noexcept: start(std::chrono::steady_clock::now()) {}
+    public:
+        Clock() noexcept
+            : start(UnderlyingClock::now())
+        {}
 
-        auto restart() -> std::chrono::steady_clock::duration
-        {
-            auto const d = std::chrono::steady_clock::now() - start;
-            start = std::chrono::steady_clock::now();
-            return d;
-        }
-
+    public:
         template<typename Rep, typename Period>
-        static constexpr auto toDuration(std::chrono::duration<Rep, Period> d) -> std::chrono::steady_clock::duration
+        static constexpr auto toDuration(std::chrono::duration<Rep, Period> d) -> UnderlyingClock::duration
         {
-            return std::chrono::duration_cast<std::chrono::steady_clock::duration>(d);
+            return std::chrono::duration_cast<UnderlyingClock::duration>(d);
         }
+
+    public:
+        auto restart() -> UnderlyingClock::duration
+        {
+            auto const now = UnderlyingClock::now();
+            return now - std::exchange(start, now);
+        }
+
+    private:
+        std::chrono::steady_clock::time_point start;
     };
 
     constexpr bool thresholdCrossed(ClockDuration const totalElapsed,

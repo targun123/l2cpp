@@ -97,7 +97,7 @@ DEFINE_PACKET_HANDLER(SkillUse)
     }
 
     if (canCast)
-        c.doNext<SkillAction>(skill);
+        c.doNext<SkillAction>(skill->tmplate());
     else
         player.connection().send(ActionFailedPacket{});
 }

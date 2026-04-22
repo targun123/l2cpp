@@ -8,12 +8,12 @@
 
 #include <l2cpp/Pimpl.hpp>
 
-class Skill;
+class SkillTemplate;
 
 class SkillAction final : public Action
 {
 public:
-    explicit SkillAction(Actor & performer, Skill & skill);
+    explicit SkillAction(Actor & performer, SkillTemplate const & skill);
     SkillAction(SkillAction &&) noexcept;
     SkillAction & operator=(SkillAction &&) noexcept;
 
