@@ -14,7 +14,7 @@
 #include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
 #include "../network/packets/server/target/TargetSelectPacket.hpp"
 
-DEFINE_PACKET_HANDLER(ActionRequest)
+DEFINE_PACKET_HANDLER(ActionRequest) try
 {
     L2CPP_B_ASSERT(player.currentCharacter(), "Cannot select target, no current character");
 
@@ -25,35 +25,34 @@ DEFINE_PACKET_HANDLER(ActionRequest)
     bool disallowMovement;
     reader >> targetId >> origin >> disallowMovement;
 
-    auto & character = *player.currentCharacter();
-    if (!character.target() || character.target()->id() != targetId) // No current target or trying to change target?
+    auto & c = *player.currentCharacter();
+    if (!c.target() || c.target()->id() != targetId) // No current target or trying to change target?
     {
-        /**/ if (auto const c = World::character(targetId))
-        {
-            character.setTarget(c);
-            player.connection().send(TargetSelectPacket(character, c));
-            World::subscribeToTarget(c, character);
-            return;
-        }
-        else if (auto const m = World::monster(targetId))
-        {
-            character.setTarget(m);
-            player.connection().send(TargetMonsterSelectPacket(character, m));
-            World::subscribeToTarget(m, character);
+        auto & target = World::subscribeToTarget(targetId, c);
+        c.setTarget(target);
 
-            StatsUpdatePacket p(m);
-            p.addStat(Stat::MaxHp, m->stats()[StatId::MaxHp]);
-            p.addStat(Stat::CurHp, m->stats()[StatId::CurHp]);
-            player.connection().send(p);
-            return;
+        if (target.type() != ActorType::Monster)
+            c.player->connection().send(TargetSelectPacket{c, target});
+        else
+        {
+            c.player->connection().send(TargetMonsterSelectPacket{c, static_cast<Monster const &>(target)});
+
+            StatsUpdatePacket p(target);
+            p.addStat(Stat::MaxHp, target.stats()[StatId::MaxHp]);
+            p.addStat(Stat::CurHp, target.stats()[StatId::CurHp]);
+            c.player->connection().send(std::move(p));
         }
     }
-    else if (targetId != character.id()) // second request on target other than self, launch attack!
+    else if (targetId != c.id()) // second request on target other than self, launch attack!
     {
-        character.state = ActorState::Attacking;
-        character.doNext<AttackAction>(character.target(), character.stats()[StatId::PAtkSpeed]);
-        return;
+        c.state = ActorState::Attacking;
+        c.doNext<AttackAction>(c.target(), c.stats()[StatId::PAtkSpeed]);
     }
-
+    else
+        player.connection().send(ActionFailedPacket{});
+}
+catch (...)
+{
     player.connection().send(ActionFailedPacket{});
+    throw;
 }

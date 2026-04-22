@@ -188,10 +188,24 @@ auto World::inGameTime() -> std::chrono::minutes
     }
 }
 
+auto World::subscribeToTarget(GameObjectId targetId, Actor const & listener) -> Actor &
+{
+    auto const target = actor(targetId);
+
+    L2CPP_B_ASSERT(target, "Failed to find actor whose GameObjectId is '{}'", targetId);
+    subscribeToTarget(target, listener);
+    return target;
+}
+
 void World::subscribeToTarget(Actor const & target, Actor const & listener)
 {
-    if (target != listener)
+    if (target != listener) // do not subscribe to yourself
+    {
+        if (auto const currentTarget = listener.target())
+            unsubscribeFromTarget(currentTarget, listener);
+
         _targetSubscribers[target.id()].emplace_back(listener.id());
+    }
 }
 
 void World::unsubscribeFromTarget(Actor const & target, Actor const & listener)

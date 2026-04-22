@@ -49,6 +49,7 @@ public:
 
     static auto inGameTime() -> std::chrono::minutes;
 
+    static auto subscribeToTarget(GameObjectId targetId, Actor const & listener) -> Actor &;
     static void subscribeToTarget(Actor const & target, Actor const & listener);
     static void unsubscribeFromTarget(Actor const & target, Actor const & listener);
     static void unsubscribeAllTargetListeners(Actor const & target);
