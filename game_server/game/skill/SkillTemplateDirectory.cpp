@@ -63,8 +63,8 @@ namespace
             L2CPP_B_ASSERT(parts.size() == 17,
                            "Found {} parts instead of 17:\nParts found: {::?}", parts.size(), parts);
 
-            auto const id  = Utils::stringViewTo<u16>(parts[0]);
-            auto const lvl = Utils::stringViewTo<u16>(parts[1]);
+            auto const id  = Utils::stringViewTo<SkillId>(parts[0]);
+            auto const lvl = Utils::stringViewTo<SkillLevel>(parts[1]);
 
             auto const it = infos.find({id, lvl});
             if (it == infos.end())
@@ -79,9 +79,8 @@ namespace
             skill.setCastDuration(std::chrono::floor<std::chrono::milliseconds>(duration));
             skill.setIsMagic(parts[7] == "1");
 
-            // oper_type: 0=active_target 1=active_no_target 2=passive 3=toggle
-            enum class SkillOperateType : u8 { ActiveTarget, ActiveNoTarget, Passive, Toggle };
-            switch (static_cast<SkillOperateType>(Utils::stringViewTo<u8>(parts[2])))
+            enum class SkillOperateType { ActiveTarget, ActiveNoTarget, Passive, Toggle };
+            switch (Utils::stringViewTo<SkillOperateType>(parts[2]))
             {
                 case SkillOperateType::ActiveTarget:
                 case SkillOperateType::ActiveNoTarget:
