@@ -28,8 +28,6 @@
 #include <fstream>
 #include <string_view>
 
-using namespace std::string_view_literals;
-
 static std::wstring readWholeFile(std::string_view path)
 {
     std::wstring content;
@@ -84,11 +82,18 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
     }
     else if (args[0] == L"spawn")
     {
-        auto const id = args.size() >= 2 ? std::stoi(std::wstring(args[1])) : 1;
+        OptRef<NpcInfo const> info;
 
-        if (auto const info = NpcDirectory::find(id))
+        if (args.size() == 1)
+            info = NpcDirectory::find(1);
+        else if (std::isdigit(args[1][0]))
+            info = NpcDirectory::find(std::stoi(std::wstring(args[1])));
+        else if (auto const infos = NpcDirectory::find(args[1]); !infos.empty())
+            info = infos[0].get();
+
+        if (info)
         {
-            auto & npc = (info->type == ActorType::Npc ? World::addNpc() : World::addMonster());
+            auto & npc = info->type == ActorType::Npc ? World::addNpc() : World::addMonster();
             npc.setName(Utils::toWideString(info->name));
 
             if (info->title.empty())
@@ -97,7 +102,7 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
                 npc.setTitle(Utils::toWideString(info->title));
 
             npc.setPosition(c.position());
-            npc.appearance().setId(id);
+            npc.appearance().setId(info->id);
             npc.appearance().collisionHeight = 15;
             npc.appearance().collisionRadius = 10;
 
@@ -106,8 +111,8 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         else
         {
             ChatSystemSayPacket p{614};
-            p.appendArg<SysMsgArg::Text>(std::format(L"Failed to spawn npc/mob (id '{}'):", id));
-            p.appendArg<SysMsgArg::Text>(L"not found");
+            p.appendArg<SysMsgArg::Text>(std::format(L"Failed to spawn npc/mob \"{}\":", args[1]));
+            p.appendArg<SysMsgArg::Text>(L"not found.");
             player.connection().send(std::move(p));
         }
     }

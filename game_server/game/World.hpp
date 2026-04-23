@@ -17,7 +17,7 @@ class Character;
 class Monster;
 class Npc;
 class Player;
-class System;
+struct System;
 
 namespace l2cpp::Network { class Packet; }
 

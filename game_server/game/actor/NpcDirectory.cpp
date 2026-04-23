@@ -1,8 +1,6 @@
 /// @author    Chnossos
 /// @date      Created on 2026-04-23
 
-// ReSharper disable CppDefinitionsOrder
-
 #include "NpcDirectory.hpp"
 
 // Project includes
@@ -11,18 +9,16 @@
 #include <l2cpp/Exception.hpp>
 
 // Third-pary includes
-#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <spdlog/spdlog.h>
 
 // C++ includes
 #include <fstream>
-#include <boost/algorithm/string/trim.hpp>
+#include <ranges>
 
 using Storage = std::unordered_map<size_t, NpcInfo>;
-
-Storage NpcDirectory::_monsters;
-Storage NpcDirectory::_npcs;
 
 namespace
 {
@@ -98,8 +94,8 @@ namespace
             L2CPP_B_ASSERT(parts.size() == partsCount,
                            "Found {} parts instead of {}:\nParts found: {::?}", parts.size(), partsCount, parts);
 
-            NpcInfo info{
-                .id        = Utils::stringViewTo<size_t>(parts[0]),
+            NpcInfo info {
+                .id        = Utils::stringViewTo<u32>(parts[0]),
                 .type      = parts[1].contains("NPC") ? ActorType::Npc : ActorType::Monster,
                 .baseSpeed = 100 * Utils::stringViewTo<double>(parts[21]),
             };
@@ -123,20 +119,44 @@ auto NpcDirectory::npcCount()     -> size_t { return _npcs.size();              
 auto NpcDirectory::monsterCount() -> size_t { return _monsters.size();                }
 auto NpcDirectory::totalCount()   -> size_t { return _monsters.size() + _npcs.size(); }
 
-auto NpcDirectory::find(size_t const id) -> OptRef<NpcInfo>
+auto NpcDirectory::find(std::string_view const name) -> std::vector<Ref<NpcInfo const>>
+{
+    std::vector<Ref<NpcInfo const>> result;
+
+    for (auto * storage : {&_npcs, &_monsters})
+    {
+        for (auto const & info : *storage | std::views::values)
+        {
+            if (boost::iequals(info.name, name))
+                result.emplace_back(info);
+        }
+    }
+
+    return result;
+}
+
+auto NpcDirectory::find(std::wstring_view const wName) -> std::vector<Ref<NpcInfo const>>
+{
+    return find(Utils::toString(wName));
+}
+
+auto NpcDirectory::find(size_t const id) -> OptRef<NpcInfo const>
 {
     auto info = npc(id);
     return info ? info : monster(id);
 }
 
-auto NpcDirectory::npc(size_t const id) -> OptRef<NpcInfo>
+auto NpcDirectory::npc(size_t const id) -> OptRef<NpcInfo const>
 {
     auto const it = _npcs.find(id);
     return it != _npcs.end() ? OptRef(it->second) : std::nullopt;
 }
 
-auto NpcDirectory::monster(size_t const id) -> OptRef<NpcInfo>
+auto NpcDirectory::monster(size_t const id) -> OptRef<NpcInfo const>
 {
     auto const it = _monsters.find(id);
     return it != _monsters.end() ? OptRef(it->second) : std::nullopt;
 }
+
+Storage NpcDirectory::_monsters;
+Storage NpcDirectory::_npcs;

@@ -14,7 +14,7 @@
 
 struct NpcInfo
 {
-    size_t id = 0;
+    u32 id = 0;
     std::string name, title;
     u32 titleColor = 0xffffffff;
     ActorType type = ActorType::Npc;
@@ -33,9 +33,11 @@ public:
     static auto monsterCount() -> size_t;
     static auto totalCount()   -> size_t;
 
-    static auto find   (size_t id) -> OptRef<NpcInfo>;
-    static auto npc    (size_t id) -> OptRef<NpcInfo>;
-    static auto monster(size_t id) -> OptRef<NpcInfo>;
+    static auto find   (std::string_view   name) -> std::vector<Ref<NpcInfo const>>;
+    static auto find   (std::wstring_view wName) -> std::vector<Ref<NpcInfo const>>;
+    static auto find   (size_t id) -> OptRef<NpcInfo const>;
+    static auto npc    (size_t id) -> OptRef<NpcInfo const>;
+    static auto monster(size_t id) -> OptRef<NpcInfo const>;
 
 private:
     static std::unordered_map<size_t, NpcInfo> _monsters;
