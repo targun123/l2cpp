@@ -1,16 +1,26 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
+All notable changes to this project will be documented in this file.  
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 - Gain experience and levels when killing monsters;  
 - Skill usage and skill effects conditions; 
 - More skill effects (heal, resurection);
 - Loading basic NPC table (name, collision data);
 - Store/Load data in-between runs.
+
+## [0.21.0] - 2026-04-23
+### Added
+- Load basic NPC table: `id`, `name`, `title`, default `titleColor`, `type` and `baseSpeed`
+- Can spawn a NPC by its name (case insensitive)
+
+### Changed
+- `NonPlayableActor` renamed to `Npc`
+- `World` stores actors in a single container now instead of one container per type 
+
+### Removed
+- No more function name in exception formatting
 
 ## [0.20.0] - 2026-04-23
 
