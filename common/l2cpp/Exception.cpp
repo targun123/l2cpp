@@ -52,10 +52,6 @@ namespace
         if (!src.empty())
             src = std::format(" [{}]", src);
 
-#ifndef NDEBUG
-        if (!e.functionName().empty())
-            src += std::format(" [{}]", e.functionName());
-#endif
         return src;
     }
 } // !namespace
