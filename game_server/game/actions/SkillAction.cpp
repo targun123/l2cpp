@@ -11,9 +11,11 @@
 #include "../../utils/Chrono.hpp"
 #include "../../utils/Target.hpp"
 #include "../World.hpp"
+#include "../actor/Actor.hpp"
 #include "../components/Stats.hpp"
 #include "../skill/Skill.hpp"
 
+#include <l2cpp/Exception.hpp>
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
 #include <l2cpp/utils/Enum.hpp>

@@ -9,6 +9,7 @@
 #include "../../network/packets/server/movement/ActorMovePacket.hpp"
 #include "../../network/packets/server/movement/ActorMoveStopPacket.hpp"
 #include "../World.hpp"
+#include "../actor/Actor.hpp"
 
 MoveAction::MoveAction(Actor & performer, Position const & origin, Position const & target, Input const input)
     : Action(ActionType::Move, performer)

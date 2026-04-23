@@ -4,12 +4,11 @@
 #pragma once
 
 // Project includes
-#include "NonPlayableActor.hpp"
+#include "Npc.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 
-/// Enter brief here.
-class Monster : public NonPlayableActor
+class Monster : public Npc
 {
 public:
     Monster() noexcept;

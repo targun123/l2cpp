@@ -4,22 +4,25 @@
 #pragma once
 
 // Project includes
-#include "actor/Character.hpp"
-#include "actor/Monster.hpp"
-#include "ecs/System.hpp"
-
 #include <l2cpp/Typedefs.hpp>
 
 // C++ includes
+#include <functional>
+#include <source_location>
 #include <unordered_map>
 #include <vector>
+
+class Actor;
+class Character;
+class Monster;
+class Npc;
+class Player;
+struct System;
 
 namespace l2cpp::Network { class Packet; }
 
 class World
 {
-    using SystemPtr = std::unique_ptr<System>;
-
 private:
     World() noexcept = delete;
 
@@ -27,6 +30,7 @@ public:
     static auto actor(GameObjectId)     -> OptRef<Actor>;
     static auto character(GameObjectId) -> OptRef<Character>;
     static auto monster(GameObjectId)   -> OptRef<Monster>;
+    static auto npc(GameObjectId)       -> OptRef<Npc>;
 
 public:
     static void init();
@@ -44,12 +48,13 @@ public:
 
     static auto addCharacter(OptRef<Player> = std::nullopt) -> Character &;
     static auto addMonster() -> Monster &;
+    static auto addNpc() -> Npc &;
 
     static void scheduleForDeletion(Actor &, ClockDuration timeFromNow = ClockDuration::zero());
 
     static auto inGameTime() -> std::chrono::minutes;
 
-    static auto subscribeToTarget(GameObjectId targetId, Actor const & listener) -> Actor &;
+    static auto subscribeToTarget(GameObjectId targetId, Actor const & listener) -> OptRef<Actor>;
     static void subscribeToTarget(Actor const & target, Actor const & listener);
     static void unsubscribeFromTarget(Actor const & target, Actor const & listener);
     static void unsubscribeAllTargetListeners(Actor const & target);
@@ -64,7 +69,7 @@ public:
 
     /// Sends a packet to specified actor if it is a Character with an active player
     static void send(Actor const & to, l2cpp::Network::Packet && packet,
-                     std::source_location const & src = std::source_location::current()) { send(to, packet, std::move(src)); }
+        std::source_location const & src = std::source_location::current()) { send(to, packet, std::move(src)); }
 
     /// @warning This broadcasts given packet to ALL online players, regardless of distance!
     static void broadcast(l2cpp::Network::Packet &&,
@@ -79,16 +84,20 @@ public:
                                        std::source_location const & src = std::source_location::current());
 
 private:
+    template<class T, typename... Args> requires std::is_base_of_v<Actor, T>
+    static auto addActor(Args &&... args) -> T & {
+        return static_cast<T &>(addActor(std::make_unique<T>(std::forward<Args>(args)...)));
+    }
+    static auto addActor(std::unique_ptr<Actor> actor) -> Actor &;
     static void delActor(Actor & a);
 
 private:
-    static std::vector<SystemPtr> _systems;
+    static std::vector<std::unique_ptr<System>> _systems;
 
     static std::unordered_map<std::wstring_view, std::vector<GameObjectId>> _characterPreviewsIndex;
 
-    static std::unordered_map<GameObjectId, Character> _characterPreviews;
-    static std::unordered_map<GameObjectId, Character> _characters;
-    static std::unordered_map<GameObjectId, Monster>   _monsters;
+    static std::unordered_map<GameObjectId, std::unique_ptr<Character>> _characterPreviews;
+    static std::unordered_map<GameObjectId, std::unique_ptr<Actor>>     _actors;
 
     static std::unordered_map<GameObjectId, Ref<Actor>> _scheduledForDeletion;
 

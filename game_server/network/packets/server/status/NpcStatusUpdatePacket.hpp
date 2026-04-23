@@ -6,11 +6,11 @@
 // Project includes
 #include <l2cpp/network/Packet.hpp>
 
-class NonPlayableActor;
+class Npc;
 
 namespace Network::Packet::Server { struct NpcStatusUpdatePacket; }
 
 struct Network::Packet::Server::NpcStatusUpdatePacket final : public l2cpp::Network::Packet
 {
-    explicit NpcStatusUpdatePacket(NonPlayableActor const &);
+    explicit NpcStatusUpdatePacket(Npc const &);
 };

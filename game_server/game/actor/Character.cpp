@@ -127,6 +127,8 @@ auto Character::appearance() const -> PlayerAppearance const & { return componen
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
 auto Character::inventory() const -> ItemStorage const & { return _impl->inventory; }
 
+bool Character::isAttackable() const { return false; }
+
 template<typename T, typename F>
 void assign(T & t, F f) { t = static_cast<T>(f); }
 

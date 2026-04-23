@@ -9,10 +9,11 @@
 class ActorStatus;
 class NpcAppearance;
 
-class NonPlayableActor : public Actor
+class Npc : public Actor
 {
 public:
-    explicit NonPlayableActor(ActorType type);
+    Npc();
+    explicit Npc(ActorType type);
 
 public:
     auto appearance()       -> NpcAppearance       &;
@@ -20,5 +21,5 @@ public:
 
     virtual auto status() const -> ActorStatus const &;
 
-    virtual bool isAttackable() const = 0;
+    bool isAttackable() const override { return false; }
 };

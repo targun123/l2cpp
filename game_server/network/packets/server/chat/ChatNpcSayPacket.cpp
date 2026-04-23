@@ -4,7 +4,7 @@
 #include "ChatNpcSayPacket.hpp"
 
 // Project includes
-#include "../../../../game/actor/NonPlayableActor.hpp"
+#include "../../../../game/actor/Npc.hpp"
 #include "../../../../game/components/NpcAppearance.hpp"
 
 using Network::Packet::Server::ChatNpcSayPacket;
@@ -15,7 +15,7 @@ ChatNpcSayPacket::ChatNpcSayPacket(Actor const & emitter, ChatType type, std::ws
     L2CPP_B_ASSERT(emitter.type() != ActorType::Character,
                    "Packet ChatNpcSayPacket is incompatible with Character emitter");
 
-    auto & nonPlayableActor = static_cast<NonPlayableActor const &>(emitter);
+    auto & nonPlayableActor = static_cast<Npc const &>(emitter);
 
     *this
         << emitter.id()

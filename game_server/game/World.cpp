@@ -9,14 +9,17 @@
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
 #include "../utils/Maths.hpp"
+#include "actor/Character.hpp"
+#include "actor/Monster.hpp"
+#include "actor/Npc.hpp"
 #include "components/DeletionTimer.hpp"
+#include "ecs/System.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
 #include "systems/ActorSkillEffectSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
-#include <l2cpp/network/Packet.hpp>
 
 // Third-party
 #include <spdlog/spdlog.h>
@@ -30,21 +33,26 @@ using l2cpp::Network::Packet;
 
 auto World::actor(GameObjectId const id) -> OptRef<Actor>
 {
-    /**/ if (auto const c = character(id)) return c;
-    else if (auto const m = monster(id))   return m;
-    else                                   return std::nullopt;
+    auto const it = _actors.find(id);
+    return it != _actors.end() ? OptRef(*it->second) : std::nullopt;
 }
 
 auto World::character(GameObjectId const id) -> OptRef<Character>
 {
-    auto const it = _characters.find(id);
-    return it != _characters.end() ? OptRef(it->second) : std::nullopt;
+    auto const actor = World::actor(id);
+    return actor && actor->type() == ActorType::Character ? OptRef(static_cast<Character &>(*actor)) : std::nullopt;
 }
 
 auto World::monster(GameObjectId const id) -> OptRef<Monster>
 {
-    auto const it = _monsters.find(id);
-    return it != _monsters.end() ? OptRef(it->second) : std::nullopt;
+    auto const actor = World::actor(id);
+    return actor && actor->type() == ActorType::Monster ? OptRef(static_cast<Monster &>(*actor)) : std::nullopt;
+}
+
+auto World::npc(GameObjectId const id) -> OptRef<Npc>
+{
+    auto const actor = World::actor(id);
+    return actor && actor->type() == ActorType::Npc ? OptRef(static_cast<Npc &>(*actor)) : std::nullopt;
 }
 
 void World::init()
@@ -63,32 +71,28 @@ void World::update(ClockDuration const elapsed)
 {
     using namespace std::chrono;
 
-    for (auto & c : _characters | std::views::values)
+    for (auto const & a : _actors | std::views::values)
     {
         try
         {
-            if (auto const action = c.currentAction())
+            if (auto const action = a->currentAction())
                 action->update(elapsed);
         }
         catch (l2cpp::Exception const & e)
         {
-            SPDLOG_ERROR("Failed to update action for character '{}':\n{}", c.id(), l2cpp::formatExceptionStack(e));
+            SPDLOG_ERROR("Failed to update action for character '{}':\n{}", a->id(), l2cpp::formatExceptionStack(e));
         }
         catch (std::exception const & e)
         {
-            SPDLOG_ERROR("Failed to update action for character '{}':\n{}", c.id(), l2cpp::formatExceptionStack(e));
+            SPDLOG_ERROR("Failed to update action for character '{}':\n{}", a->id(), l2cpp::formatExceptionStack(e));
         }
     }
 
     for (auto const & system : _systems)
-    {
-        for (auto & c : _characters | std::views::values) system->update(elapsed, c);
-        for (auto & m : _monsters   | std::views::values) system->update(elapsed, m);
-    }
+        for (auto const & a : _actors | std::views::values) system->update(elapsed, *a);
 
     // Death is handled outside the system loops because internals are modified upon death
-    for (auto & c : _characters | std::views::values) if (c.dying()) c.die();
-    for (auto & m : _monsters   | std::views::values) if (m.dying()) m.die();
+    for (auto const & a : _actors | std::views::values) if (a->dying()) a->die();
 
     for (Actor & a : _scheduledForDeletion | std::views::values)
         delActor(a);
@@ -102,7 +106,7 @@ auto World::getCharacterPreviews(std::wstring_view const playerAccount) -> std::
 
     auto const & index = _characterPreviewsIndex[playerAccount];
     for (result.reserve(index.size()); auto const id : index)
-        result.emplace_back(_characterPreviews.at(id));
+        result.emplace_back(*_characterPreviews.at(id));
 
     return result;
 }
@@ -114,15 +118,15 @@ auto World::addCharacterPreview(std::wstring_view const playerAccount) -> Charac
     Character  c;
     auto const id = c.id();
     _characterPreviewsIndex[playerAccount].emplace_back(id);
-    return _characterPreviews.try_emplace(id, std::move(c)).first->second;
+    return *_characterPreviews.try_emplace(id, std::make_unique<Character>(std::move(c))).first->second;
 }
 
 auto World::loadCharacterFromPreview(Character & c) -> Character &
 {
-    auto const id  = c.id();
-    auto &     ref = _characters.try_emplace(id, std::move(c)).first->second;
+    auto const id    = c.id();
+    auto const & ptr = _actors.try_emplace(id, std::make_unique<Character>(std::move(c))).first->second;
     _characterPreviews.erase(id);
-    return ref;
+    return static_cast<Character &>(*ptr);
 }
 
 void World::moveCharacterBackToPreviews(Character & c)
@@ -140,23 +144,13 @@ void World::moveCharacterBackToPreviews(Character & c)
         c.player->unsetCurrentCharacter();
 
     auto const id = c.id();
-    _characterPreviews.try_emplace(id, std::move(c));
-    _characters.erase(id);
+    _characterPreviews.try_emplace(id, std::make_unique<Character>(std::move(c)));
+    _actors.erase(id);
 }
 
-auto World::addCharacter(OptRef<Player> p) -> Character &
-{
-    Character c(std::move(p));
-    auto const id = c.id();
-    return _characters.try_emplace(id, std::move(c)).first->second;
-}
-
-auto World::addMonster() -> Monster &
-{
-    Monster m;
-    auto const id = m.id();
-    return _monsters.try_emplace(id, std::move(m)).first->second;
-}
+auto World::addCharacter(OptRef<Player> p) -> Character & { return addActor<Character>(std::move(p)); }
+auto World::addMonster()                   -> Monster   & { return addActor<Monster>();               }
+auto World::addNpc()                       -> Npc       & { return addActor<Npc>();                   }
 
 void World::scheduleForDeletion(Actor & a, ClockDuration const timeFromNow)
 {
@@ -188,24 +182,28 @@ auto World::inGameTime() -> std::chrono::minutes
     }
 }
 
-auto World::subscribeToTarget(GameObjectId targetId, Actor const & listener) -> Actor &
+auto World::subscribeToTarget(GameObjectId targetId, Actor const & listener) -> OptRef<Actor>
 {
-    auto const target = actor(targetId);
+    OptRef<Actor> target;
 
-    L2CPP_B_ASSERT(target, "Failed to find actor whose GameObjectId is '{}'", targetId);
-    subscribeToTarget(target, listener);
+    if (listener.type() == ActorType::Character)
+    {
+        if (target = actor(targetId); target)
+            subscribeToTarget(target, listener);
+    }
+
     return target;
 }
 
 void World::subscribeToTarget(Actor const & target, Actor const & listener)
 {
-    if (target != listener) // do not subscribe to yourself
-    {
-        if (auto const currentTarget = listener.target())
-            unsubscribeFromTarget(currentTarget, listener);
+    if (listener.type() != ActorType::Character || listener == target) // do not subscribe to yourself
+        return;
 
-        _targetSubscribers[target.id()].emplace_back(listener.id());
-    }
+    if (auto const currentTarget = listener.target())
+        unsubscribeFromTarget(currentTarget, listener);
+
+    _targetSubscribers[target.id()].emplace_back(listener.id());
 }
 
 void World::unsubscribeFromTarget(Actor const & target, Actor const & listener)
@@ -215,15 +213,14 @@ void World::unsubscribeFromTarget(Actor const & target, Actor const & listener)
 
 void World::unsubscribeAllTargetListeners(Actor const & target)
 {
-    // ReSharper disable once CppLocalVariableMayBeConst
-    auto v = _targetSubscribers[target.id()]
-           | std::views::transform([] (GameObjectId const id) -> Ref<Character> { return character(id); })
-           | std::views::filter([] (Character const & c) { return c.player.has_value(); });
-
-    for (Character & c : v)
+    using namespace std::views;
+    for (auto const c : _targetSubscribers[target.id()] | transform([] (auto const id) { return character(id); }))
     {
-        c.setTarget(std::nullopt);
-        c.player->connection().send(SC::TargetClearPacket{c});
+        if (c)
+        {
+            c->setTarget(std::nullopt);
+            send(c, SC::TargetClearPacket{c});
+        }
     }
 
     _targetSubscribers[target.id()].clear();
@@ -233,15 +230,12 @@ void World::forEachActorAround(Actor const & source, std::function<void(Actor &)
 {
     if (f)
     {
-        auto const distancePred = [&] (Actor const & a) { return isInBroadcastRange(source, a); };
-        auto const skipEmitter  = [&] (Actor const & a) { return a != source;                   };
+        auto const distancePred = [&] (auto const & a) { return isInBroadcastRange(source, *a); };
+        auto const skipEmitter  = [&] (auto const & a) { return *a != source;                   };
 
         using namespace std::views;
-        auto charactersInRange = _characters | values | filter(distancePred) | filter(skipEmitter);
-        auto monstersInRange   = _monsters   | values | filter(distancePred) | filter(skipEmitter);
-
-        for (auto & a : charactersInRange) f(a);
-        for (auto & a : monstersInRange)   f(a);
+        for (auto & a : _actors | values | filter(distancePred) | filter(skipEmitter))
+            f(*a);
     }
 }
 
@@ -261,40 +255,45 @@ void World::send(Actor const & to, Packet & packet, std::source_location const &
 
 void World::broadcast(Packet && packet, std::source_location const & src)
 {
-    for (auto const & c : _characters | std::views::values)
-    {
-        if (c.player)
-            c.player->connection().send(Packet(packet), src);
-    }
+    for (auto const & a : _actors | std::views::values)
+        send(*a, Packet(packet), src);
 }
 
 void World::broadcastAround(Actor const & emitter, Packet && packet, bool const includeEmitter,
                             std::source_location const & src)
 {
-    auto const charHasDriver      = [ ] (Character const & c) { return c.player.has_value();           };
-    auto const charIsInRange      = [&] (Character const & c) { return isInBroadcastRange(emitter, c); };
-    auto const emitterIfRequested = [&] (Character const & c) { return c != emitter || includeEmitter; };
+    auto const charIsInRange      = [&] (auto const & a) { return isInBroadcastRange(emitter, *a); };
+    auto const emitterIfRequested = [&] (auto const & a) { return *a != emitter || includeEmitter; };
 
     using namespace std::views;
-    // ReSharper disable once CppLocalVariableMayBeConst
-    auto view = _characters | values | filter(charHasDriver) | filter(charIsInRange) | filter(emitterIfRequested);
-
-    for (auto const & c : view)
-        c.player->connection().send(Packet(packet), src);
+    for (auto const & a : _actors | values | filter(charIsInRange) | filter(emitterIfRequested))
+        send(*a, Packet(packet), src);
 }
 
 void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool const includeEmitter,
                                    std::source_location const & src)
 {
-    for (auto const id : _targetSubscribers[emitter.id()])
+    auto & subs = _targetSubscribers[emitter.id()];
+
+    for (auto it = subs.begin(); it != subs.end(); )
     {
-        // Ensure we find an active player
-        if (auto const it = _characters.find(id); it != _characters.end() && it->second.player)
-            it->second.player->connection().send(Packet(packet), src);
+        if (auto const actorIt = _actors.find(*it); actorIt != _actors.end())
+        {
+            send(*actorIt->second, Packet(packet), src);
+            ++it;
+        }
+        else
+            it = subs.erase(it);
     }
 
     if (includeEmitter)
         send(emitter, Packet(packet));
+}
+
+auto World::addActor(std::unique_ptr<Actor> actor) -> Actor &
+{
+    auto const id = actor->id();
+    return *_actors.try_emplace(id, std::move(actor)).first->second;
 }
 
 // PRIVATE -------------------------------------------------------------------------------------------------------------
@@ -311,14 +310,13 @@ void World::delActor(Actor & a)
     {
         unsubscribeAllTargetListeners(a);
         broadcastAround(a, SC::GameObjectDeletePacket{a});
-        _monsters.erase(a.id());
+        _actors.erase(a.id());
     }
 }
 
 std::vector<std::unique_ptr<System>>                             World::_systems;
 std::unordered_map<std::wstring_view, std::vector<GameObjectId>> World::_characterPreviewsIndex;
-std::unordered_map<GameObjectId, Character>                      World::_characterPreviews;
-std::unordered_map<GameObjectId, Character>                      World::_characters;
-std::unordered_map<GameObjectId, Monster>                        World::_monsters;
+std::unordered_map<GameObjectId, std::unique_ptr<Character>>     World::_characterPreviews;
+std::unordered_map<GameObjectId, std::unique_ptr<Actor>>         World::_actors;
 std::unordered_map<GameObjectId, Ref<Actor>>                     World::_scheduledForDeletion;
 std::unordered_map<GameObjectId, std::list<GameObjectId>>        World::_targetSubscribers;

@@ -4,7 +4,7 @@
 #include "NpcStatusUpdatePacket.hpp"
 
 // Project includes
-#include "../../../../game/actor/NonPlayableActor.hpp"
+#include "../../../../game/actor/Npc.hpp"
 #include "../../../../game/components/Gear.hpp"
 #include "../../../../game/components/NpcAppearance.hpp"
 #include "../../../../game/components/Position.hpp"
@@ -12,7 +12,7 @@
 
 using Network::Packet::Server::NpcStatusUpdatePacket;
 
-NpcStatusUpdatePacket::NpcStatusUpdatePacket(NonPlayableActor const & actor)
+NpcStatusUpdatePacket::NpcStatusUpdatePacket(Npc const & actor)
     : Packet(0x16, "NpcStatusUpdate")
 {
     auto const & appearance = actor.appearance();

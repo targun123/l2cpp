@@ -5,7 +5,7 @@
 #include "_Common.hpp"
 #include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
-#include "../game/components/SkillDirectory.hpp"
+#include "../game/actor/Npc.hpp"
 #include "../game/components/Stats.hpp"
 #include "../network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "../network/packets/server/client/ClientForceDisconnectPacket.hpp"
@@ -29,7 +29,7 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
         if (a.type() == ActorType::Character)
             conn.send(CharacterStatusUpdateBroadcastPacket{static_cast<Character &>(a)});
         else
-            conn.send(NpcStatusUpdatePacket{static_cast<NonPlayableActor &>(a)});
+            conn.send(NpcStatusUpdatePacket{static_cast<Npc &>(a)});
     });
     conn.send(CharacterStatusUpdatePacket(c));
     World::broadcastAround(c, CharacterStatusUpdateBroadcastPacket(c));
