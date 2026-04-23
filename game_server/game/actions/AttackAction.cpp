@@ -17,7 +17,7 @@
 
 namespace SM = Network::Packet::Server;
 
-AttackAction::AttackAction(Actor & performer, Actor & target, u32 const pAtkSpeed) noexcept
+AttackAction::AttackAction(Actor & performer, Actor & target, StatValue const pAtkSpeed) noexcept
     : Action(ActionType::Attack, performer)
     , _target(target)
     , _hitDuration(Utils::Chrono::Clock::toDuration(1s / (pAtkSpeed / 500.)))
@@ -77,5 +77,5 @@ void AttackAction::onFinished()
 
     // Physical attacking never stops unless another action is requested (e.g. actor moves) or target dies
     if (!actor.nextAction() && _target.isAlive())
-        actor.doNext<AttackAction>(_target, actor.stats().pAtkSpeed);
+        actor.doNext<AttackAction>(_target, actor.stats()[StatId::PAtkSpeed]);
 }

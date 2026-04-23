@@ -4,41 +4,25 @@
 #pragma once
 
 // Project includes
+#include "../constants/StatId.hpp"
 #include "../ecs/Component.hpp"
 
 #include <l2cpp/Typedefs.hpp>
 
+// C++ includes
+#include <array>
+
+class Actor;
+
 struct Stats : public Component
 {
-    double maxCp   = 0, maxHp   = 0, maxMp   = 0;
-    double cpRegen = 0, hpRegen = 0, mpRegen = 0;
+    Stats();
 
-    u32 maxWeight = 10'000;
+    auto operator[](StatId const index)       -> StatValue & { return _stats[std::to_underlying(index)]; }
+    auto operator[](StatId const index) const -> StatValue   { return _stats[std::to_underlying(index)]; }
 
-    u32 STR = 0, DEX = 0, CON = 0;
-    u32 INT = 0, WIT = 0, MEN = 0;
+    void compute(Actor const &);
 
-    u32 pAtk         = 0, pDef          = 0;
-    u32 mAtk         = 0, mDef          = 0;
-    u32 pAtkSpeed    = 0, mAtkSpeed     = 0;
-    u32 pAtkRange    = 0, pAtkRandom    = 0;
-    u32 accuracy     = 0, evasion       = 0;
-    u32 pCritRate    = 0, mCritRate     = 0;
-    u32 runSpeed     = 0, walkSpeed     = 0;
-    u32 swimRunSpeed = 0, swimWalkSpeed = 0;
-    u32 flyRunSpeed  = 0, flyWalkSpeed  = 0; ///< Unused
-};
-
-struct ComputedStats : public Stats
-{
-    explicit ComputedStats(Stats stats) noexcept
-        : Stats(std::move(stats))
-    {}
-
-    double moveSpeedMultiplier = 1;
-    double pAtkSpeedMultiplier = 1;
-
-    double curCp = 0, curHp = 0, curMp = 0;
-
-    u32 curWeight = 0;
+private:
+    std::array<StatValue, std::to_underlying(StatId::Count)> _stats{};
 };

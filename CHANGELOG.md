@@ -6,9 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-- Some basic skill effects (instant damage, buffs);
-- Loading basic NPC table;
+- Gain experience and levels when killing monsters;  
+- Skill usage and skill effects conditions; 
+- More skill effects (heal, resurection);
+- Loading basic NPC table (name, collision data);
 - Store/Load data in-between runs.
+
+## [0.20.0] - 2026-04-23
+
+### Added
+- **World:**
+  - can lookup any actor by GameObjectId
+- **Skill:**
+  - Load operating type (active, passive, etc.)
+  - Load physical/magical status
+  - Split target type (single target, AoE, aura…) from target nature (ennemy, friendly, self…)
+  - Demonstration skills: instant buff, toggle buff, single target damage, multiple targets damage, poison over time…
+  - Casting speed is dependant on mAtkSpeed/pAtkSpeed depending on physical/magical status
+- **Abnormal Effects:**
+  - Buff and damage effects (instant + DoT) added
+  - Can be reapplied or canceled
+  - Toggle effect
+
+### Improved
+- Logs are better aligned
+- Stats have been revamped (no more Stats+ComputedStats)
+
+### Fixed
+- Application loop was updating twice in a row every updates
+
+### Removed
+- HeaderOnlyPackets because they couldn't specify a name (would've needed  `std::basic_fixed_string`)
 
 ## [0.19.0] - 2026-04-14
 

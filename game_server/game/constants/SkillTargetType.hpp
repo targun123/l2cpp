@@ -5,43 +5,8 @@
 
 enum class SkillTargetType
 {
-    None,
-
-    Area,
-    AreaCorpseMob,
-    AreaFriendly,
-    AreaSummon,
-    AreaUndead,
-    Aura,
-    AuraCorpseMob,
-    AuraFriendly,
-    BehindArea,
-    BehindAura,
-    Clan,
-    ClanMember,
-    CommandChannel,
-    Corpse,
-    CorpseClan,
-    CorpseMob,
-    EnemySummon,
-    Flagpole,
-    AreaFront,
-    AuraFront,
-    Ground,
-    Holy,
-    Single,
-    PetOwner,
-    Party,
-    PartyClan,
-    PartyMember,
-    PartyMembers,
-    PartyOther,
-    PlayerBody,
-    Pet,
-    Self,
-    Servitor,
-    Summon,
-    TargetParty,
-    Undead,
-    Unlockable,
+    Self,   ///< Skill effects apply to self only
+    Single, ///< Skill effects apply on single target
+    Aura,   ///< Skill effects apply around self @note Can include self if @c SkillTargetNature includes @c Self
+    AoE,    ///< Skill effects apply around the target
 };

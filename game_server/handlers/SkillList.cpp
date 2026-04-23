@@ -4,7 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/actor/Character.hpp"
-#include "../network/packets/server/SkillListPacket.hpp"
+#include "../network/packets/server/skill/SkillListPacket.hpp"
 
 DEFINE_PACKET_HANDLER(SkillList)
 {

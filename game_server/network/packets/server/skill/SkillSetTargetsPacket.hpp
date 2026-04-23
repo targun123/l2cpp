@@ -7,11 +7,11 @@
 #include <l2cpp/network/Packet.hpp>
 
 class Actor;
-class Skill;
+class SkillTemplate;
 
 namespace Network::Packet::Server { struct SkillSetTargetsPacket; }
 
 struct Network::Packet::Server::SkillSetTargetsPacket final : public l2cpp::Network::Packet
 {
-    SkillSetTargetsPacket(Actor const & caster, Skill const & skill, std::span<Ref<Actor const> const> targets);
+    SkillSetTargetsPacket(Actor const & caster, SkillTemplate const & skill, std::span<Ref<Actor const> const> targets);
 };

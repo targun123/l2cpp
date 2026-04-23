@@ -14,12 +14,13 @@
 
 using namespace Network::Packet::Server;
 
-CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
+CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
     : Packet(0x04, "CharacterStatusUpdate")
 {
     using enum GearSlot;
 
-    auto const weapon = c.gear().weapon();
+    auto const & stats = c.stats();
+    auto const weapon  = c.gear().weapon();
 
     *this
         << c.position()
@@ -31,19 +32,19 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.profession()
         << c.status().level()
         << c.status().xp
-        << c.stats().STR
-        << c.stats().DEX
-        << c.stats().CON
-        << c.stats().INT
-        << c.stats().WIT
-        << c.stats().MEN
-        << static_cast<u32>(c.stats().maxHp)
-        << static_cast<u32>(c.stats().curHp)
-        << static_cast<u32>(c.stats().maxMp)
-        << static_cast<u32>(c.stats().curMp)
+        << static_cast<u32>(stats[StatId::Str])
+        << static_cast<u32>(stats[StatId::Dex])
+        << static_cast<u32>(stats[StatId::Con])
+        << static_cast<u32>(stats[StatId::Int])
+        << static_cast<u32>(stats[StatId::Wit])
+        << static_cast<u32>(stats[StatId::Men])
+        << static_cast<u32>(stats[StatId::MaxHp])
+        << static_cast<u32>(stats[StatId::CurHp])
+        << static_cast<u32>(stats[StatId::MaxMp])
+        << static_cast<u32>(stats[StatId::CurMp])
         << c.status().sp
-        << c.stats().curWeight
-        << c.stats().maxWeight
+        << static_cast<u32>(stats[StatId::CurWeight])
+        << static_cast<u32>(stats[StatId::MaxWeight])
         << (c.gear().hasActiveWeapon() ? 20 : 40)
         << c.gear().itemId(Underwear)
         << c.gear().itemId(RightEar)
@@ -77,28 +78,28 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.gear().itemTemplateId(Back)
         << c.gear().itemTemplateId(RightHand)
         << c.gear().itemTemplateId(Hair)
-        << c.stats().pAtk
-        << c.stats().pAtkSpeed
-        << c.stats().pDef
-        << c.stats().evasion
-        << c.stats().accuracy
-        << c.stats().pCritRate
-        << c.stats().mAtk
-        << c.stats().mAtkSpeed
-        << c.baseStats().pAtkSpeed
-        << c.stats().mDef
+        << static_cast<u32>(stats[StatId::PAtk])
+        << static_cast<u32>(stats[StatId::PAtkSpeed])
+        << static_cast<u32>(stats[StatId::PDef])
+        << static_cast<u32>(stats[StatId::Evasion])
+        << static_cast<u32>(stats[StatId::Accuracy])
+        << static_cast<u32>(stats[StatId::PCritRate])
+        << static_cast<u32>(stats[StatId::MAtk])
+        << static_cast<u32>(stats[StatId::MAtkSpeed])
+        << static_cast<u32>(stats[StatId::BasePAtkSpeed])
+        << static_cast<u32>(stats[StatId::MDef])
         << 0 // (c.isPvpFlagged ? 1 : 0)
         << c.status().karma
-        << c.baseStats().runSpeed
-        << c.baseStats().walkSpeed
-        << c.baseStats().swimRunSpeed
-        << c.baseStats().swimWalkSpeed
-        << c.baseStats().flyRunSpeed
-        << c.baseStats().flyWalkSpeed
-        << c.baseStats().flyRunSpeed
-        << c.baseStats().flyWalkSpeed
-        << c.stats().moveSpeedMultiplier
-        << c.stats().pAtkSpeedMultiplier
+        << static_cast<u32>(stats[StatId::BaseRunSpeed])
+        << static_cast<u32>(stats[StatId::BaseWalkSpeed])
+        << static_cast<u32>(stats[StatId::BaseSwimRunSpeed])
+        << static_cast<u32>(stats[StatId::BaseSwimWalkSpeed])
+        << static_cast<u32>(stats[StatId::BaseFlyRunSpeed])
+        << static_cast<u32>(stats[StatId::BaseFlyWalkSpeed])
+        << static_cast<u32>(stats[StatId::BaseFlyRunSpeed])
+        << static_cast<u32>(stats[StatId::BaseFlyWalkSpeed])
+        << stats[StatId::RunSpeed ] / stats[StatId::BaseRunSpeed ]
+        << stats[StatId::PAtkSpeed] / stats[StatId::BasePAtkSpeed]
         << c.appearance().collisionRadius
         << c.appearance().collisionHeight
         << c.appearance().hairStyleId
@@ -140,8 +141,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character & c)
         << c.inventory().limit()
         << c.profession()
         << 0 // special effects? circles around player...
-        << static_cast<u32>(c.stats().maxCp)
-        << static_cast<u32>(c.stats().curCp)
+        << static_cast<u32>(stats[StatId::MaxCp])
+        << static_cast<u32>(stats[StatId::CurCp])
         << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan crest large id

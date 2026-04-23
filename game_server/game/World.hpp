@@ -24,6 +24,7 @@ private:
     World() noexcept = delete;
 
 public:
+    static auto actor(GameObjectId)     -> OptRef<Actor>;
     static auto character(GameObjectId) -> OptRef<Character>;
     static auto monster(GameObjectId)   -> OptRef<Monster>;
 
@@ -42,13 +43,13 @@ public:
     static void moveCharacterBackToPreviews(Character &);
 
     static auto addCharacter(OptRef<Player> = std::nullopt) -> Character &;
-
     static auto addMonster() -> Monster &;
 
     static void scheduleForDeletion(Actor &, ClockDuration timeFromNow = ClockDuration::zero());
 
     static auto inGameTime() -> std::chrono::minutes;
 
+    static auto subscribeToTarget(GameObjectId targetId, Actor const & listener) -> Actor &;
     static void subscribeToTarget(Actor const & target, Actor const & listener);
     static void unsubscribeFromTarget(Actor const & target, Actor const & listener);
     static void unsubscribeAllTargetListeners(Actor const & target);

@@ -50,7 +50,6 @@ public:
     auto inventory() const -> ItemStorage const &;
 
 public:
-    void computeStats();
     void setProfession(Profession profession);
 
     auto setShortcut(Shortcut shortcut) -> Shortcut &;

@@ -36,7 +36,7 @@ void MoveAction::updateImpl(ClockDuration)
     setFinished(_currentDistance >= _totalDistance);
 }
 
-void MoveAction::onCancelled()
+void MoveAction::onCanceled()
 {
     World::broadcastAround(performer(), Network::Packet::Server::ActorMoveStopPacket{performer()}, true);
 }

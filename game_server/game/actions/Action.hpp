@@ -39,7 +39,7 @@ private:
     virtual void onStarted()               {}
     virtual void updateImpl(ClockDuration) {}
     virtual void onFinished()              {}
-    virtual void onCancelled()             {}
+    virtual void onCanceled()              {}
 
 private:
     ActionType     _type;

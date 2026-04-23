@@ -5,12 +5,14 @@
 
 using Network::Packet::Server::UiGaugePacket;
 
-UiGaugePacket::UiGaugePacket(GaugeColor const color, MSec const duration)
+UiGaugePacket::UiGaugePacket(GaugeColor const color, ClockDuration const duration)
     : Packet(0x6d, "UiGauge")
 {
+    auto const d = std::chrono::floor<std::chrono::milliseconds>(duration);
+
     *this
         << color
-        << duration // cur value
-        << duration // max value
+        << d // cur value
+        << d // max value
     ;
 }

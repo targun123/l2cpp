@@ -4,9 +4,14 @@
 #include "SkillUid.hpp"
 
 // Project includes
-#include <l2cpp/network/Packet.hpp>
+#include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 
 DEFINE_PACKET_SERIALIZATION_OPERATOR(SkillUid, uid)
 {
     return p << static_cast<u32>(uid.id()) << static_cast<u32>(uid.level());
+}
+
+DEFINE_CUSTOM_PACKET_SERIALIZATION_OPERATOR(Network::Packet::Server::AbnormalEffectListPacket, SkillUid, uid)
+{
+    return p << static_cast<u32>(uid.id()) << uid.level();
 }

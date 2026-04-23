@@ -18,5 +18,5 @@ enum class GaugeColor : u32
 
 struct Network::Packet::Server::UiGaugePacket final : public l2cpp::Network::Packet
 {
-    UiGaugePacket(GaugeColor color, MSec duration);
+    UiGaugePacket(GaugeColor color, ClockDuration duration);
 };

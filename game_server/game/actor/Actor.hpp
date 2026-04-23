@@ -10,6 +10,7 @@
 #include "../constants/ActorType.hpp"
 #include "../constants/Team.hpp"
 #include "../ecs/Entity.hpp"
+#include "../effects/AbnormalEffect.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 
@@ -41,8 +42,8 @@ public:
     auto position() const -> Position const &;
     auto team() const -> Team;
 
-    auto baseStats() const -> Stats const &;
-    auto stats() const -> ComputedStats const &;
+    auto stats()       -> Stats       &;
+    auto stats() const -> Stats const &;
 
     auto gear()       -> Gear       &;
     auto gear() const -> Gear const &;
@@ -52,11 +53,15 @@ public:
 
     auto target() const -> OptRef<Actor>;
 
+    bool dying() const;
     bool isAlive() const;
     bool isInCombatStance() const;
 
     auto currentAction() -> OptRef<Action>;
     auto nextAction() -> OptRef<Action>;
+
+    auto abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> &;
+    auto abnormalEffects() const -> std::list<std::unique_ptr<AbnormalEffect>> const &;
 
 public:
     void setName(std::wstring name);
@@ -77,8 +82,12 @@ public:
     void die();
     void resurrect();
 
+    template<typename T, typename... Args> requires std::is_base_of_v<AbnormalEffect, T>
+    void addAbnormalEffect(Args &&... args) { addAbnormalEffect(std::make_unique<T>(std::forward<Args>(args)...)); }
+
 private:
     void doNext(std::unique_ptr<Action>);
+    void addAbnormalEffect(std::unique_ptr<AbnormalEffect>);
 
 private:
     struct ActorImpl;

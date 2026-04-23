@@ -33,16 +33,20 @@ Unless explicitely specified, don't assume anything to be available. Here's what
 - [x] Mini-map;
 - [x] Character status;
 - [x] Skills list (can give yourself any skill with `//learn <skill_id> <skill_level>` command);
-- [x] Skill use (effects will come later);
+- [x] Skill use, available effects:
+  - Instant buff (e.g. `Wind Walk`)
+  - Toggle buff (e.g. `Super Haste`)
+  - Instant damage (e.g. `Wind Strike`)
+  - Damage over time (e.g. `Poison`)
+- [x] Skill target types: `self`, `single`, `AoE`, `aura`
+- [x] Skill target nature (can be combined): `self`, `ennemy`, `friendly`, `corpse`, `character`, `monster`, `npc`, etc. 
 - [x] Skill cancellation;
-- [x] Shortcuts (skills and items);
+- [x] Shortcuts: `skills`, `items`;
 - [x] Target select and unselect;
 - [x] Chat (no restrictions);
-- [x] Can spawn any NPC with `//spawn <npc_id>` (collision is bugged);
 - [x] game loop to handle over-time actions and updates (regen, auto-attacks, DoTs…);
-- [x] Auto-attacking (infinite);
-- [x] Damage can be inflicted until death ensues;
-- [x] Status (health…) modification broadcasting;
+- [x] Auto-attacking (until target is dead);
+- [x] Status (health, mana…) modifications broadcasting;
 - [x] In-game time;
 - [x] Corpse removal after a few seconds;
 - [x] System messages.

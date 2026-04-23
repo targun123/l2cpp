@@ -13,9 +13,13 @@
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
+#include "systems/ActorSkillEffectSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/network/Packet.hpp>
+
+// Third-party
+#include <spdlog/spdlog.h>
 
 // C++ includes
 #include <ranges>
@@ -24,31 +28,31 @@ namespace SC = Network::Packet::Server; // Server -> Client
 
 using l2cpp::Network::Packet;
 
+auto World::actor(GameObjectId const id) -> OptRef<Actor>
+{
+    /**/ if (auto const c = character(id)) return c;
+    else if (auto const m = monster(id))   return m;
+    else                                   return std::nullopt;
+}
+
 auto World::character(GameObjectId const id) -> OptRef<Character>
 {
-    OptRef<Character> result;
-
-    if (auto const it = _characters.find(id); it != _characters.end())
-        result = it->second;
-
-    return result;
+    auto const it = _characters.find(id);
+    return it != _characters.end() ? OptRef(it->second) : std::nullopt;
 }
 
 auto World::monster(GameObjectId const id) -> OptRef<Monster>
 {
-    OptRef<Monster> result;
-
-    if (auto const it = _monsters.find(id); it != _monsters.end())
-        result = it->second;
-
-    return result;
+    auto const it = _monsters.find(id);
+    return it != _monsters.end() ? OptRef(it->second) : std::nullopt;
 }
 
 void World::init()
 {
     registerSystem<ActorAttackStanceTimerSystem>();
-    registerSystem<ActorDeletionTimerSystem>();
     registerSystem<ActorAutoRegenSystem>();
+    registerSystem<ActorDeletionTimerSystem>();
+    registerSystem<ActorSkillEffectSystem>();
 
     auto & c = addCharacterPreview(L"Admin");
     c.setName(L"test" + std::to_wstring(c.id()));
@@ -61,18 +65,30 @@ void World::update(ClockDuration const elapsed)
 
     for (auto & c : _characters | std::views::values)
     {
-        if (auto const action = c.currentAction(); action)
-            action->update(elapsed);
+        try
+        {
+            if (auto const action = c.currentAction())
+                action->update(elapsed);
+        }
+        catch (l2cpp::Exception const & e)
+        {
+            SPDLOG_ERROR("Failed to update action for character '{}':\n{}", c.id(), l2cpp::formatExceptionStack(e));
+        }
+        catch (std::exception const & e)
+        {
+            SPDLOG_ERROR("Failed to update action for character '{}':\n{}", c.id(), l2cpp::formatExceptionStack(e));
+        }
     }
 
     for (auto const & system : _systems)
     {
-        for (auto & c : _characters | std::views::values)
-            system->update(elapsed, c);
-
-        for (auto & m : _monsters | std::views::values)
-            system->update(elapsed, m);
+        for (auto & c : _characters | std::views::values) system->update(elapsed, c);
+        for (auto & m : _monsters   | std::views::values) system->update(elapsed, m);
     }
+
+    // Death is handled outside the system loops because internals are modified upon death
+    for (auto & c : _characters | std::views::values) if (c.dying()) c.die();
+    for (auto & m : _monsters   | std::views::values) if (m.dying()) m.die();
 
     for (Actor & a : _scheduledForDeletion | std::views::values)
         delActor(a);
@@ -112,7 +128,10 @@ auto World::loadCharacterFromPreview(Character & c) -> Character &
 void World::moveCharacterBackToPreviews(Character & c)
 {
     if (auto const target = c.target())
+    {
         unsubscribeFromTarget(target, c);
+        c.setTarget(std::nullopt);
+    }
 
     unsubscribeAllTargetListeners(c);
     broadcastAround(c, SC::GameObjectDeletePacket{c});
@@ -169,10 +188,24 @@ auto World::inGameTime() -> std::chrono::minutes
     }
 }
 
+auto World::subscribeToTarget(GameObjectId targetId, Actor const & listener) -> Actor &
+{
+    auto const target = actor(targetId);
+
+    L2CPP_B_ASSERT(target, "Failed to find actor whose GameObjectId is '{}'", targetId);
+    subscribeToTarget(target, listener);
+    return target;
+}
+
 void World::subscribeToTarget(Actor const & target, Actor const & listener)
 {
-    if (target != listener)
+    if (target != listener) // do not subscribe to yourself
+    {
+        if (auto const currentTarget = listener.target())
+            unsubscribeFromTarget(currentTarget, listener);
+
         _targetSubscribers[target.id()].emplace_back(listener.id());
+    }
 }
 
 void World::unsubscribeFromTarget(Actor const & target, Actor const & listener)

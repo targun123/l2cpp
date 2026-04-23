@@ -4,6 +4,7 @@
 #include "Actor.hpp"
 
 // Project includes
+#include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../../network/packets/server/status/ActorDiePacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../World.hpp"
@@ -21,10 +22,14 @@ struct Actor::ActorImpl
 {
     ActorType type;
     Team team = Team::None;
+
+    bool dying = false;
     bool isInCombatStance = false;
 
     OptRef<Actor> target;
     std::unique_ptr<Action> currentAction, nextAction;
+
+    std::list<std::unique_ptr<AbnormalEffect>> _abnormalEffects;
 };
 
 template class Pimpl<Actor::ActorImpl>;
@@ -39,43 +44,52 @@ Actor::Actor(ActorType const type)
     addComponent<ActorIdentity>();
     addComponent<Gear>();
     addComponent<Position>();
-    addComponent<SkillDirectory>();
 
-    auto & baseStats = addComponent<Stats>();
-    baseStats.maxCp         = 500;
-    baseStats.maxHp         = 500;
-    baseStats.maxMp         = 500;
-    baseStats.STR           = 40;
-    baseStats.DEX           = 30;
-    baseStats.CON           = 43;
-    baseStats.INT           = 21;
-    baseStats.WIT           = 11;
-    baseStats.MEN           = 25;
-    baseStats.pAtk          = 10;
-    baseStats.pDef          = 80;
-    baseStats.mAtk          = 6;
-    baseStats.mDef          = 40;
-    baseStats.pAtkSpeed     = 300;
-    baseStats.mAtkSpeed     = 333;
-    baseStats.pAtkRange     = 20;
-    baseStats.pAtkRandom    = 10;
-    baseStats.accuracy      = 10;
-    baseStats.evasion       = 10;
-    baseStats.pCritRate     = 10;
-    baseStats.mCritRate     = 10;
-    baseStats.runSpeed      = 115;
-    baseStats.walkSpeed     = 80;
-    baseStats.swimRunSpeed  = 50;
-    baseStats.swimWalkSpeed = 50;
+    auto & skills = addComponent<SkillDirectory>();
+    skills.learn(18,   1); // Hate Aura
+    skills.learn(78,   1); // War Cry
+    skills.learn(129,  1); // Poison
+    skills.learn(1204, 1); // Wind Walk
+    skills.learn(1177, 1); // Wind Strike
+    skills.learn(1295, 1); // Aqua Splash
 
-    baseStats.hpRegen = 2.0;
-    baseStats.mpRegen = 0.8;
-    baseStats.cpRegen = 1.4;
+    auto & stats = addComponent<Stats>();
+    stats[StatId::BaseStr]           = 40;
+    stats[StatId::BaseDex]           = 30;
+    stats[StatId::BaseCon]           = 43;
+    stats[StatId::BaseInt]           = 21;
+    stats[StatId::BaseWit]           = 11;
+    stats[StatId::BaseMen]           = 25;
+    stats[StatId::BasePAtk]          = 10;
+    stats[StatId::BasePDef]          = 80;
+    stats[StatId::BaseMAtk]          = 6;
+    stats[StatId::BaseMDef]          = 40;
+    stats[StatId::BasePAtkSpeed]     = 300;
+    stats[StatId::BaseMAtkSpeed]     = 333;
+    stats[StatId::BasePAtkRange]     = 20;
+    stats[StatId::BasePAtkRandom]    = 10;
+    stats[StatId::BaseAccuracy]      = 10;
+    stats[StatId::BaseEvasion]       = 10;
+    stats[StatId::BasePCritRate]     = 10;
+    stats[StatId::BaseMCritRate]     = 10;
+    stats[StatId::BaseRunSpeed]      = 115;
+    stats[StatId::BaseWalkSpeed]     = 80;
+    stats[StatId::BaseSwimRunSpeed]  = 50;
+    stats[StatId::BaseSwimWalkSpeed] = 50;
 
-    auto & stats = addComponent<ComputedStats>(baseStats);
-    stats.curCp = stats.maxCp;
-    stats.curHp = stats.maxHp;
-    stats.curMp = stats.maxMp;
+    stats[StatId::BaseHpRegen] = 2.0;
+    stats[StatId::BaseMpRegen] = 0.8;
+    stats[StatId::BaseCpRegen] = 1.4;
+
+    stats[StatId::BaseMaxCp] = 500;
+    stats[StatId::BaseMaxHp] = 500;
+    stats[StatId::BaseMaxMp] = 500;
+
+    stats.compute(*this);
+
+    stats[StatId::CurCp] = stats[StatId::MaxCp];
+    stats[StatId::CurHp] = stats[StatId::MaxHp];
+    stats[StatId::CurMp] = stats[StatId::MaxMp];
 }
 
 Actor::Actor(Actor &&) noexcept = default;
@@ -90,8 +104,8 @@ auto Actor::title()    const -> std::wstring_view { return component<ActorIdenti
 auto Actor::position() const -> Position const &  { return component<Position>();             }
 auto Actor::team()     const -> Team              { return _impl->team;                       }
 
-auto Actor::baseStats()  const -> Stats         const & { return *component<Stats>();         }
-auto Actor::stats()      const -> ComputedStats const & { return *component<ComputedStats>(); }
+auto Actor::stats()       -> Stats       & { return *component<Stats>(); }
+auto Actor::stats() const -> Stats const & { return *component<Stats>(); }
 
 auto Actor::gear()       -> Gear       & { return *component<Gear>(); }
 auto Actor::gear() const -> Gear const & { return *component<Gear>(); }
@@ -101,8 +115,9 @@ auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDi
 
 auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
-bool Actor::isAlive()          const { return stats().curHp > 0;       }
-bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
+bool Actor::dying()            const { return _impl->dying;               }
+bool Actor::isAlive()          const { return stats()[StatId::CurHp] > 0; }
+bool Actor::isInCombatStance() const { return _impl->isInCombatStance;    }
 
 auto Actor::currentAction() -> OptRef<Action>
 {
@@ -118,6 +133,13 @@ auto Actor::currentAction() -> OptRef<Action>
 }
 
 auto Actor::nextAction() -> OptRef<Action> { return _impl->nextAction ? OptRef(*_impl->nextAction) : std::nullopt; }
+
+auto Actor::abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> & { return _impl->_abnormalEffects; }
+auto Actor::abnormalEffects() const -> std::list<std::unique_ptr<AbnormalEffect>> const & {
+    return _impl->_abnormalEffects;
+}
+
+// SETTERS -------------------------------------------------------------------------------------------------------------
 
 void Actor::setName (std::wstring name)  { component<ActorIdentity>()->name  = std::move(name);  }
 void Actor::setTitle(std::wstring title) { component<ActorIdentity>()->title = std::move(title); }
@@ -146,25 +168,28 @@ void Actor::takeDamage(double const amount)
     if (amount <= 0)
         return;
 
-    bool dying = false;
+    auto & stats = *component<Stats>();
+    if (stats[StatId::CurHp] == 0)
+        return;
 
-    auto & stats = *component<ComputedStats>();
-    if ((stats.curHp -= amount) <= 0)
+    if ((stats[StatId::CurHp] -= amount) <= 0)
     {
-        stats.curHp = 0;
-        dying = true;
+        stats[StatId::CurHp] = 0;
+        _impl->dying = true;
     }
 
     Network::Packet::Server::StatsUpdatePacket p(*this);
-    p.addStat(Stat::CurHp, static_cast<u32>(stats.curHp));
-    World::broadcastToSubscribers(*this, std::move(p));
-
-    if (dying)
-        die();
+    p.addStat(Stat::CurHp, static_cast<u32>(stats[StatId::CurHp]));
+    World::broadcastToSubscribers(*this, std::move(p), true);
 }
 
 void Actor::die()
 {
+    _impl->dying = false;
+
+    _impl->_abnormalEffects.clear();
+    World::send(*this, Network::Packet::Server::AbnormalEffectListPacket{*this});
+
     delComponent<ActorAutoRegen>();
 
     World::broadcastAround(*this, Network::Packet::Server::ActorDiePacket(*this), true);
@@ -192,3 +217,5 @@ void Actor::doNext(std::unique_ptr<Action> action)
     else
         _impl->nextAction = std::move(action);
 }
+
+void Actor::addAbnormalEffect(std::unique_ptr<AbnormalEffect> e) { _impl->_abnormalEffects.emplace_back(std::move(e)); }

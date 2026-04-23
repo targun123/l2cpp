@@ -8,12 +8,12 @@
 
 #include <l2cpp/Pimpl.hpp>
 
-class Skill;
+class SkillTemplate;
 
 class SkillAction final : public Action
 {
 public:
-    explicit SkillAction(Actor & performer, Skill & skill);
+    explicit SkillAction(Actor & performer, SkillTemplate const & skill, bool forceAttack);
     SkillAction(SkillAction &&) noexcept;
     SkillAction & operator=(SkillAction &&) noexcept;
 
@@ -24,7 +24,8 @@ private:
     void onStarted() override;
     void updateImpl(ClockDuration) override;
     void onFinished() override;
-    void onCancelled() override;
+    void onCanceled() override;
+    void selectTargets();
 
 private:
     struct SkillActionImpl;

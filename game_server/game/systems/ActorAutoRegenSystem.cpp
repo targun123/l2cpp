@@ -9,36 +9,37 @@
 #include "../components/ActorAutoRegen.hpp"
 #include "../components/Stats.hpp"
 
+/// @returns @c true if rounded-down stat has changed value, else @c false
+static bool addRegenTicks(double & stat, double const regenPerSecond, size_t const ticks, double const statMax)
+{
+    auto const tmp = static_cast<StatValue>(stat);
+    stat = std::min(stat + regenPerSecond * ticks, statMax);
+    return static_cast<StatValue>(stat) != tmp;
+}
+
 void ActorAutoRegenSystem::updateImpl(ClockDuration const elapsed, Actor & actor)
 {
     auto const autoRegen = actor.component<ActorAutoRegen>();
-    if (autoRegen && (autoRegen->elapsedSinceLastUpdate += elapsed) >= 1s)
+    if (autoRegen && (autoRegen->elapsedSinceLastUpdate += elapsed) >= 3s)
     {
         // A lot of time could have elapsed since last update, account for that
-        auto const ticks = std::chrono::floor<std::chrono::seconds>(autoRegen->elapsedSinceLastUpdate).count();
+        size_t const ticks = std::chrono::floor<std::chrono::seconds>(autoRegen->elapsedSinceLastUpdate).count();
 
-        autoRegen->elapsedSinceLastUpdate %= 1s;
-
-        auto & stats = *actor.component<ComputedStats>();
+        autoRegen->elapsedSinceLastUpdate %= 3s;
 
         std::unordered_map<Stat, double> updates;
-        if (stats.curHp < stats.maxHp)
-        {
-            stats.curHp = std::min(stats.curHp + stats.hpRegen * ticks, stats.maxHp);
-            updates.try_emplace(Stat::CurHp, stats.curHp);
-        }
 
-        if (stats.curMp < stats.maxMp)
-        {
-            stats.curMp = std::min(stats.curMp + stats.mpRegen * ticks, stats.maxMp);
-            updates.try_emplace(Stat::CurMp, stats.curMp);
-        }
+        using enum StatId;
 
-        if (stats.curCp < stats.maxCp)
-        {
-            stats.curCp = std::min(stats.curCp + stats.cpRegen * ticks, stats.maxCp);
-            updates.try_emplace(Stat::CurCp, stats.curCp);
-        }
+        auto & stats = *actor.component<Stats>();
+        if (stats[CurHp] < stats[MaxHp] && addRegenTicks(stats[CurHp], stats[HpRegen], ticks, stats[MaxHp]))
+            updates.try_emplace(Stat::CurHp, stats[CurHp]);
+
+        if (stats[CurMp] < stats[MaxMp] && addRegenTicks(stats[CurMp], stats[HpRegen], ticks, stats[MaxMp]))
+            updates.try_emplace(Stat::CurMp, stats[CurMp]);
+
+        if (stats[CurCp] < stats[MaxCp] && addRegenTicks(stats[CurCp], stats[HpRegen], ticks, stats[MaxCp]))
+            updates.try_emplace(Stat::CurCp, stats[CurCp]);
 
         if (!updates.empty())
         {

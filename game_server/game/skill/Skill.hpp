@@ -25,6 +25,9 @@ public:
 public:
     void setLevel(SkillLevel level);
 
+public:
+    operator SkillTemplate const &() const { return tmplate(); }
+
 private:
     struct SkillImpl;
     Pimpl<SkillImpl> _impl;

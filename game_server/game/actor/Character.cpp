@@ -9,7 +9,6 @@
 #include "../components/Gear.hpp"
 #include "../components/PlayerAppearance.hpp"
 #include "../components/SkillDirectory.hpp"
-#include "../components/Stats.hpp"
 #include "../inventory/ItemStorage.hpp"
 #include "../skill/SkillTemplateDirectory.hpp"
 
@@ -44,6 +43,9 @@ Character::Character(OptRef<Player> p)
     appearance.collisionRadius = 9;
 
     addComponent<CharacterStatus>();
+
+    if (accessLevel > 0)
+        skills().learn(7029, 4); // Super Haste
 
     auto & gear = *component<Gear>();
 
@@ -127,26 +129,6 @@ auto Character::inventory() const -> ItemStorage const & { return _impl->invento
 
 template<typename T, typename F>
 void assign(T & t, F f) { t = static_cast<T>(f); }
-
-void Character::computeStats()
-{
-    // First update race stats from gear & buffs
-
-    auto const & baseStats = *component<Stats>();
-    auto       & stats     = *component<ComputedStats>();
-
-    // Then update dependent stats
-    assign(stats.pAtkSpeedMultiplier, 1. + (stats.DEX - 20) / 100.);
-    assign(stats.moveSpeedMultiplier, 1. + (stats.DEX - 20) / 100.);
-
-    assign(stats.pAtkSpeed,     baseStats.pAtkSpeed     * stats.pAtkSpeedMultiplier);
-    assign(stats.runSpeed,      baseStats.runSpeed      * stats.moveSpeedMultiplier);
-    assign(stats.walkSpeed,     baseStats.walkSpeed     * stats.moveSpeedMultiplier);
-    assign(stats.swimRunSpeed,  baseStats.swimRunSpeed  * stats.moveSpeedMultiplier);
-    assign(stats.swimWalkSpeed, baseStats.swimWalkSpeed * stats.moveSpeedMultiplier);
-    assign(stats.flyRunSpeed,   baseStats.flyRunSpeed   * stats.moveSpeedMultiplier);
-    assign(stats.flyWalkSpeed,  baseStats.flyWalkSpeed  * stats.moveSpeedMultiplier);
-}
 
 void Character::setProfession(Profession const profession) { _impl->profession = profession; }
 

@@ -7,6 +7,7 @@
 #include "../../utils/Conversion.hpp"
 
 #include <l2cpp/Exception.hpp>
+#include <l2cpp/utils/EnumMask.hpp>
 
 // Third-pary includes
 #include <boost/algorithm/string/classification.hpp>
@@ -59,13 +60,11 @@ namespace
         for (size_t i = 1; std::getline(file, line) && !line.empty(); ++i) try
         {
             boost::algorithm::split(parts, line, boost::algorithm::is_any_of("\t"));
-            if (parts.size() != 17)
-            {
-                L2CPP_THROW("Found {} parts instead of 17:\nParts found: {::?}", parts.size(), parts);
-            }
+            L2CPP_B_ASSERT(parts.size() == 17,
+                           "Found {} parts instead of 17:\nParts found: {::?}", parts.size(), parts);
 
-            auto const id  = Utils::stringViewTo<u16>(parts[0]);
-            auto const lvl = Utils::stringViewTo<u16>(parts[1]);
+            auto const id  = Utils::stringViewTo<SkillId>(parts[0]);
+            auto const lvl = Utils::stringViewTo<SkillLevel>(parts[1]);
 
             auto const it = infos.find({id, lvl});
             if (it == infos.end())
@@ -74,14 +73,85 @@ namespace
                 continue;
             }
 
+            auto & skill = it->second;
+
             std::chrono::duration<double> const duration{Utils::stringViewTo<double>(parts[6])};
-            it->second.setCastDuration(std::chrono::floor<std::chrono::milliseconds>(duration));
+            skill.setCastDuration(std::chrono::floor<std::chrono::milliseconds>(duration));
+            skill.setIsMagic(parts[7] == "1");
+
+            enum class SkillOperateType { ActiveTarget, ActiveNoTarget, Passive, Toggle };
+            switch (Utils::stringViewTo<SkillOperateType>(parts[2]))
+            {
+                case SkillOperateType::ActiveTarget:
+                case SkillOperateType::ActiveNoTarget:
+                    skill.setType(SkillType::Active);
+                    break;
+
+                case SkillOperateType::Passive:
+                    skill.setType(SkillType::Passive);
+                    break;
+
+                case SkillOperateType::Toggle:
+                    skill.setType(SkillType::Toggle);
+                    skill.setTargetNature(SkillTargetNature::Self);
+                    break;
+            }
+
+            using enum SkillTargetNature;
+
+            if (id == 18) // Hate Aura
+            {
+                skill.setTargetType(SkillTargetType::Aura);
+                skill.setTargetNature(Ennemy);
+                skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Neutral);
+            }
+
+            if (id == 78) // War Cry
+            {
+                skill.setTargetNature(Self);
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::PAtkMultiplier, .2);
+            }
+
+            if (id == 129) // Poison
+            {
+                skill.setTargetType(SkillTargetType::Single);
+                skill.setTargetNature(Ennemy);
+                skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Poison);
+            }
+
+            if (id == 1177) // Wind Strike
+            {
+                skill.setTargetType(SkillTargetType::Single);
+                skill.setTargetNature(Ennemy);
+                skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Wind);
+            }
+
+            if (id == 1204) // Wind Walk
+            {
+                skill.setTargetType(SkillTargetType::Single);
+                skill.setTargetNature(Self | Friendly | Ennemy);
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedBonus, 33);
+            }
+
+            if (id == 1295) // Aqua Splash
+            {
+                skill.setTargetType(SkillTargetType::AoE);
+                skill.setTargetNature(Ennemy);
+                skill.addAbnormalEffectFactory<DamageEffectFactory>(skill, DamageElementType::Water);
+            }
+
+            if (id == 7029) // Super Haste
+            {
+                skill.setType(SkillType::Toggle); // Enforce toggle mode for this one because it makes more sense
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MoveSpeedMultiplier, 5);
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::PAtkSpeedMultiplier, 5);
+                skill.addAbnormalEffectFactory<BuffEffectFactory>(skill, StatId::MAtkSpeedMultiplier, 5);
+            }
         }
-        catch  (l2cpp::Exception const & e)
+        catch (l2cpp::Exception const & e)
         {
             SPDLOG_ERROR("Failed to load skill from '{}:{}':\n{}", path.string(), i, l2cpp::formatExceptionStack(e));
         }
-        // oper_type: 0=active_target 1=active_no_target 2=passive 3=toggle
         // cast_style: 0=instant/passive 1=cast_time_non_zero 2=magic_skills_only 3=physical_skills_only
         //             4=hp_drain_magic 5=bow_skill 6=seal_of_ruler 7=physical_projectile 8=double_attack
         //             9=dual_weapon(dual/fists) 10=force_discharge
@@ -89,24 +159,16 @@ namespace
 }
 
 void SkillTemplateDirectory::load(std::filesystem::path const & skillNamesFile,
-                             std::filesystem::path const & skillGroupsFile)
+                                  std::filesystem::path const & skillGroupsFile)
 {
-
     loadSkillNames(_templates, skillNamesFile);
     loadSkillGroups(_templates, skillGroupsFile);
 }
 
-auto SkillTemplateDirectory::size() -> size_t
-{
-    return _templates.size();
-}
+auto SkillTemplateDirectory::size() -> size_t { return _templates.size(); }
 
 auto SkillTemplateDirectory::skill(SkillUid const uid) -> OptRef<SkillTemplate>
 {
-    OptRef<SkillTemplate> skill;
-
-    if (auto const it = _templates.find(uid); it != _templates.end())
-        skill = it->second;
-
-    return skill;
+    auto const it = _templates.find(uid);
+    return it != _templates.end() ? OptRef(it->second) : std::nullopt;
 }

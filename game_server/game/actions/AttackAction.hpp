@@ -9,7 +9,7 @@
 class AttackAction : public Action
 {
 public:
-    AttackAction(Actor & performer, Actor & target, u32 pAtkSpeed) noexcept;
+    AttackAction(Actor & performer, Actor & target, StatValue pAtkSpeed) noexcept;
 
 public:
     bool canBeInterruptedByAnotherAction() const override;

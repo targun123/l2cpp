@@ -18,25 +18,33 @@ DEFINE_PACKET_HANDLER(CharacterCreate)
     Race race;
     Sex sex;
     Profession profession;
+    u32 INT, STR, CON, MEN, DEX, WIT;
 
-    auto & c         = World::addCharacterPreview(player.accountName());
-    auto & baseStats = *c.component<Stats>();
+    auto & c     = World::addCharacterPreview(player.accountName());
+    auto & stats = c.stats();
 
     reader
         >> name
         >> race
         >> sex
         >> profession
-        >> baseStats.INT
-        >> baseStats.STR
-        >> baseStats.CON
-        >> baseStats.MEN
-        >> baseStats.DEX
-        >> baseStats.WIT
+        >> INT
+        >> STR
+        >> CON
+        >> MEN
+        >> DEX
+        >> WIT
         >> c.appearance().hairStyleId
         >> c.appearance().hairColorId
         >> c.appearance().faceId
     ;
+
+    stats[StatId::Int] = INT;
+    stats[StatId::Str] = STR;
+    stats[StatId::Con] = CON;
+    stats[StatId::Men] = MEN;
+    stats[StatId::Dex] = DEX;
+    stats[StatId::Wit] = WIT;
 
     c.setName(std::move(name));
     c.appearance().setRace(race);
