@@ -27,6 +27,7 @@ public:
     static auto actor(GameObjectId)     -> OptRef<Actor>;
     static auto character(GameObjectId) -> OptRef<Character>;
     static auto monster(GameObjectId)   -> OptRef<Monster>;
+    static auto npc(GameObjectId)       -> OptRef<Npc>;
 
 public:
     static void init();
@@ -44,6 +45,7 @@ public:
 
     static auto addCharacter(OptRef<Player> = std::nullopt) -> Character &;
     static auto addMonster() -> Monster &;
+    static auto addNpc() -> Npc &;
 
     static void scheduleForDeletion(Actor &, ClockDuration timeFromNow = ClockDuration::zero());
 
@@ -89,6 +91,7 @@ private:
     static std::unordered_map<GameObjectId, Character> _characterPreviews;
     static std::unordered_map<GameObjectId, Character> _characters;
     static std::unordered_map<GameObjectId, Monster>   _monsters;
+    static std::unordered_map<GameObjectId, Npc>       _npcs;
 
     static std::unordered_map<GameObjectId, Ref<Actor>> _scheduledForDeletion;
 

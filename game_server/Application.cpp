@@ -6,6 +6,7 @@
 // Project includes
 #include "Player.hpp"
 #include "game/World.hpp"
+#include "game/actor/NpcDirectory.hpp"
 #include "game/skill/SkillTemplateDirectory.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
@@ -64,14 +65,22 @@ template class Pimpl<Application::ApplicationImpl>;
 
 bool Application::ApplicationImpl::load() const try
 {
-    SPDLOG_INFO("Loading static data…");
+    SPDLOG_INFO("[Loading static data]");
 
+    SPDLOG_INFO("Loading skills…");
     SkillTemplateDirectory::load("data/skillname-e.txt", "data/skillgrp.txt");
-    SPDLOG_INFO("Registered {} unique skill variants", SkillTemplateDirectory::size());
+    SPDLOG_INFO("Registered {:L} unique skill variants", SkillTemplateDirectory::size());
+
+    SPDLOG_INFO("Loading NPCs info…");
+    NpcDirectory::load("data/npcname-e.txt", "data/npcgrp.txt");
+    SPDLOG_INFO("Registered {:L} NPC templates ({:L} NPCs, {:L} monsters)",
+                NpcDirectory::totalCount(), NpcDirectory::npcCount(), NpcDirectory::monsterCount());
 
     SPDLOG_INFO("Loading ECS systems");
     World::init();
+    SPDLOG_INFO("Loaded");
 
+    SPDLOG_INFO("Static data loading done.");
     return true;
 }
 catch (l2cpp::Exception const & e)

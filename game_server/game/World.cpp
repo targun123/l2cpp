@@ -32,6 +32,7 @@ auto World::actor(GameObjectId const id) -> OptRef<Actor>
 {
     /**/ if (auto const c = character(id)) return c;
     else if (auto const m = monster(id))   return m;
+    else if (auto const n = npc(id))       return n;
     else                                   return std::nullopt;
 }
 
@@ -45,6 +46,12 @@ auto World::monster(GameObjectId const id) -> OptRef<Monster>
 {
     auto const it = _monsters.find(id);
     return it != _monsters.end() ? OptRef(it->second) : std::nullopt;
+}
+
+auto World::npc(GameObjectId const id) -> OptRef<Npc>
+{
+    auto const it = _npcs.find(id);
+    return it != _npcs.end() ? OptRef(it->second) : std::nullopt;
 }
 
 void World::init()
@@ -84,11 +91,13 @@ void World::update(ClockDuration const elapsed)
     {
         for (auto & c : _characters | std::views::values) system->update(elapsed, c);
         for (auto & m : _monsters   | std::views::values) system->update(elapsed, m);
+        for (auto & n : _npcs       | std::views::values) system->update(elapsed, n);
     }
 
     // Death is handled outside the system loops because internals are modified upon death
     for (auto & c : _characters | std::views::values) if (c.dying()) c.die();
     for (auto & m : _monsters   | std::views::values) if (m.dying()) m.die();
+    for (auto & n : _npcs       | std::views::values) if (n.dying()) n.die();
 
     for (Actor & a : _scheduledForDeletion | std::views::values)
         delActor(a);
@@ -156,6 +165,13 @@ auto World::addMonster() -> Monster &
     Monster m;
     auto const id = m.id();
     return _monsters.try_emplace(id, std::move(m)).first->second;
+}
+
+auto World::addNpc() -> Npc &
+{
+    Npc n;
+    auto const id = n.id();
+    return _npcs.try_emplace(id, std::move(n)).first->second;
 }
 
 void World::scheduleForDeletion(Actor & a, ClockDuration const timeFromNow)
@@ -239,9 +255,11 @@ void World::forEachActorAround(Actor const & source, std::function<void(Actor &)
         using namespace std::views;
         auto charactersInRange = _characters | values | filter(distancePred) | filter(skipEmitter);
         auto monstersInRange   = _monsters   | values | filter(distancePred) | filter(skipEmitter);
+        auto npcsInRange       = _npcs       | values | filter(distancePred) | filter(skipEmitter);
 
         for (auto & a : charactersInRange) f(a);
         for (auto & a : monstersInRange)   f(a);
+        for (auto & a : npcsInRange)       f(a);
     }
 }
 
@@ -320,5 +338,6 @@ std::unordered_map<std::wstring_view, std::vector<GameObjectId>> World::_charact
 std::unordered_map<GameObjectId, Character>                      World::_characterPreviews;
 std::unordered_map<GameObjectId, Character>                      World::_characters;
 std::unordered_map<GameObjectId, Monster>                        World::_monsters;
+std::unordered_map<GameObjectId, Npc>                            World::_npcs;
 std::unordered_map<GameObjectId, Ref<Actor>>                     World::_scheduledForDeletion;
 std::unordered_map<GameObjectId, std::list<GameObjectId>>        World::_targetSubscribers;
