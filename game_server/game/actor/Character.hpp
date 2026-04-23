@@ -49,6 +49,8 @@ public:
     auto inventory()       -> ItemStorage       &;
     auto inventory() const -> ItemStorage const &;
 
+    bool isAttackable() const override;
+
 public:
     void setProfession(Profession profession);
 

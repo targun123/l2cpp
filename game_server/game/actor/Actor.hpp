@@ -36,11 +36,11 @@ public:
     bool operator==(Actor const &) const;
 
 public:
-    auto type() const -> ActorType;
-    auto name() const -> std::wstring_view;
-    auto title() const -> std::wstring_view;
+    auto type()     const -> ActorType;
+    auto name()     const -> std::wstring_view;
+    auto title()    const -> std::wstring_view;
     auto position() const -> Position const &;
-    auto team() const -> Team;
+    auto team()     const -> Team;
 
     auto stats()       -> Stats       &;
     auto stats() const -> Stats const &;
@@ -62,6 +62,8 @@ public:
 
     auto abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> &;
     auto abnormalEffects() const -> std::list<std::unique_ptr<AbnormalEffect>> const &;
+
+    virtual bool isAttackable() const = 0;
 
 public:
     void setName(std::wstring name);
