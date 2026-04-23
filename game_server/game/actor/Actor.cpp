@@ -14,6 +14,7 @@
 #include "../components/Position.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
+#include "Character.hpp"
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>

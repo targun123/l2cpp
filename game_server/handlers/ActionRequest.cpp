@@ -6,7 +6,7 @@
 #include "../game/World.hpp"
 #include "../game/actions/AttackAction.hpp"
 #include "../game/actor/Character.hpp"
-#include "../game/components/Gear.hpp"
+#include "../game/actor/Monster.hpp"
 #include "../game/components/Position.hpp"
 #include "../game/components/Stats.hpp"
 #include "../network/packets/server/ActionFailedPacket.hpp"

@@ -9,6 +9,7 @@
 #include "../../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
 #include "../../utils/Chrono.hpp"
 #include "../World.hpp"
+#include "../actor/Character.hpp"
 #include "../components/Stats.hpp"
 #include "../skill/Skill.hpp"
 
