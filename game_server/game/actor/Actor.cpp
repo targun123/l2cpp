@@ -50,8 +50,13 @@ Actor::Actor(ActorType const type)
     skills.learn(18,   1); // Hate Aura
     skills.learn(78,   1); // War Cry
     skills.learn(129,  1); // Poison
-    skills.learn(1204, 1); // Wind Walk
+    skills.learn(1027, 1); // Group Heal
     skills.learn(1177, 1); // Wind Strike
+    skills.learn(1204, 1); // Wind Walk
+    skills.learn(1216, 1); // Self Heal
+    skills.learn(1217, 1); // Greater Heal
+    skills.learn(1229, 1); // Chant of Life
+    skills.learn(1256, 1); // Heart of Paagrio
     skills.learn(1295, 1); // Aqua Splash
 
     auto & stats = addComponent<Stats>();

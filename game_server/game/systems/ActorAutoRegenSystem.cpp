@@ -10,11 +10,11 @@
 #include "../components/Stats.hpp"
 
 /// @returns @c true if rounded-down stat has changed value, else @c false
-static bool addRegenTicks(double & stat, double const regenPerSecond, size_t const ticks, double const statMax)
+static bool addRegenTicks(StatValue & stat, StatValue const regenPerSecond, size_t const ticks, StatValue const statMax)
 {
-    auto const tmp = static_cast<StatValue>(stat);
+    auto const tmp = stat;
     stat = std::min(stat + regenPerSecond * ticks, statMax);
-    return static_cast<StatValue>(stat) != tmp;
+    return stat != tmp;
 }
 
 void ActorAutoRegenSystem::updateImpl(ClockDuration const elapsed, Actor & actor)
@@ -27,7 +27,7 @@ void ActorAutoRegenSystem::updateImpl(ClockDuration const elapsed, Actor & actor
 
         autoRegen->elapsedSinceLastUpdate %= 3s;
 
-        std::unordered_map<Stat, double> updates;
+        std::unordered_map<Stat, StatValue> updates;
 
         using enum StatId;
 

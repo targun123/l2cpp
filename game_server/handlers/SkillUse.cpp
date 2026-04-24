@@ -21,8 +21,6 @@ DEFINE_PACKET_HANDLER(SkillUse)
     auto const skill = c.skills().skill(static_cast<SkillId>(skillId));
     L2CPP_B_ASSERT(skill, "Character does not possess skill id '{}'", skillId);
 
-    // TODO: check that the skill can actually be casted here (enough MP, relevant target if required, etc.)
-
     auto const target = c.target();
 
     if (bool canCast = c.isAlive() && (target || !skill->tmplate().needsTarget()))
