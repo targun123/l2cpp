@@ -5,6 +5,9 @@
 
 // Project includes
 #include "../../utils/Conversion.hpp"
+#include "../effects/factories/DamageEffectFactory.hpp"
+#include "../effects/factories/HealEffectFactory.hpp"
+#include "../effects/factories/ToggleBuffEffectFactory.hpp"
 
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/utils/EnumMask.hpp>

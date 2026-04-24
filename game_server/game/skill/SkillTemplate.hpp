@@ -7,7 +7,7 @@
 #include "../constants/SkillTargetNature.hpp"
 #include "../constants/SkillTargetType.hpp"
 #include "../constants/SkillType.hpp"
-#include "../effects/AbnormalEffectFactory.hpp"
+#include "../effects/factories/AbnormalEffectFactory.hpp"
 #include "SkillUid.hpp"
 
 // C++ includes

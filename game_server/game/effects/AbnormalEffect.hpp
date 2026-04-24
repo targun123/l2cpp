@@ -6,8 +6,7 @@
 // Project includes
 #include "../constants/StatId.hpp"
 #include "../skill/SkillUid.hpp"
-#include "AbnormalEffectType.hpp"
-#include "DamageElementType.hpp"
+#include "../constants/AbnormalEffectType.hpp"
 
 class Actor;
 
@@ -49,57 +48,6 @@ private:
     SkillUid           _skillUid;
     ClockDuration      _duration, _elapsed, _elapsedSinceLastTick, _tickDuration, _initialTriggerDuration;
     bool               _finished;
-};
-
-class DamageEffect : public AbnormalEffect
-{
-public:
-    explicit DamageEffect(Actor &           target,
-                          SkillUid          skillUid,
-                          DamageElementType type,
-                          StatValue         damage,
-                          ClockDuration     effectDuration         = ClockDuration::zero(),
-                          ClockDuration     tickDuration           = ClockDuration::zero(),
-                          ClockDuration     initialTriggerDuration = ClockDuration::zero());
-
-private:
-    void onTick() override;
-
-private:
-    DamageElementType _elementType;
-    StatValue         _damage;
-};
-
-class HealEffect : public AbnormalEffect
-{
-public:
-    explicit HealEffect(Actor &           target,
-                        SkillUid          skillUid,
-                        StatValue         healAmount,
-                        ClockDuration     effectDuration         = ClockDuration::zero(),
-                        ClockDuration     tickDuration           = ClockDuration::zero(),
-                        ClockDuration     initialTriggerDuration = ClockDuration::zero());
-
-private:
-    void onTick() override;
-
-private:
-    StatValue _healAmount;
-};
-
-class BuffEffect : public AbnormalEffect
-{
-public:
-    BuffEffect(Actor & target, SkillUid skillUid, ClockDuration duration, StatId modifiedStat, StatValue value);
-
-private:
-    void onStarted() override;
-    void onFinished() override;
-    void modifyStat(StatValue newValue) const;
-
-private:
-    StatId    _modifiedStat;
-    StatValue _value;
 };
 
 /*
