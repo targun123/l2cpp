@@ -112,6 +112,25 @@ void DamageEffect::onTick()
 
 // ----------
 
+HealEffect::HealEffect(
+    Actor &             target
+  , SkillUid      const skillUid
+  , StatValue     const healAmount
+  , ClockDuration const effectDuration
+  , ClockDuration const tickDuration
+  , ClockDuration const initialTriggerDuration
+)
+    : AbnormalEffect(AbnormalEffectType::Heal, target, skillUid, effectDuration, tickDuration, initialTriggerDuration)
+    , _healAmount(healAmount)
+{}
+
+void HealEffect::onTick()
+{
+    target().takeDamage(-_healAmount);
+}
+
+// ----------
+
 BuffEffect::BuffEffect(
     Actor &               target
     , SkillUid      const skillUid

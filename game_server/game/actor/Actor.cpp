@@ -166,18 +166,19 @@ void Actor::cancelAction()
 
 void Actor::takeDamage(double const amount)
 {
-    if (amount <= 0)
+    if (!isAlive() || amount == 0)
         return;
 
     auto & stats = *component<Stats>();
-    if (stats[StatId::CurHp] == 0)
-        return;
+    auto & hp    = stats[StatId::CurHp] -= amount;
 
-    if ((stats[StatId::CurHp] -= amount) <= 0)
+    if (hp <= 0)
     {
-        stats[StatId::CurHp] = 0;
+        hp = 0;
         _impl->dying = true;
     }
+    else if (hp > stats[StatId::MaxHp])
+        hp = stats[StatId::MaxHp];
 
     Network::Packet::Server::StatsUpdatePacket p(*this);
     p.addStat(Stat::CurHp, static_cast<u32>(stats[StatId::CurHp]));
@@ -186,6 +187,9 @@ void Actor::takeDamage(double const amount)
 
 void Actor::die()
 {
+    if (!isAlive() && !_impl->dying)
+        return;
+
     _impl->dying = false;
 
     _impl->_abnormalEffects.clear();
@@ -201,6 +205,9 @@ void Actor::die()
 
 void Actor::resurrect()
 {
+    if (isAlive())
+        return;
+
     addComponent<ActorAutoRegen>();
 }
 

@@ -68,8 +68,23 @@ private:
 private:
     DamageElementType _elementType;
     StatValue         _damage;
-    ClockDuration     _initialTriggerDuration;
-    ClockDuration     _tick, _elapsedSinceLastTick;
+};
+
+class HealEffect : public AbnormalEffect
+{
+public:
+    explicit HealEffect(Actor &           target,
+                        SkillUid          skillUid,
+                        StatValue         healAmount,
+                        ClockDuration     effectDuration         = ClockDuration::zero(),
+                        ClockDuration     tickDuration           = ClockDuration::zero(),
+                        ClockDuration     initialTriggerDuration = ClockDuration::zero());
+
+private:
+    void onTick() override;
+
+private:
+    StatValue _healAmount;
 };
 
 class BuffEffect : public AbnormalEffect
@@ -89,10 +104,11 @@ private:
 
 /*
 {
-  "Wind Walk": {
-    "id": 1204,
+  "1204": {
+    "default_name": "Wind Walk",
     "category": "active/magic",
-    "target_type": "single/character",
+    "target_type": "Single",
+    "target_nature": ["Self", "Friendly", "Ennemy"],
     "cast_duration": 4000,
     "cooldown": 6000,
     "cast_range": 400,
@@ -100,6 +116,7 @@ private:
     "routes": {
       "1~2": [{
         "type": "buff",
+        "target_nature": ["Self", "Character"],
         "stat": "move_speed_flat",
         "power": [20, 33],
         "duration": 1200,
