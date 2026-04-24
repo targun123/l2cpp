@@ -87,6 +87,7 @@ SkillAction::SkillAction(Actor & performer, SkillTemplate const & skill, bool co
 
 SkillAction::SkillAction(SkillAction &&) noexcept = default;
 SkillAction & SkillAction::operator=(SkillAction &&) noexcept = default;
+SkillAction::~SkillAction() = default;
 
 bool SkillAction::canBeInterruptedByAnotherAction() const { return false; }
 

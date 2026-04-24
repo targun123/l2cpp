@@ -7,6 +7,7 @@
 #include "../../utils/Conversion.hpp"
 #include "../effects/factories/DamageEffectFactory.hpp"
 #include "../effects/factories/HealEffectFactory.hpp"
+#include "../effects/factories/ResurrectionEffectFactory.hpp"
 #include "../effects/factories/ToggleBuffEffectFactory.hpp"
 
 #include <l2cpp/Exception.hpp>
@@ -126,6 +127,12 @@ namespace
                 skill.setTargetNature(Ennemy);
                 skill.addAbnormalEffectFactory<DamageEffectFactory>(DamageElementType::Poison, 72, 30s, 3s);
             }
+            else if (id == 1016) // Resurrection
+            {
+                skill.setTargetType(SkillTargetType::Single);
+                skill.setTargetNature(Corpse | Character);
+                skill.addAbnormalEffectFactory<ResurrectionEffectFactory>();
+            }
             else if (id == 1027) // Group Heal
             {
                 skill.setTargetType(SkillTargetType::Aura);
@@ -160,13 +167,19 @@ namespace
             else if (id == 1229) // Chant of Life
             {
                 skill.setTargetType(SkillTargetType::Aura);
-                skill.setTargetNature(Self | Party | Character);
+                skill.setTargetNature(Self | Party);
                 skill.addAbnormalEffectFactory<HealEffectFactory>(12, 15s, 1s);
+            }
+            else if (id == 1254) // Mass Resurrection
+            {
+                skill.setTargetType(SkillTargetType::Aura);
+                skill.setTargetNature(Corpse | Character);
+                skill.addAbnormalEffectFactory<ResurrectionEffectFactory>();
             }
             else if (id == 1256) // Heart of Paagrio
             {
                 skill.setTargetType(SkillTargetType::Aura);
-                skill.setTargetNature(Self | Party | Clan | Alliance | Character);
+                skill.setTargetNature(Self | Party | Clan | Alliance);
                 skill.addAbnormalEffectFactory<HealEffectFactory>(91);
                 skill.addAbnormalEffectFactory<HealEffectFactory>(31, 15s, 1s);
             }

@@ -96,7 +96,11 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         else
         {
             ChatSystemSayPacket p{614};
-            p.appendArg<SysMsgArg::Text>(std::format(L"Failed to spawn npc/mob \"{}\":", args[1]));
+            if (args.size() > 1)
+                p.appendArg<SysMsgArg::Text>(std::format(L"Failed to spawn npc/mob \"{}\":", args[1]));
+            else
+                p.appendArg<SysMsgArg::Text>(std::format(L"Failed to spawn npc/mob:"));
+
             p.appendArg<SysMsgArg::Text>(L"not found.");
             player.connection().send(std::move(p));
         }

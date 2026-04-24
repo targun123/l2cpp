@@ -6,7 +6,6 @@
 // Project includes
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
-#include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
 #include "../utils/Conversion.hpp"
@@ -48,7 +47,7 @@ static void addGremlin()
     if (auto const gremlin = World::addMonster(1))
     {
         gremlin->setPosX(gremlin->position().x + (count++ % 2 ? 35 : -35));
-        World::broadcastAround(gremlin, SC::NpcStatusUpdatePacket(gremlin));
+        gremlin->setPosY(gremlin->position().y + (count++ % 2 ? 35 : -35));
     }
 }
 
@@ -230,6 +229,12 @@ void World::scheduleForDeletion(Actor & a, ClockDuration const timeFromNow)
         _scheduledForDeletion.try_emplace(a.id(), a);
 }
 
+void World::unscheduleForDeletion(Actor & a)
+{
+    _scheduledForDeletion.erase(a.id());
+    a.delComponent<DeletionTimer>();
+}
+
 auto World::inGameTime() -> std::chrono::minutes
 {
     if constexpr (Config::isDebugMode)
@@ -248,7 +253,7 @@ auto World::inGameTime() -> std::chrono::minutes
     }
 }
 
-auto World::subscribeToTarget(GameObjectId targetId, Actor const & listener) -> OptRef<Actor>
+auto World::subscribeToTarget(GameObjectId const targetId, Actor const & listener) -> OptRef<Actor>
 {
     OptRef<Actor> target;
 

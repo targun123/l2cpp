@@ -9,4 +9,5 @@ enum class AbnormalEffectType
     Debuff,
     Damage,
     Heal,
+    Resurrection,
 };

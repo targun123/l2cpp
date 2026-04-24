@@ -53,6 +53,7 @@ public:
     static auto addNpc(u32 id) -> OptRef<Npc>;
 
     static void scheduleForDeletion(Actor &, ClockDuration timeFromNow = ClockDuration::zero());
+    static void unscheduleForDeletion(Actor &);
 
     static auto inGameTime() -> std::chrono::minutes;
 

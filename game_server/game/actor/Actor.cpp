@@ -6,6 +6,7 @@
 // Project includes
 #include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../../network/packets/server/status/ActorDiePacket.hpp"
+#include "../../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../World.hpp"
 #include "../components/ActorAutoRegen.hpp"
@@ -50,12 +51,14 @@ Actor::Actor(ActorType const type)
     skills.learn(18,   1); // Hate Aura
     skills.learn(78,   1); // War Cry
     skills.learn(129,  1); // Poison
+    skills.learn(1016, 1); // Resurrection
     skills.learn(1027, 1); // Group Heal
     skills.learn(1177, 1); // Wind Strike
     skills.learn(1204, 1); // Wind Walk
     skills.learn(1216, 1); // Self Heal
     skills.learn(1217, 1); // Greater Heal
     skills.learn(1229, 1); // Chant of Life
+    skills.learn(1254, 1); // Mass Resurrection
     skills.learn(1256, 1); // Heart of Paagrio
     skills.learn(1295, 1); // Aqua Splash
 
@@ -214,6 +217,15 @@ void Actor::resurrect()
         return;
 
     addComponent<ActorAutoRegen>();
+
+    World::broadcastAround(*this, Network::Packet::Server::ActorRevivePacket{*this}, true);
+    // l2cpp::Network::Packet p(0xed, "UiConfirmationDialogShow");
+    // p << 1510 << 2; // Resurrection is attempted by $c1 for $c2 xp
+    // p << 2 << 1; // "Gremlin"
+    // p << 1 << 0; // 0xp recovered
+    // World::send(*this, std::move(p));
+
+    World::unscheduleForDeletion(*this);
 }
 
 void Actor::doNext(std::unique_ptr<Action> action)
