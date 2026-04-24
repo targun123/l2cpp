@@ -6,13 +6,23 @@
 // Project includes
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
+#include "../utils/Conversion.hpp"
 #include "../utils/Maths.hpp"
 #include "actor/Character.hpp"
 #include "actor/Monster.hpp"
 #include "actor/Npc.hpp"
+#include "actor/NpcDirectory.hpp"
+#include "components/ActorStatus.hpp"
 #include "components/DeletionTimer.hpp"
+#include "components/NpcAppearance.hpp"
+#include "components/PlayerAppearance.hpp"
+#include "components/Position.hpp"
+#include "constants/Profession.hpp"
+#include "constants/Race.hpp"
+#include "constants/Sex.hpp"
 #include "ecs/System.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
@@ -30,6 +40,49 @@
 namespace SC = Network::Packet::Server; // Server -> Client
 
 using l2cpp::Network::Packet;
+
+static void addGremlin()
+{
+    static u32 count = 1;
+
+    if (auto const gremlin = World::addMonster(1))
+    {
+        gremlin->setPosX(gremlin->position().x + (count++ % 2 ? 35 : -35));
+        World::broadcastAround(gremlin, SC::NpcStatusUpdatePacket(gremlin));
+    }
+}
+
+static void addDummy()
+{
+    static u32 count = 1;
+
+    auto & d = World::addCharacter();
+    d.setPosY(d.position().y + (count++ % 2 ? 35 : -35));
+    d.setName(std::format(L"dummy{}", d.id()));
+    d.appearance().setRace(Race::Elf);
+    d.appearance().sex = Sex::Female;
+    d.appearance().collisionHeight = 23;
+    d.appearance().collisionRadius = 7.5;
+    d.setProfession(Profession::ElvenMystic);
+}
+
+void World::init()
+{
+    registerSystem<ActorAttackStanceTimerSystem>();
+    registerSystem<ActorAutoRegenSystem>();
+    registerSystem<ActorDeletionTimerSystem>();
+    registerSystem<ActorSkillEffectSystem>();
+
+    auto & c = addCharacterPreview(L"Admin");
+    c.setName(L"test" + std::to_wstring(c.id()));
+    c.setTitle(L"{l2cpp}");
+
+    addGremlin();
+    addGremlin();
+
+    addDummy();
+    addDummy();
+}
 
 auto World::actor(GameObjectId const id) -> OptRef<Actor>
 {
@@ -53,18 +106,6 @@ auto World::npc(GameObjectId const id) -> OptRef<Npc>
 {
     auto const actor = World::actor(id);
     return actor && actor->type() == ActorType::Npc ? OptRef(static_cast<Npc &>(*actor)) : std::nullopt;
-}
-
-void World::init()
-{
-    registerSystem<ActorAttackStanceTimerSystem>();
-    registerSystem<ActorAutoRegenSystem>();
-    registerSystem<ActorDeletionTimerSystem>();
-    registerSystem<ActorSkillEffectSystem>();
-
-    auto & c = addCharacterPreview(L"Admin");
-    c.setName(L"test" + std::to_wstring(c.id()));
-    c.setTitle(L"{l2cpp}");
 }
 
 void World::update(ClockDuration const elapsed)
@@ -149,8 +190,33 @@ void World::moveCharacterBackToPreviews(Character & c)
 }
 
 auto World::addCharacter(OptRef<Player> p) -> Character & { return addActor<Character>(std::move(p)); }
-auto World::addMonster()                   -> Monster   & { return addActor<Monster>();               }
-auto World::addNpc()                       -> Npc       & { return addActor<Npc>();                   }
+
+auto World::addMonster(u32 const id) -> OptRef<Monster>
+{
+    auto const result = addNpc(id);
+    return result && result->type() == ActorType::Monster ? OptRef(static_cast<Monster &>(*result)) : std::nullopt;
+}
+
+auto World::addNpc(u32 id) -> OptRef<Npc>
+{
+    OptRef<Monster> result;
+
+    if (auto const info = NpcDirectory::find(id))
+    {
+        auto & npc = info->type == ActorType::Npc ? addActor<Npc>(id) : addActor<Monster>(id);
+        npc.setName(Utils::toWideString(info->name));
+
+        if (info->title.empty())
+            npc.setTitle(std::format(L"Lv. {}", npc.status().level()));
+        else
+            npc.setTitle(Utils::toWideString(info->title));
+
+        npc.appearance().collisionHeight = 15;
+        npc.appearance().collisionRadius = 10;
+    }
+
+    return result;
+}
 
 void World::scheduleForDeletion(Actor & a, ClockDuration const timeFromNow)
 {

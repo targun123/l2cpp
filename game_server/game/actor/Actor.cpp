@@ -44,7 +44,7 @@ Actor::Actor(ActorType const type)
     addComponent<ActorAutoRegen>();
     addComponent<ActorIdentity>();
     addComponent<Gear>();
-    addComponent<Position>();
+    addComponent<Position>(-83968, 244634, -3500); // Talking Island GK
 
     auto & skills = addComponent<SkillDirectory>();
     skills.learn(18,   1); // Hate Aura

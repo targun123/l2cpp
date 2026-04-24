@@ -12,8 +12,10 @@ class NpcAppearance;
 class Npc : public Actor
 {
 public:
-    Npc();
-    explicit Npc(ActorType type);
+    explicit Npc(u32 id);
+
+protected:
+    Npc(ActorType type, u32 id);
 
 public:
     auto appearance()       -> NpcAppearance       &;

@@ -6,20 +6,11 @@
 // Project includes
 #include "Npc.hpp"
 
-#include <l2cpp/Pimpl.hpp>
-
 class Monster : public Npc
 {
 public:
-    Monster() noexcept;
-    Monster(Monster &&) noexcept;
-    Monster & operator=(Monster &&) noexcept;
-    ~Monster() override;
+    explicit Monster(u32 id) noexcept;
 
 public:
     bool isAttackable() const override;
-
-private:
-    struct MonsterActorImpl;
-    Pimpl<MonsterActorImpl> _impl;
 };

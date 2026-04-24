@@ -36,8 +36,6 @@ Character::Character(OptRef<Player> p)
     : Actor(ActorType::Character)
     , player(std::move(p))
 {
-    setPosition(-83968, 244634, -3500); // Talking Island GK
-
     auto & appearance = addComponent<PlayerAppearance>();
     appearance.collisionHeight = 23.5;
     appearance.collisionRadius = 9;
