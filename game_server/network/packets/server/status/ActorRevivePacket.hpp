@@ -12,5 +12,5 @@ namespace Network::Packet::Server { struct ActorRevivePacket; }
 
 struct Network::Packet::Server::ActorRevivePacket final : public l2cpp::Network::Packet
 {
-    ActorRevivePacket(Actor const & target);
+    explicit ActorRevivePacket(Actor const & target);
 };

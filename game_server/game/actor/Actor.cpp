@@ -42,7 +42,6 @@ Actor::Actor(ActorType const type)
 {
     _impl->type = type;
 
-    addComponent<ActorAutoRegen>();
     addComponent<ActorIdentity>();
     addComponent<Gear>();
     addComponent<Position>(-83968, 244634, -3500); // Talking Island GK
@@ -124,9 +123,11 @@ auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDi
 
 auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
-bool Actor::dying()            const { return _impl->dying;               }
-bool Actor::isAlive()          const { return stats()[StatId::CurHp] > 0; }
-bool Actor::isInCombatStance() const { return _impl->isInCombatStance;    }
+bool Actor::dying()   const { return _impl->dying;                }
+bool Actor::isAlive() const { return stats()[StatId::CurHp] >= 1; }
+bool Actor::isDead()  const { return stats()[StatId::CurCp] < 1;  }
+
+bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
 auto Actor::currentAction() -> OptRef<Action>
 {
@@ -180,7 +181,7 @@ void Actor::takeDamage(double const amount)
     auto & stats = *component<Stats>();
     auto & hp    = stats[StatId::CurHp] -= amount;
 
-    if (hp <= 0)
+    if (hp < 1)
     {
         hp = 0;
         _impl->dying = true;

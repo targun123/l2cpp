@@ -55,6 +55,7 @@ public:
 
     bool dying() const;
     bool isAlive() const;
+    bool isDead()  const;
     bool isInCombatStance() const;
 
     auto currentAction() -> OptRef<Action>;
