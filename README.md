@@ -25,31 +25,34 @@ Unless explicitely specified, don't assume anything to be available. Here's what
 - [x] Server list always displays 2 server (one up, one down), both lead to game server.
 
 **Game Server**
-- [x] Protocol 656 only; 
+- [x] Protocol `656` only; 
 - [x] Character creation (but not restored between runs as no data is stored on disk yet);
 - [x] World entering (every character spawns at Talking Island);
 - [x] Moving around;
 - [x] Inventory list (gear items can be equipped and unequipped);
 - [x] Mini-map;
 - [x] Character status;
+- [x] Target select and unselect;
+- [x] game loop to handle over-time actions and updates (regen, auto-attacks, DoTs…);
 - [x] Skills list (can give yourself any skill with `//learn <skill_id> <skill_level>` command);
 - [x] Skill use, available effects:
   - Instant buff (e.g. `Wind Walk`)
   - Toggle buff (e.g. `Super Haste`)
   - Instant damage (e.g. `Wind Strike`)
   - Damage over time (e.g. `Poison`)
-- [x] Skill target types: `self`, `single`, `AoE`, `aura`
+  - Instant heal (e.g. `Battle Heal`)
+  - Heal over time (e.g. `Chant of Life`)
+  - Resurrection (e.g. `Mass Resurrection`)
+- [x] Skill target types: `self`, `single`, `aoe`, `aura`
 - [x] Skill target nature (can be combined): `self`, `ennemy`, `friendly`, `corpse`, `character`, `monster`, `npc`, etc. 
-- [x] Skill cancellation;
+- [x] Skill casting cancellation;
 - [x] Shortcuts: `skills`, `items`;
-- [x] Target select and unselect;
 - [x] Chat (no restrictions);
-- [x] game loop to handle over-time actions and updates (regen, auto-attacks, DoTs…);
 - [x] Auto-attacking (until target is dead);
 - [x] Status (health, mana…) modifications broadcasting;
 - [x] In-game time;
 - [x] Corpse removal after a few seconds;
-- [x] System messages.
+- [x] System messages and confirmation modals.
 
 ## What's coming next
 
