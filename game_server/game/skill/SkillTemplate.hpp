@@ -7,7 +7,7 @@
 #include "../constants/SkillTargetNature.hpp"
 #include "../constants/SkillTargetType.hpp"
 #include "../constants/SkillType.hpp"
-#include "../effects/AbnormalEffectFactory.hpp"
+#include "../effects/factories/AbnormalEffectFactory.hpp"
 #include "SkillUid.hpp"
 
 // C++ includes
@@ -42,7 +42,7 @@ public:
 
     template<class T> requires std::is_base_of_v<AbnormalEffectFactory, T>
     void addAbnormalEffectFactory(auto &&... args) {
-        _effects.emplace_back(std::make_unique<T>(std::forward<decltype(args)>(args)...));
+        _effects.emplace_back(std::make_unique<T>(*this, std::forward<decltype(args)>(args)...));
     }
 
 public:

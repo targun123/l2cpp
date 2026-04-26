@@ -11,6 +11,7 @@
 #include <spdlog/spdlog.h>
 
 static void setupLogger();
+static auto getCurrentLocale() -> std::string;
 
 int main(int const argc, char const * const argv[])
 {
@@ -19,6 +20,13 @@ int main(int const argc, char const * const argv[])
 #endif
 
     setupLogger();
+
+    {
+        // std::locale const currentLocale(getCurrentLocale());
+        std::locale const currentLocale("en-UK");
+        std::locale::global(currentLocale);
+        SPDLOG_TRACE("Current locale: {}", currentLocale.name().c_str());
+    }
 
     int code = EXIT_FAILURE;
     try
@@ -46,4 +54,21 @@ void setupLogger()
 {
     spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
     spdlog::set_level(spdlog::level::trace);
+}
+
+std::string getCurrentLocale()
+{
+    std::string result;
+
+#ifdef _WIN32
+    wchar_t name[LOCALE_NAME_MAX_LENGTH];
+    if (auto size = LCIDToLocaleName(GetThreadLocale(), name, LOCALE_NAME_MAX_LENGTH, 0))
+    {
+        result.resize(static_cast<std::size_t>(--size)); // Decrement to remove leading '\0'
+        // Locale names don't contain weird characters so it's okay
+        std::transform(name, name + size, result.begin(), [] (wchar_t const c) { return static_cast<char>(c); });
+    }
+#endif
+
+    return result;
 }

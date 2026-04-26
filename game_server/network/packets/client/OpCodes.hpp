@@ -33,6 +33,7 @@ namespace Network
         ChatAdminCommand            = 0x5b,
         CharacterCancelDeletion     = 0x62,
         QuestList                   = 0x63,
+        UiConfirmationModalAnswer   = 0xc5,
         MiniMapShow                 = 0xcd,
         ManorList                   = 0xd0,
     };

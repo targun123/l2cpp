@@ -6,6 +6,7 @@
 // Project includes
 #include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../../network/packets/server/status/ActorDiePacket.hpp"
+#include "../../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../World.hpp"
 #include "../components/ActorAutoRegen.hpp"
@@ -41,17 +42,23 @@ Actor::Actor(ActorType const type)
 {
     _impl->type = type;
 
-    addComponent<ActorAutoRegen>();
     addComponent<ActorIdentity>();
     addComponent<Gear>();
-    addComponent<Position>();
+    addComponent<Position>(-83968, 244634, -3500); // Talking Island GK
 
     auto & skills = addComponent<SkillDirectory>();
     skills.learn(18,   1); // Hate Aura
     skills.learn(78,   1); // War Cry
     skills.learn(129,  1); // Poison
-    skills.learn(1204, 1); // Wind Walk
+    skills.learn(1016, 1); // Resurrection
+    skills.learn(1027, 1); // Group Heal
     skills.learn(1177, 1); // Wind Strike
+    skills.learn(1204, 1); // Wind Walk
+    skills.learn(1216, 1); // Self Heal
+    skills.learn(1217, 1); // Greater Heal
+    skills.learn(1229, 1); // Chant of Life
+    skills.learn(1254, 1); // Mass Resurrection
+    skills.learn(1256, 1); // Heart of Paagrio
     skills.learn(1295, 1); // Aqua Splash
 
     auto & stats = addComponent<Stats>();
@@ -116,9 +123,11 @@ auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDi
 
 auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
-bool Actor::dying()            const { return _impl->dying;               }
-bool Actor::isAlive()          const { return stats()[StatId::CurHp] > 0; }
-bool Actor::isInCombatStance() const { return _impl->isInCombatStance;    }
+bool Actor::dying()   const { return _impl->dying;                }
+bool Actor::isAlive() const { return stats()[StatId::CurHp] >= 1; }
+bool Actor::isDead()  const { return stats()[StatId::CurCp] < 1;  }
+
+bool Actor::isInCombatStance() const { return _impl->isInCombatStance; }
 
 auto Actor::currentAction() -> OptRef<Action>
 {
@@ -166,18 +175,19 @@ void Actor::cancelAction()
 
 void Actor::takeDamage(double const amount)
 {
-    if (amount <= 0)
+    if (!isAlive() || amount == 0)
         return;
 
     auto & stats = *component<Stats>();
-    if (stats[StatId::CurHp] == 0)
-        return;
+    auto & hp    = stats[StatId::CurHp] -= amount;
 
-    if ((stats[StatId::CurHp] -= amount) <= 0)
+    if (hp < 1)
     {
-        stats[StatId::CurHp] = 0;
+        hp = 0;
         _impl->dying = true;
     }
+    else if (hp > stats[StatId::MaxHp])
+        hp = stats[StatId::MaxHp];
 
     Network::Packet::Server::StatsUpdatePacket p(*this);
     p.addStat(Stat::CurHp, static_cast<u32>(stats[StatId::CurHp]));
@@ -186,6 +196,9 @@ void Actor::takeDamage(double const amount)
 
 void Actor::die()
 {
+    if (!isAlive() && !_impl->dying)
+        return;
+
     _impl->dying = false;
 
     _impl->_abnormalEffects.clear();
@@ -199,9 +212,21 @@ void Actor::die()
         World::scheduleForDeletion(*this, 5s); // Corpse will disappear soon
 }
 
-void Actor::resurrect()
+void Actor::revive()
 {
+    if (isAlive())
+        return;
     addComponent<ActorAutoRegen>();
+
+    World::unscheduleForDeletion(*this);
+    World::broadcastAround(*this, Network::Packet::Server::ActorRevivePacket{*this}, true);
+
+    auto & stats = *component<Stats>();
+    stats[StatId::CurHp] = stats[StatId::MaxHp] * 0.65;
+
+    Network::Packet::Server::StatsUpdatePacket p(*this);
+    p.addStat(Stat::CurHp, stats[StatId::CurHp]);
+    World::broadcastToSubscribers(*this, std::move(p), true);
 }
 
 void Actor::doNext(std::unique_ptr<Action> action)

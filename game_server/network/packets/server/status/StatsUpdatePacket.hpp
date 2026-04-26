@@ -4,7 +4,6 @@
 #pragma once
 
 // Project includes
-#include <unordered_map>
 #include <l2cpp/network/Packet.hpp>
 
 class Actor;
@@ -57,5 +56,5 @@ public:
     auto addStat(Stat const id, T const value) -> Packet & { return addStat(id, static_cast<s32>(value)); }
 
 private:
-    size_t _statsCountOffset;
+    u32 _statsCountOffset;
 };

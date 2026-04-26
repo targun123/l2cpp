@@ -3,24 +3,8 @@
 
 #include "Monster.hpp"
 
-// Project includes
-// ReSharper disable once CppUnusedIncludeDirective
-#include <l2cpp/details/Pimpl.hpp>
+Monster::Monster(u32 const id) noexcept
+    : Npc(ActorType::Monster, id)
+{}
 
-struct Monster::MonsterActorImpl
-{
-};
-
-template class Pimpl<Monster::MonsterActorImpl>;
-
-// ---------------------------------------------------------------------------------------------------------------------
-
-Monster::Monster() noexcept: Npc(ActorType::Monster) {}
-Monster::Monster(Monster &&) noexcept = default;
-Monster & Monster::operator=(Monster &&) noexcept = default;
-Monster::~Monster() = default;
-
-bool Monster::isAttackable() const
-{
-    return true;
-}
+bool Monster::isAttackable() const { return true; }

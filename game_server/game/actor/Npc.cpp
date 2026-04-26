@@ -7,15 +7,16 @@
 #include "../components/ActorStatus.hpp"
 #include "../components/NpcAppearance.hpp"
 
-Npc::Npc()
-    : Npc(ActorType::Npc)
+Npc::Npc(u32 const id)
+    : Npc(ActorType::Npc, id)
 {}
 
-Npc::Npc(ActorType const type)
+Npc::Npc(ActorType const type, u32 const id)
     : Actor(type)
 {
     addComponent<ActorStatus>();
-    addComponent<NpcAppearance>();
+    auto & appearance = addComponent<NpcAppearance>();
+    appearance.setId(id);
 }
 
 auto Npc::appearance()       -> NpcAppearance       & { return component<NpcAppearance>(); }

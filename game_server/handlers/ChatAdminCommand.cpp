@@ -8,15 +8,12 @@
 #include "../game/actor/Character.hpp"
 #include "../game/actor/Monster.hpp"
 #include "../game/actor/NpcDirectory.hpp"
-#include "../game/components/ActorStatus.hpp"
-#include "../game/components/NpcAppearance.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/components/SkillDirectory.hpp"
 #include "../network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "../network/packets/server/skill/SkillListPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
-#include "../utils/Conversion.hpp"
 #include "_Common.hpp"
 
 // Third-party includes
@@ -82,37 +79,29 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
     }
     else if (args[0] == L"spawn")
     {
-        OptRef<NpcInfo const> info;
+        OptRef<Npc> npc;
 
         if (args.size() == 1)
-            info = NpcDirectory::find(1);
+            npc = World::addNpc(1);
         else if (std::isdigit(args[1][0]))
-            info = NpcDirectory::find(std::stoi(std::wstring(args[1])));
+            npc = World::addNpc(std::stoi(std::wstring(args[1])));
         else if (auto const infos = NpcDirectory::find(args[1]); !infos.empty())
-            info = infos[0].get();
+            npc = World::addNpc(infos[0].get().id);
 
-        if (info)
+        if (npc)
         {
-            auto & npc = info->type == ActorType::Npc ? World::addNpc() : World::addMonster();
-            npc.setName(Utils::toWideString(info->name));
-
-            if (info->title.empty())
-                npc.setTitle(std::format(L"Lv. {}", npc.status().level()));
-            else
-                npc.setTitle(Utils::toWideString(info->title));
-
-            npc.setPosition(c.position());
-            npc.appearance().setId(info->id);
-            npc.appearance().collisionHeight = 15;
-            npc.appearance().collisionRadius = 10;
-
-            World::broadcastAround(c, NpcStatusUpdatePacket(npc), true);
+            npc->setPosition(c.position());
+            World::broadcastAround(npc, NpcStatusUpdatePacket(npc));
         }
         else
         {
             ChatSystemSayPacket p{614};
-            p.appendArg<SysMsgArg::Text>(std::format(L"Failed to spawn npc/mob \"{}\":", args[1]));
-            p.appendArg<SysMsgArg::Text>(L"not found.");
+            if (args.size() > 1)
+                p << SysMsgArg::Text(std::format(L"Failed to spawn npc/mob \"{}\":", args[1]));
+            else
+                p << SysMsgArg::Text(std::format(L"Failed to spawn npc/mob:"));
+
+            p << SysMsgArg::Text(L"not found.");
             player.connection().send(std::move(p));
         }
     }

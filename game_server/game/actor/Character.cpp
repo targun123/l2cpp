@@ -4,7 +4,9 @@
 #include "Character.hpp"
 
 // Project includes
+#include "../../network/packets/server/ui/UiConfirmationModalShowPacket.hpp"
 #include "../Shortcut.hpp"
+#include "../World.hpp"
 #include "../components/CharacterStatus.hpp"
 #include "../components/Gear.hpp"
 #include "../components/PlayerAppearance.hpp"
@@ -15,10 +17,14 @@
 #include <l2cpp/Exception.hpp>
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
-#include <l2cpp/utils/Enum.hpp>
 
 // C++ includes
 #include <array>
+
+enum class ConfirmationModalSystemMessageId : u32
+{
+    ResurrectionProposal = 1510,
+};
 
 struct Character::CharacterImpl
 {
@@ -26,6 +32,8 @@ struct Character::CharacterImpl
 
     ItemStorage               inventory;
     std::array<Shortcut, 120> shortcuts{};
+
+    std::optional<ConfirmationModalSystemMessageId> confirmationModalMessageId;
 };
 
 template class Pimpl<Character::CharacterImpl>;
@@ -36,8 +44,6 @@ Character::Character(OptRef<Player> p)
     : Actor(ActorType::Character)
     , player(std::move(p))
 {
-    setPosition(-83968, 244634, -3500); // Talking Island GK
-
     auto & appearance = addComponent<PlayerAppearance>();
     appearance.collisionHeight = 23.5;
     appearance.collisionRadius = 9;
@@ -153,4 +159,48 @@ void Character::delShortcut(size_t const index)
 {
     L2CPP_B_ASSERT(index < _impl->shortcuts.size(), "Cannot remove a shortcut whose index ({}) is invalid", index);
     _impl->shortcuts[index] = Shortcut();
+}
+
+void Character::offerResurrection(Actor const & emitter)
+{
+    if (isAlive())
+        return;
+
+    if (!player)
+        return revive();
+
+    using enum ConfirmationModalSystemMessageId;
+
+    Network::Packet::Server::UiConfirmationModalShowPacket p(std::to_underlying(ResurrectionProposal));
+    p << SysMsgArg::Text(emitter.name());
+    p << SysMsgArg::Text(name());
+
+    World::send(*this, std::move(p));
+
+    _impl->confirmationModalMessageId = ResurrectionProposal;
+}
+
+void Character::answerConfirmationModal(u32 const systemMessageId, bool const accepted)
+{
+    L2CPP_B_ASSERT(_impl->confirmationModalMessageId, "[{}] wasn't expecting any modal answer", id());
+    L2CPP_B_ASSERT(std::to_underlying(*_impl->confirmationModalMessageId) == systemMessageId,
+                   "[{}] wasn't expecting a confirmation modal answer to system message '{}' (expected id: {})",
+                   id(), systemMessageId, std::to_underlying(*_impl->confirmationModalMessageId));
+
+    switch (*_impl->confirmationModalMessageId)
+    {
+        using enum ConfirmationModalSystemMessageId;
+
+        case ResurrectionProposal:
+        {
+            if (accepted)
+                revive();
+
+            break;
+        }
+
+        default:
+            L2CPP_THROW("[{}] Unhandled confirmation modal answer for message id '{}'",
+                        id(), std::to_underlying(*_impl->confirmationModalMessageId));
+    }
 }

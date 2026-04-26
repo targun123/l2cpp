@@ -27,13 +27,15 @@ private:
     World() noexcept = delete;
 
 public:
+    static void init();
+
+public:
     static auto actor(GameObjectId)     -> OptRef<Actor>;
     static auto character(GameObjectId) -> OptRef<Character>;
     static auto monster(GameObjectId)   -> OptRef<Monster>;
     static auto npc(GameObjectId)       -> OptRef<Npc>;
 
 public:
-    static void init();
     static void update(ClockDuration elapsed);
 
     template<typename T, typename... Args> requires std::is_base_of_v<System, T>
@@ -47,10 +49,11 @@ public:
     static void moveCharacterBackToPreviews(Character &);
 
     static auto addCharacter(OptRef<Player> = std::nullopt) -> Character &;
-    static auto addMonster() -> Monster &;
-    static auto addNpc() -> Npc &;
+    static auto addMonster(u32 id) -> OptRef<Monster>;
+    static auto addNpc(u32 id) -> OptRef<Npc>;
 
     static void scheduleForDeletion(Actor &, ClockDuration timeFromNow = ClockDuration::zero());
+    static void unscheduleForDeletion(Actor &);
 
     static auto inGameTime() -> std::chrono::minutes;
 

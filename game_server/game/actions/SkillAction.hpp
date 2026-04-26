@@ -16,6 +16,7 @@ public:
     explicit SkillAction(Actor & performer, SkillTemplate const & skill, bool forceAttack);
     SkillAction(SkillAction &&) noexcept;
     SkillAction & operator=(SkillAction &&) noexcept;
+    ~SkillAction() override;
 
 public:
     bool canBeInterruptedByAnotherAction() const override;

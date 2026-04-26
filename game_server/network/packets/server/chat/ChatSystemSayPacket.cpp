@@ -10,12 +10,12 @@ ChatSystemSayPacket::ChatSystemSayPacket(u32 const messageId)
 {
     *this << messageId;
 
-    _argsCountOffset = appendSize(0);
+    appendCounterAndStoreOffset(_argsCountOffset);
 }
 
-ChatSystemSayPacket & ChatSystemSayPacket::appendArg(details::SystemMessageArgument const && arg)
+ChatSystemSayPacket & ChatSystemSayPacket::appendArgImpl(SystemMessageArgument const & arg)
 {
-    sizeAtOffset<u32>(_argsCountOffset) += 1;
+    counterAtOffset(_argsCountOffset) += 1;
     arg.serialize(*this);
     return *this;
 }

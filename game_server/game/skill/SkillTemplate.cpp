@@ -26,15 +26,15 @@ SkillTemplate::SkillTemplate(SkillId const id, std::string name, SkillLevel cons
     , _cooldownDuration(ClockDuration::zero())
 {}
 
-auto SkillTemplate::uid()              const -> SkillUid          { return {_id, _level};     }
-auto SkillTemplate::id()               const -> SkillId           { return _id;               }
-auto SkillTemplate::name()             const -> std::string_view  { return _name;             }
-auto SkillTemplate::fullName()         const -> std::string_view  { return _fullName;         }
-auto SkillTemplate::level()            const -> SkillLevel        { return _level;            }
-auto SkillTemplate::type()             const -> SkillType         { return _type;             }
-auto SkillTemplate::targetType()       const -> SkillTargetType   { return _targetType;       }
-auto SkillTemplate::targetNature()     const -> SkillTargetNature { return _targetNature;     }
-auto SkillTemplate::isMagic()          const -> bool              { return _isMagic;          }
+auto SkillTemplate::uid()          const -> SkillUid          { return {_id, _level}; }
+auto SkillTemplate::id()           const -> SkillId           { return _id;           }
+auto SkillTemplate::name()         const -> std::string_view  { return _name;         }
+auto SkillTemplate::fullName()     const -> std::string_view  { return _fullName;     }
+auto SkillTemplate::level()        const -> SkillLevel        { return _level;        }
+auto SkillTemplate::type()         const -> SkillType         { return _type;         }
+auto SkillTemplate::targetType()   const -> SkillTargetType   { return _targetType;   }
+auto SkillTemplate::targetNature() const -> SkillTargetNature { return _targetNature; }
+auto SkillTemplate::isMagic()      const -> bool              { return _isMagic;      }
 
 auto SkillTemplate::needsTarget() const -> bool
 {

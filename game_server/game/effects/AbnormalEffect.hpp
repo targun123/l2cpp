@@ -6,8 +6,7 @@
 // Project includes
 #include "../constants/StatId.hpp"
 #include "../skill/SkillUid.hpp"
-#include "AbnormalEffectType.hpp"
-#include "DamageElementType.hpp"
+#include "../constants/AbnormalEffectType.hpp"
 
 class Actor;
 
@@ -15,6 +14,7 @@ class AbnormalEffect
 {
 public:
     AbnormalEffect(AbnormalEffectType type,
+                   Actor &            source,
                    Actor &            target,
                    SkillUid           skillUid,
                    ClockDuration      effectDuration         = ClockDuration::zero(),
@@ -30,6 +30,7 @@ public:
     auto remainingDuration() const -> ClockDuration;
 
 protected:
+    auto source() const -> Actor &;
     auto target() const -> Actor &;
 
 public:
@@ -45,54 +46,20 @@ private:
 
 private:
     AbnormalEffectType _type;
+    Actor &            _source;
     Actor &            _target;
     SkillUid           _skillUid;
     ClockDuration      _duration, _elapsed, _elapsedSinceLastTick, _tickDuration, _initialTriggerDuration;
     bool               _finished;
 };
 
-class DamageEffect : public AbnormalEffect
-{
-public:
-    explicit DamageEffect(Actor &           target,
-                          SkillUid          skillUid,
-                          DamageElementType type,
-                          StatValue         damage,
-                          ClockDuration     effectDuration         = ClockDuration::zero(),
-                          ClockDuration     tickDuration           = ClockDuration::zero(),
-                          ClockDuration     initialTriggerDuration = ClockDuration::zero());
-
-private:
-    void onTick() override;
-
-private:
-    DamageElementType _elementType;
-    StatValue         _damage;
-    ClockDuration     _initialTriggerDuration;
-    ClockDuration     _tick, _elapsedSinceLastTick;
-};
-
-class BuffEffect : public AbnormalEffect
-{
-public:
-    BuffEffect(Actor & target, SkillUid skillUid, ClockDuration duration, StatId modifiedStat, StatValue value);
-
-private:
-    void onStarted() override;
-    void onFinished() override;
-    void modifyStat(StatValue newValue) const;
-
-private:
-    StatId    _modifiedStat;
-    StatValue _value;
-};
-
 /*
 {
-  "Wind Walk": {
-    "id": 1204,
+  "1204": {
+    "default_name": "Wind Walk",
     "category": "active/magic",
-    "target_type": "single/character",
+    "target_type": "Single",
+    "target_nature": ["Self", "Friendly", "Ennemy"],
     "cast_duration": 4000,
     "cooldown": 6000,
     "cast_range": 400,
@@ -100,6 +67,7 @@ private:
     "routes": {
       "1~2": [{
         "type": "buff",
+        "target_nature": ["Self", "Character"],
         "stat": "move_speed_flat",
         "power": [20, 33],
         "duration": 1200,

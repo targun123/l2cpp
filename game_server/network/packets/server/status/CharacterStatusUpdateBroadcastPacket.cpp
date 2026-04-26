@@ -72,10 +72,10 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << true  // standing
         << true  // running
         << c.isInCombatStance()
-        << false // not in Oly, not (fake) dead
+        << c.isDead()
         << false // not invisible
-        << 0_u8 // mount type (0=none 1=Strider 2=Wyvern)
-        << 0_u8 // private store type
+        << 0_u8  // mount type (0=none 1=Strider 2=Wyvern)
+        << 0_u8  // private store type
     ;
 
     *this << static_cast<u16>(c.cubics.size());

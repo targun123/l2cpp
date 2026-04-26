@@ -5,10 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 - Gain experience and levels when killing monsters;  
-- Skill usage and skill effects conditions; 
-- More skill effects (heal, resurection);
+- Skill usage/effects conditions; 
 - Loading basic NPC table (name, collision data);
 - Store/Load data in-between runs.
+
+## [0.22.0] - 2026-04-26
+### Added
+- HealEffect (instant + over time)
+- ResurrectionEffect (single target + aura targetting)
+- Resurrection confirmation modal for players
+
+### Changed
+- Some big numbers are locale-formatted for readability (e.g. during server initialization)
 
 ## [0.21.0] - 2026-04-23
 ### Added

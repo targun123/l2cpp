@@ -4,6 +4,7 @@
 #include "SkillAction.hpp"
 
 // Project includes
+#include "../../network/packets/server/ActionFailedPacket.hpp"
 #include "../../network/packets/server/skill/SkillCancelPacket.hpp"
 #include "../../network/packets/server/skill/SkillSetTargetsPacket.hpp"
 #include "../../network/packets/server/skill/SkillUsePacket.hpp"
@@ -75,23 +76,33 @@ SkillAction::SkillAction(Actor & performer, SkillTemplate const & skill, bool co
         if (auto const target = performer.target())
             _impl->targets.emplace_back(target);
         else
+        {
+            World::send(performer, SC::ActionFailedPacket{});
             L2CPP_THROW("Skill '{}' needs a target to be performed", _impl->skill.fullName());
+        }
     }
+    else if (Utils::Target::isValidTarget(performer, _impl->skill, performer, false))
+        _impl->targets.emplace_back(performer);
 }
 
 SkillAction::SkillAction(SkillAction &&) noexcept = default;
 SkillAction & SkillAction::operator=(SkillAction &&) noexcept = default;
+SkillAction::~SkillAction() = default;
 
 bool SkillAction::canBeInterruptedByAnotherAction() const { return false; }
 
 void SkillAction::onStarted()
 {
-    if (_impl->skill.type() == SkillType::Active)
+    auto const & skill = _impl->skill;
+
+    if (skill.type() == SkillType::Active)
     {
+        Actor const & target = (_impl->targets.empty() ? performer() : _impl->targets[0].get());
+
         World::send(performer(), SC::UiGaugePacket{GaugeColor::Blue, _impl->castingDuration});
-        SC::SkillUsePacket p{performer(), _impl->targets.empty() ? performer() : _impl->targets.at(0).get(),
-                             _impl->skill.uid(), _impl->castingDuration, 1s, false};
-        World::broadcastAround(performer(), std::move(p), true);
+        World::broadcastAround(performer(), SC::SkillUsePacket{
+            performer(), target, skill.uid(), _impl->castingDuration, skill.cooldownDuration(), false
+        }, true);
     }
     else // Toggle
         setFinished(true);
@@ -119,7 +130,8 @@ void SkillAction::updateImpl(ClockDuration const elapsed)
 
 void SkillAction::onFinished()
 {
-    L2CPP_B_ASSERT(!_impl->targets.empty(), "No target at the end of skill casting, cannot apply effects");
+    L2CPP_B_ASSERT(!_impl->targets.empty() || _impl->skill.targetType() == SkillTargetType::Aura,
+                   "No target at the end of skill casting, cannot apply effects");
 
     for (auto & target : _impl->targets)
         _impl->skill.applyEffects(performer(), target);
@@ -136,7 +148,6 @@ void SkillAction::selectTargets()
                    "Skill whose type is not Active inside {}", __FUNCTION__);
 
     auto const & target = _impl->targets.empty() ? performer() : _impl->targets.at(0).get();
-
     World::forEachActorAround(target, [&] (auto & a)
     {
         if (Utils::Target::isValidTarget(performer(), _impl->skill, a, _impl->forceAttack))

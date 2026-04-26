@@ -13,11 +13,11 @@ StatsUpdatePacket::StatsUpdatePacket(Actor const & emitter)
 {
     *this << emitter.id();
 
-    _statsCountOffset = appendSize(0);
+    appendCounterAndStoreOffset(_statsCountOffset);
 }
 
 auto StatsUpdatePacket::addStat(Stat const id, s32 const value) -> Packet &
 {
-    sizeAtOffset<u32>(_statsCountOffset) += 1;
+    counterAtOffset(_statsCountOffset) += 1;
     return *this << id << value;
 }

@@ -73,7 +73,7 @@ bool Application::ApplicationImpl::load() const try
 
     SPDLOG_INFO("Loading NPCs info…");
     NpcDirectory::load("data/npcname-e.txt", "data/npcgrp.txt");
-    SPDLOG_INFO("Registered {:L} NPC templates ({:L} NPCs, {:L} monsters)",
+    SPDLOG_INFO("Registered {:L} NPC templates ({:L} NPCs; {:L} monsters)",
                 NpcDirectory::totalCount(), NpcDirectory::npcCount(), NpcDirectory::monsterCount());
 
     SPDLOG_INFO("Loading ECS systems");

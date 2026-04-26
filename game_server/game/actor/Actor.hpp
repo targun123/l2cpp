@@ -55,6 +55,7 @@ public:
 
     bool dying() const;
     bool isAlive() const;
+    bool isDead()  const;
     bool isInCombatStance() const;
 
     auto currentAction() -> OptRef<Action>;
@@ -82,7 +83,7 @@ public:
 
     void takeDamage(double amount);
     void die();
-    void resurrect();
+    void revive();
 
     template<typename T, typename... Args> requires std::is_base_of_v<AbnormalEffect, T>
     void addAbnormalEffect(Args &&... args) { addAbnormalEffect(std::make_unique<T>(std::forward<Args>(args)...)); }

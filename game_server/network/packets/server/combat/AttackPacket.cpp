@@ -30,11 +30,11 @@ void AttackPacket::addHit(Hit const & hit)
             << _attacker.position()
         ;
 
-        _hitsCountOffset = appendSize(0_u16);
+        appendCounterAndStoreOffset(_hitsCountOffset);
     }
     else
     {
-        sizeAtOffset<u16>(_hitsCountOffset) += 1;
+        counterAtOffset(_hitsCountOffset) += 1;
         erase(positionSize);
         *this << hit;
     }

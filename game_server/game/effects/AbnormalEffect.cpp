@@ -4,24 +4,21 @@
 #include "AbnormalEffect.hpp"
 
 // Project includes
-#include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
-#include "../../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
-#include "../../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
 #include "../../utils/Chrono.hpp"
-#include "../World.hpp"
 #include "../actor/Character.hpp"
-#include "../components/Stats.hpp"
 #include "../skill/Skill.hpp"
 
 AbnormalEffect::AbnormalEffect(
-    AbnormalEffectType const type
-    , Actor &                target
-    , SkillUid         const skillUid
-    , ClockDuration    const effectDuration
-    , ClockDuration    const tickDuration
-    , ClockDuration    const initialTriggerDuration
+    AbnormalEffectType const   type
+    , Actor                  & source
+    , Actor                  & target
+    , SkillUid         const   skillUid
+    , ClockDuration    const   effectDuration
+    , ClockDuration    const   tickDuration
+    , ClockDuration    const   initialTriggerDuration
 )
     : _type(type)
+    , _source(source)
     , _target(target)
     , _skillUid(skillUid)
     , _duration(effectDuration)
@@ -44,6 +41,7 @@ auto AbnormalEffect::remainingDuration() const -> ClockDuration
     return _duration > ClockDuration::zero() ? _duration - _elapsed : _duration;
 }
 
+auto AbnormalEffect::source() const -> Actor & { return _source; }
 auto AbnormalEffect::target() const -> Actor & { return _target; }
 
 bool AbnormalEffect::update(ClockDuration const elapsed)
@@ -87,63 +85,4 @@ bool AbnormalEffect::update(ClockDuration const elapsed)
 void AbnormalEffect::cancel()
 {
     _finished = true;
-}
-
-// ----------
-
-DamageEffect::DamageEffect(
-    Actor &                   target
-    , SkillUid          const skillUid
-    , DamageElementType const type
-    , StatValue         const damage
-    , ClockDuration     const effectDuration
-    , ClockDuration     const tickDuration
-    , ClockDuration     const initialTriggerDuration
-)
-    : AbnormalEffect(AbnormalEffectType::Damage, target, skillUid, effectDuration, tickDuration, initialTriggerDuration)
-    , _elementType(type)
-    , _damage(damage)
-{}
-
-void DamageEffect::onTick()
-{
-    target().takeDamage(_damage);
-}
-
-// ----------
-
-BuffEffect::BuffEffect(
-    Actor &               target
-    , SkillUid      const skillUid
-    , ClockDuration const duration
-    , StatId        const modifiedStat
-    , StatValue     const value
-)
-    : AbnormalEffect(AbnormalEffectType::Buff, target, skillUid, duration)
-    , _modifiedStat(modifiedStat)
-    , _value(value)
-{}
-
-void BuffEffect::onStarted()
-{
-    modifyStat(_value);
-}
-
-void BuffEffect::onFinished()
-{
-    modifyStat(-_value);
-}
-
-void BuffEffect::modifyStat(StatValue const newValue) const
-{
-    auto & stats = *target().component<Stats>();
-    stats[_modifiedStat] += newValue;
-    stats.compute(target());
-
-    namespace SC   = Network::Packet::Server;
-    auto const & c = static_cast<Character &>(target());
-
-    World::send           (target(), Network::Packet::Server::AbnormalEffectListPacket{target()});
-    World::send           (target(), SC::CharacterStatusUpdatePacket{c});
-    World::broadcastAround(target(), SC::CharacterStatusUpdateBroadcastPacket{c});
 }
