@@ -77,15 +77,16 @@ public:
 
 protected:
     template<typename T> requires std::integral<T>
-    auto appendSize(T t) -> size_t
+    void appendCounterAndStoreOffset(T & t, T initialSize = T{})
     {
-        auto const sz = size();
-        *this << t;
-        return sz;
+        t = static_cast<T>(size());
+        *this << initialSize;
     }
 
-    template<typename T> requires std::integral<T>
-    auto sizeAtOffset(size_t const offset) -> T & { return *static_cast<T *>(sizeAtOffset(offset)); }
+    template<typename T> requires Utils::Traits::isAnyOf<T, u16, u32>
+    auto counterAtOffset(T const offset) -> T & {
+        return *static_cast<T *>(counterAtOffset(static_cast<size_t>(offset)));
+    }
 
     void erase(size_t size);
 
@@ -94,7 +95,7 @@ private:
         return operator<<({static_cast<byte const *>(ptr), sz});
     }
 
-    auto sizeAtOffset(size_t offset) -> void *;
+    auto counterAtOffset(size_t offset) -> void *;
 
 private:
     struct PacketImpl;

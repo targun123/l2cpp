@@ -23,5 +23,5 @@ public:
 private:
     Actor const & _attacker;
     Actor const & _mainTarget;
-    size_t        _hitsCountOffset;
+    u16           _hitsCountOffset;
 };

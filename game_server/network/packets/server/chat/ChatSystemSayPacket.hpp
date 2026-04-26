@@ -73,5 +73,5 @@ private:
     ChatSystemSayPacket & appendArg(details::SystemMessageArgument const && arg);
 
 private:
-    size_t _argsCountOffset;
+    u32 _argsCountOffset;
 };
