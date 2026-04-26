@@ -7,15 +7,17 @@
 #include "../actor/Actor.hpp"
 
 DamageEffect::DamageEffect(
-    Actor &                   target
-    , SkillUid          const skillUid
-    , DamageElementType const type
-    , StatValue         const damage
-    , ClockDuration     const effectDuration
-    , ClockDuration     const tickDuration
-    , ClockDuration     const initialTriggerDuration
+    Actor                   & source
+  , Actor                   & target
+  , SkillUid          const   skillUid
+  , DamageElementType const   type
+  , StatValue         const   damage
+  , ClockDuration     const   effectDuration
+  , ClockDuration     const   tickDuration
+  , ClockDuration     const   initialTriggerDuration
 )
-    : AbnormalEffect(AbnormalEffectType::Damage, target, skillUid, effectDuration, tickDuration, initialTriggerDuration)
+    : AbnormalEffect(AbnormalEffectType::Damage, source, target, skillUid,
+                     effectDuration, tickDuration, initialTriggerDuration)
     , _elementType(type)
     , _damage(damage)
 {}

@@ -20,8 +20,8 @@ HealEffectFactory::HealEffectFactory(
     , _power(power)
 {}
 
-void HealEffectFactory::apply(Actor &, Actor & target)
+void HealEffectFactory::apply(Actor & source, Actor & target)
 {
-    target.addAbnormalEffect<HealEffect>(target, _skillTemplate.uid(), _power,
+    target.addAbnormalEffect<HealEffect>(source, target, _skillTemplate.uid(), _power,
                                          _totalDuration, _tickDuration, _initialTriggerDuration);
 }

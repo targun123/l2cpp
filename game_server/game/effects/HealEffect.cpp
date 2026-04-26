@@ -7,14 +7,16 @@
 #include "../actor/Actor.hpp"
 
 HealEffect::HealEffect(
-    Actor &             target
-  , SkillUid      const skillUid
-  , StatValue     const healAmount
-  , ClockDuration const effectDuration
-  , ClockDuration const tickDuration
-  , ClockDuration const initialTriggerDuration
+    Actor               & source
+  , Actor               & target
+  , SkillUid      const   skillUid
+  , StatValue     const   healAmount
+  , ClockDuration const   effectDuration
+  , ClockDuration const   tickDuration
+  , ClockDuration const   initialTriggerDuration
 )
-    : AbnormalEffect(AbnormalEffectType::Heal, target, skillUid, effectDuration, tickDuration, initialTriggerDuration)
+    : AbnormalEffect(AbnormalEffectType::Heal, source, target, skillUid,
+                     effectDuration, tickDuration, initialTriggerDuration)
     , _healAmount(healAmount)
 {}
 

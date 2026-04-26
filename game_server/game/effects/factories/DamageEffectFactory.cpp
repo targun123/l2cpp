@@ -22,9 +22,9 @@ DamageEffectFactory::DamageEffectFactory(
     , _power(power)
 {}
 
-void DamageEffectFactory::apply(Actor &, Actor & target)
+void DamageEffectFactory::apply(Actor & source, Actor & target)
 {
-    target.addAbnormalEffect<DamageEffect>(target, _skillTemplate.uid(), _elementType, _power,
+    target.addAbnormalEffect<DamageEffect>(source, target, _skillTemplate.uid(), _elementType, _power,
                                            _totalDuration, _tickDuration, _initialTriggerDuration);
 }
 

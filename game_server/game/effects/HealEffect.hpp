@@ -9,7 +9,7 @@
 class HealEffect : public AbnormalEffect
 {
 public:
-    HealEffect(Actor & target, SkillUid skillUid, StatValue healAmount,
+    HealEffect(Actor & source, Actor & target, SkillUid skillUid, StatValue healAmount,
                ClockDuration effectDuration         = ClockDuration::zero(),
                ClockDuration tickDuration           = ClockDuration::zero(),
                ClockDuration initialTriggerDuration = ClockDuration::zero());

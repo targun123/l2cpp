@@ -9,7 +9,7 @@
 class ResurrectionEffect : public AbnormalEffect
 {
 public:
-    ResurrectionEffect(Actor & target, SkillUid skillUid);
+    ResurrectionEffect(Actor & source, Actor & target, SkillUid skillUid);
 
 private:
     void onStarted() override;

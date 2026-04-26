@@ -10,13 +10,14 @@
 class DamageEffect : public AbnormalEffect
 {
 public:
-    DamageEffect(Actor &           target,
-                 SkillUid          skillUid,
-                 DamageElementType type,
-                 StatValue         damage,
-                 ClockDuration     effectDuration         = ClockDuration::zero(),
-                 ClockDuration     tickDuration           = ClockDuration::zero(),
-                 ClockDuration     initialTriggerDuration = ClockDuration::zero());
+    DamageEffect(Actor             & source,
+                 Actor             & target,
+                 SkillUid            skillUid,
+                 DamageElementType   type,
+                 StatValue           damage,
+                 ClockDuration       effectDuration         = ClockDuration::zero(),
+                 ClockDuration       tickDuration           = ClockDuration::zero(),
+                 ClockDuration       initialTriggerDuration = ClockDuration::zero());
 
 private:
     void onTick() override;

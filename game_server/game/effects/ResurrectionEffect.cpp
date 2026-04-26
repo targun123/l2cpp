@@ -6,8 +6,8 @@
 // Project includes
 #include "../actor/Actor.hpp"
 
-ResurrectionEffect::ResurrectionEffect(Actor & target, SkillUid const skillUid)
-    : AbnormalEffect(AbnormalEffectType::Resurrection, target, skillUid)
+ResurrectionEffect::ResurrectionEffect(Actor & source, Actor & target, SkillUid const skillUid)
+    : AbnormalEffect(AbnormalEffectType::Resurrection, source, target, skillUid)
 {}
 
 void ResurrectionEffect::onStarted()

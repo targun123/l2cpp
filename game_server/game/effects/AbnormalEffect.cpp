@@ -10,6 +10,7 @@
 
 AbnormalEffect::AbnormalEffect(
     AbnormalEffectType const   type
+    , Actor                  & source
     , Actor                  & target
     , SkillUid         const   skillUid
     , ClockDuration    const   effectDuration
@@ -17,6 +18,7 @@ AbnormalEffect::AbnormalEffect(
     , ClockDuration    const   initialTriggerDuration
 )
     : _type(type)
+    , _source(source)
     , _target(target)
     , _skillUid(skillUid)
     , _duration(effectDuration)
@@ -39,6 +41,7 @@ auto AbnormalEffect::remainingDuration() const -> ClockDuration
     return _duration > ClockDuration::zero() ? _duration - _elapsed : _duration;
 }
 
+auto AbnormalEffect::source() const -> Actor & { return _source; }
 auto AbnormalEffect::target() const -> Actor & { return _target; }
 
 bool AbnormalEffect::update(ClockDuration const elapsed)

@@ -12,13 +12,14 @@
 #include "../World.hpp"
 
 BuffEffect::BuffEffect(
-    Actor &               target
-    , SkillUid      const skillUid
-    , ClockDuration const duration
-    , StatId        const modifiedStat
-    , StatValue     const value
+    Actor               & source
+  , Actor               & target
+  , SkillUid      const   skillUid
+  , ClockDuration const   duration
+  , StatId        const   modifiedStat
+  , StatValue     const   value
 )
-    : AbnormalEffect(AbnormalEffectType::Buff, target, skillUid, duration)
+    : AbnormalEffect(AbnormalEffectType::Buff, source, target, skillUid, duration)
     , _modifiedStat(modifiedStat)
     , _value(value)
 {}

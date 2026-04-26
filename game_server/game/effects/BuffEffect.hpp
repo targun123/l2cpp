@@ -9,7 +9,8 @@
 class BuffEffect : public AbnormalEffect
 {
 public:
-    BuffEffect(Actor & target, SkillUid skillUid, ClockDuration duration, StatId modifiedStat, StatValue value);
+    BuffEffect(Actor & source, Actor & target, SkillUid skillUid,
+               ClockDuration duration, StatId modifiedStat, StatValue value);
 
 private:
     void onStarted() override;

@@ -14,6 +14,7 @@ class AbnormalEffect
 {
 public:
     AbnormalEffect(AbnormalEffectType type,
+                   Actor &            source,
                    Actor &            target,
                    SkillUid           skillUid,
                    ClockDuration      effectDuration         = ClockDuration::zero(),
@@ -29,6 +30,7 @@ public:
     auto remainingDuration() const -> ClockDuration;
 
 protected:
+    auto source() const -> Actor &;
     auto target() const -> Actor &;
 
 public:
@@ -44,6 +46,7 @@ private:
 
 private:
     AbnormalEffectType _type;
+    Actor &            _source;
     Actor &            _target;
     SkillUid           _skillUid;
     ClockDuration      _duration, _elapsed, _elapsedSinceLastTick, _tickDuration, _initialTriggerDuration;
