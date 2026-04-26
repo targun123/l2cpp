@@ -83,7 +83,7 @@ public:
 
     void takeDamage(double amount);
     void die();
-    void resurrect();
+    void revive();
 
     template<typename T, typename... Args> requires std::is_base_of_v<AbnormalEffect, T>
     void addAbnormalEffect(Args &&... args) { addAbnormalEffect(std::make_unique<T>(std::forward<Args>(args)...)); }

@@ -72,9 +72,13 @@ void World::init()
     registerSystem<ActorDeletionTimerSystem>();
     registerSystem<ActorSkillEffectSystem>();
 
-    auto & c = addCharacterPreview(L"Admin");
-    c.setName(L"test" + std::to_wstring(c.id()));
-    c.setTitle(L"{l2cpp}");
+    auto & c1 = addCharacterPreview(L"Admin");
+    c1.setName(L"test" + std::to_wstring(c1.id()));
+    c1.setTitle(L"Admin");
+
+    auto & c2 = addCharacterPreview(L"Admin2");
+    c2.setName(L"test" + std::to_wstring(c2.id()));
+    c2.setTitle(L"Admin2");
 
     addGremlin();
     addGremlin();

@@ -34,6 +34,7 @@ namespace Handler
     HANDLER(SkillList)
     HANDLER(SkillUse)
     HANDLER(TargetClear)
+    HANDLER(UiConfirmationModalAnswer)
 #undef HANDLER
 }
 
@@ -65,5 +66,6 @@ std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHand
     HANDLER(SkillList),
     HANDLER(SkillUse),
     HANDLER(TargetClear),
+    HANDLER(UiConfirmationModalAnswer),
 #undef HANDLER
 };

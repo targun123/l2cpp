@@ -57,6 +57,9 @@ public:
     auto setShortcut(Shortcut shortcut) -> Shortcut &;
     void delShortcut(size_t index);
 
+    void offerResurrection(Actor const & emitter);
+    void answerConfirmationModal(u32 systemMessageId, bool accepted);
+
 private:
     struct CharacterImpl;
     Pimpl<CharacterImpl> _impl;

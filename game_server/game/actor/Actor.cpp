@@ -212,21 +212,21 @@ void Actor::die()
         World::scheduleForDeletion(*this, 5s); // Corpse will disappear soon
 }
 
-void Actor::resurrect()
+void Actor::revive()
 {
     if (isAlive())
         return;
-
     addComponent<ActorAutoRegen>();
 
-    World::broadcastAround(*this, Network::Packet::Server::ActorRevivePacket{*this}, true);
-    // l2cpp::Network::Packet p(0xed, "UiConfirmationDialogShow");
-    // p << 1510 << 2; // Resurrection is attempted by $c1 for $c2 xp
-    // p << 2 << 1; // "Gremlin"
-    // p << 1 << 0; // 0xp recovered
-    // World::send(*this, std::move(p));
-
     World::unscheduleForDeletion(*this);
+    World::broadcastAround(*this, Network::Packet::Server::ActorRevivePacket{*this}, true);
+
+    auto & stats = *component<Stats>();
+    stats[StatId::CurHp] = stats[StatId::MaxHp] * 0.65;
+
+    Network::Packet::Server::StatsUpdatePacket p(*this);
+    p.addStat(Stat::CurHp, stats[StatId::CurHp]);
+    World::broadcastToSubscribers(*this, std::move(p), true);
 }
 
 void Actor::doNext(std::unique_ptr<Action> action)

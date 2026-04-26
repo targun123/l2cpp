@@ -2,7 +2,6 @@
 /// @date      Created on 2026-02-24
 
 // Project includes
-#include "_Common.hpp"
 #include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/actor/Npc.hpp"
@@ -15,19 +14,21 @@
 #include "../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
 #include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
+#include "_Common.hpp"
 
 DEFINE_PACKET_HANDLER(EnterWorld) try
 {
     auto & c    = *player.currentCharacter();
     auto & conn = player.connection();
 
-    conn.send(InventoryListPacket(false, c.inventory()));
-    conn.send(ChatSystemSayPacket(34)); // Welcome to the world of Lineage II
-
     c.stats().compute(c);
     if (c.isAlive())
         c.addComponent<ActorAutoRegen>();
 
+    conn.send(InventoryListPacket(false, c.inventory()));
+    conn.send(ChatSystemSayPacket(34)); // Welcome to the world of Lineage II
+
+    // Send surrounding actors
     World::forEachActorAround(c, [&] (Actor & a)
     {
         if (a.type() == ActorType::Character)
@@ -35,9 +36,14 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
         else
             conn.send(NpcStatusUpdatePacket{static_cast<Npc &>(a)});
     });
+
+    // End the loading screen
     conn.send(CharacterStatusUpdatePacket(c));
+
     if (!c.isAlive())
         conn.send(ActorDiePacket{c});
+
+    // Finally, show to other players
     World::broadcastAround(c, CharacterStatusUpdateBroadcastPacket(c));
 }
 catch (...)

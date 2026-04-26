@@ -4,7 +4,7 @@
 #include "ResurrectionEffect.hpp"
 
 // Project includes
-#include "../actor/Actor.hpp"
+#include "../actor/Character.hpp"
 
 ResurrectionEffect::ResurrectionEffect(Actor & source, Actor & target, SkillUid const skillUid)
     : AbnormalEffect(AbnormalEffectType::Resurrection, source, target, skillUid)
@@ -12,5 +12,6 @@ ResurrectionEffect::ResurrectionEffect(Actor & source, Actor & target, SkillUid 
 
 void ResurrectionEffect::onStarted()
 {
-    target().resurrect();
+    if (target().type() == ActorType::Character)
+        static_cast<Character &>(target()).offerResurrection(source());
 }

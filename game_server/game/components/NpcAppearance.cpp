@@ -3,7 +3,10 @@
 
 #include "NpcAppearance.hpp"
 
-constexpr s32 baseId = 1'000'000;
+namespace
+{
+    constexpr inline u32 baseId = 1'000'000;
+}
 
 NpcAppearance::NpcAppearance() noexcept
     : _id(baseId + 1) // Gremlin
