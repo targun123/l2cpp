@@ -207,23 +207,23 @@ auto World::addMonster(u32 const id) -> OptRef<Monster>
 
 auto World::addNpc(u32 id) -> OptRef<Npc>
 {
-    OptRef<Monster> result;
+    OptRef<Npc> npc;
 
     if (auto const info = NpcDirectory::find(id))
     {
-        auto & npc = info->type == ActorType::Npc ? addActor<Npc>(id) : addActor<Monster>(id);
-        npc.setName(Utils::toWideString(info->name));
+        npc = info->type == ActorType::Npc ? addActor<Npc>(id) : addActor<Monster>(id);
+        npc->setName(Utils::toWideString(info->name));
 
         if (info->title.empty())
-            npc.setTitle(std::format(L"Lv. {}", npc.status().level()));
+            npc->setTitle(std::format(L"Lv. {}", npc->status().level()));
         else
-            npc.setTitle(Utils::toWideString(info->title));
+            npc->setTitle(Utils::toWideString(info->title));
 
-        npc.appearance().collisionHeight = 15;
-        npc.appearance().collisionRadius = 10;
+        npc->appearance().collisionHeight = 15;
+        npc->appearance().collisionRadius = 10;
     }
 
-    return result;
+    return npc;
 }
 
 void World::scheduleForDeletion(Actor & a, ClockDuration const timeFromNow)
