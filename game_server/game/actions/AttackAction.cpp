@@ -71,7 +71,7 @@ void AttackAction::onFinished()
     actor  .getOrAddComponent<AttackStanceTimer>().restart();
     _target.getOrAddComponent<AttackStanceTimer>().restart();
 
-    _target.takeDamage(250);
+    _target.takeDamage(actor, 250);
 
     // TODO: consume the soulshot charge here (not before because could have been canceled with stun/para/…)
 

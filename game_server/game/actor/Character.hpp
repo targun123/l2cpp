@@ -41,6 +41,7 @@ public:
 public:
     auto profession() const -> Profession;
 
+    auto status()       -> CharacterStatus       &;
     auto status() const -> CharacterStatus const &;
 
     auto appearance()       -> PlayerAppearance       &;

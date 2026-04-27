@@ -125,6 +125,7 @@ Character::~Character() = default;
 
 auto Character::profession() const -> Profession { return _impl->profession; }
 
+auto Character::status()       -> CharacterStatus       & { return component<CharacterStatus>(); }
 auto Character::status() const -> CharacterStatus const & { return component<CharacterStatus>(); }
 
 auto Character::appearance()       -> PlayerAppearance       & { return component<PlayerAppearance>(); }

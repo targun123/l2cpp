@@ -4,6 +4,9 @@
 #include "Actor.hpp"
 
 // Project includes
+#include "../../Player.hpp"
+#include "../../network/Connection.hpp"
+#include "../../network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../../network/packets/server/status/ActorDiePacket.hpp"
 #include "../../network/packets/server/status/ActorRevivePacket.hpp"
@@ -11,7 +14,9 @@
 #include "../World.hpp"
 #include "../components/ActorAutoRegen.hpp"
 #include "../components/ActorIdentity.hpp"
+#include "../components/CharacterStatus.hpp"
 #include "../components/Gear.hpp"
+#include "../components/Loot.hpp"
 #include "../components/Position.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
@@ -28,7 +33,7 @@ struct Actor::ActorImpl
     bool dying = false;
     bool isInCombatStance = false;
 
-    OptRef<Actor> target;
+    OptRef<Actor> target, lastHitEmitter;
     std::unique_ptr<Action> currentAction, nextAction;
 
     std::list<std::unique_ptr<AbnormalEffect>> _abnormalEffects;
@@ -173,10 +178,12 @@ void Actor::cancelAction()
     _impl->nextAction.reset();
 }
 
-void Actor::takeDamage(double const amount)
+void Actor::takeDamage(OptRef<Actor> emitter, double const amount)
 {
     if (!isAlive() || amount == 0)
         return;
+
+    _impl->lastHitEmitter = std::move(emitter);
 
     auto & stats = *component<Stats>();
     auto & hp    = stats[StatId::CurHp] -= amount;
@@ -205,6 +212,48 @@ void Actor::die()
     World::send(*this, Network::Packet::Server::AbnormalEffectListPacket{*this});
 
     delComponent<ActorAutoRegen>();
+
+    if (auto const emitter = _impl->lastHitEmitter; emitter && emitter->type() == ActorType::Character)
+    {
+        auto & c = static_cast<Character &>(*emitter);
+        if (auto const loot = component<Loot>())
+        {
+            Network::Packet::Server::StatsUpdatePacket p(c);
+
+            bool const nonZeroXp = loot->xp > 0;
+            if (nonZeroXp)
+            {
+                c.status().xp += loot->xp;
+                p.addStat(Stat::Xp, c.status().xp);
+            }
+
+            bool const nonZeroSp = loot->sp > 0;
+            if (nonZeroSp)
+            {
+                c.status().sp += loot->sp;
+                p.addStat(Stat::Sp, c.status().sp);
+            }
+            c.player->connection().send(p);
+
+            std::optional<Network::Packet::Server::ChatSystemSayPacket> msg;
+            /**/ if (nonZeroXp && nonZeroSp)
+            {
+                msg.emplace(95);
+                *msg << SysMsgArg::Number(loot->xp) << SysMsgArg::Number(loot->sp);
+            }
+            else if (nonZeroXp)
+            {
+                msg.emplace(45);
+                *msg << SysMsgArg::Number(loot->xp);
+            }
+            else
+            {
+                msg.emplace(331);
+                *msg << SysMsgArg::Number(loot->sp);
+            }
+            c.player->connection().send(*msg);
+        }
+    }
 
     World::broadcastAround(*this, Network::Packet::Server::ActorDiePacket(*this), true);
 

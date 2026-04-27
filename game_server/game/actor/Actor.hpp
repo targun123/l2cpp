@@ -81,7 +81,7 @@ public:
     void doNext(Args &&... args) { doNext(std::make_unique<A>(*this, std::forward<Args>(args)...)); }
     void cancelAction();
 
-    void takeDamage(double amount);
+    void takeDamage(OptRef<Actor> emitter, double amount);
     void die();
     void revive();
 
