@@ -16,6 +16,7 @@
 #include "actor/NpcDirectory.hpp"
 #include "components/ActorStatus.hpp"
 #include "components/DeletionTimer.hpp"
+#include "components/Loot.hpp"
 #include "components/NpcAppearance.hpp"
 #include "components/PlayerAppearance.hpp"
 #include "components/Position.hpp"
@@ -48,6 +49,10 @@ static void addGremlin()
     {
         gremlin->setPosX(gremlin->position().x + (count++ % 2 ? 35 : -35));
         gremlin->setPosY(gremlin->position().y + (count++ % 2 ? 35 : -35));
+
+        auto & loot = gremlin->addComponent<Loot>();
+        loot.xp = 29;
+        loot.sp =  2;
     }
 }
 
