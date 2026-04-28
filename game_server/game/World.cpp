@@ -164,22 +164,28 @@ auto World::addCharacterPreview(std::wstring_view const playerAccount) -> Charac
 {
     L2CPP_B_ASSERT(!playerAccount.empty(), "Player account name unknown, cannot create character preview");
 
-    Character  c;
-    auto const id = c.id();
+    Ref c = addCharacter();
+    auto const id = c.get().id();
     _characterPreviewsIndex[playerAccount].emplace_back(id);
-    return *_characterPreviews.try_emplace(id, std::make_unique<Character>(std::move(c))).first->second;
+    c = *_characterPreviews.try_emplace(id, static_cast<Character *>(_actors[id].release())).first->second;
+    _actors.erase(id);
+    return c;
 }
 
-auto World::loadCharacterFromPreview(Character & c) -> Character &
+auto World::loadCharacterFromPreview(Character const & c) -> Character &
 {
+    L2CPP_B_ASSERT(_characterPreviews.contains(c.id()), "Character '{}' is not loaded in previews", c.id());
+
     auto const id    = c.id();
-    auto const & ptr = _actors.try_emplace(id, std::make_unique<Character>(std::move(c))).first->second;
+    auto const & ptr = _actors.try_emplace(id, _characterPreviews[id].release()).first->second;
     _characterPreviews.erase(id);
     return static_cast<Character &>(*ptr);
 }
 
 void World::moveCharacterBackToPreviews(Character & c)
 {
+    L2CPP_B_ASSERT(_actors.contains(c.id()), "Character '{}' is not present in the world", c.id());
+
     if (auto const target = c.target())
     {
         unsubscribeFromTarget(target, c);

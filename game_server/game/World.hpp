@@ -45,7 +45,7 @@ public:
 
     static auto getCharacterPreviews(std::wstring_view playerAccount) -> std::vector<Ref<Character>>;
     static auto addCharacterPreview(std::wstring_view playerAccount) -> Character &;
-    static auto loadCharacterFromPreview(Character &) -> Character &;
+    static auto loadCharacterFromPreview(Character const &) -> Character &;
     static void moveCharacterBackToPreviews(Character &);
 
     static auto addCharacter(OptRef<Player> = std::nullopt) -> Character &;
