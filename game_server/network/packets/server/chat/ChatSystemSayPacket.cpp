@@ -5,7 +5,7 @@
 
 using Network::Packet::Server::ChatSystemSayPacket;
 
-ChatSystemSayPacket::ChatSystemSayPacket(u32 const messageId)
+ChatSystemSayPacket::ChatSystemSayPacket(SystemMessageId const messageId)
     : Packet(0x64, "ChatSystemSay")
 {
     *this << messageId;

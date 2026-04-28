@@ -3,7 +3,10 @@
 
 #pragma once
 
+// ReSharper disable CppNonExplicitConvertingConstructor
+
 // Project includes
+#include "../../../../game/constants/SystemMessageId.hpp"
 #include "../i18n/SystemMessageArgument.hpp"
 
 namespace Network::Packet::Server { class ChatSystemSayPacket; }
@@ -11,7 +14,7 @@ namespace Network::Packet::Server { class ChatSystemSayPacket; }
 class Network::Packet::Server::ChatSystemSayPacket final : public l2cpp::Network::Packet
 {
 public:
-    explicit ChatSystemSayPacket(u32 messageId);
+    explicit ChatSystemSayPacket(SystemMessageId messageId);
 
 public:
     template<class T> requires std::is_base_of_v<SystemMessageArgument, T>

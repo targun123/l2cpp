@@ -133,8 +133,8 @@ void Application::ApplicationImpl::shutdown()
     for (auto & player : players)
     {
         auto & conn = player.connection();
-        conn.send(Network::Packet::Server::ChatSystemSayPacket(0)); // "You have been disconnected from the server."
-        conn.send(Network::Packet::Server::ClientForceDisconnectPacket());
+        conn.send(Network::Packet::Server::ChatSystemSayPacket{SystemMessageId::DisconnectedFromServer});
+        conn.send(Network::Packet::Server::ClientForceDisconnectPacket{});
         conn.close();
     }
 

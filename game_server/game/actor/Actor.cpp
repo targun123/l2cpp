@@ -251,17 +251,17 @@ void Actor::die()
             std::optional<SC::ChatSystemSayPacket> msg;
             /**/ if (nonZeroXp && nonZeroSp)
             {
-                msg.emplace(95);
+                msg.emplace(SystemMessageId::EarnedXpAndSp);
                 *msg << SysMsgArg::Number{loot->xp} << SysMsgArg::Number{loot->sp};
             }
             else if (nonZeroXp)
             {
-                msg.emplace(45);
+                msg.emplace(SystemMessageId::EarnedXp);
                 *msg << SysMsgArg::Number{loot->xp};
             }
             else
             {
-                msg.emplace(331);
+                msg.emplace(SystemMessageId::EarnedSp);
                 *msg << SysMsgArg::Number{loot->sp};
             }
             c.player->connection().send(*msg);
@@ -269,7 +269,7 @@ void Actor::die()
             if (leveledUp)
             {
                 c.player->connection().send(SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation});
-                c.player->connection().send(SC::ChatSystemSayPacket{96});
+                c.player->connection().send(SC::ChatSystemSayPacket{SystemMessageId::YourLevelHasIncreased});
             }
         }
     }
