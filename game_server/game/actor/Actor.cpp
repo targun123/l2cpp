@@ -6,6 +6,7 @@
 // Project includes
 #include "../../Player.hpp"
 #include "../../network/Connection.hpp"
+#include "../../network/packets/server/action/SocialActionPerformPacket.hpp"
 #include "../../network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../../network/packets/server/status/ActorDiePacket.hpp"
@@ -20,10 +21,13 @@
 #include "../components/Position.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
+#include "../gameplay/ExperienceTable.hpp"
 #include "Character.hpp"
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
+
+namespace SC = Network::Packet::Server; // Server -> Client
 
 struct Actor::ActorImpl
 {
@@ -196,7 +200,7 @@ void Actor::takeDamage(OptRef<Actor> emitter, double const amount)
     else if (hp > stats[StatId::MaxHp])
         hp = stats[StatId::MaxHp];
 
-    Network::Packet::Server::StatsUpdatePacket p(*this);
+    SC::StatsUpdatePacket p(*this);
     p.addStat(Stat::CurHp, static_cast<u32>(stats[StatId::CurHp]));
     World::broadcastToSubscribers(*this, std::move(p), true);
 }
@@ -209,7 +213,7 @@ void Actor::die()
     _impl->dying = false;
 
     _impl->_abnormalEffects.clear();
-    World::send(*this, Network::Packet::Server::AbnormalEffectListPacket{*this});
+    World::send(*this, SC::AbnormalEffectListPacket{*this});
 
     delComponent<ActorAutoRegen>();
 
@@ -218,13 +222,22 @@ void Actor::die()
         auto & c = static_cast<Character &>(*emitter);
         if (auto const loot = component<Loot>())
         {
-            Network::Packet::Server::StatsUpdatePacket p(c);
+            SC::StatsUpdatePacket p(c);
 
             bool const nonZeroXp = loot->xp > 0;
             if (nonZeroXp)
             {
                 c.status().xp += loot->xp;
                 p.addStat(Stat::Xp, c.status().xp);
+            }
+
+            bool leveledUp = false;
+            auto const currentLevel = c.status().level();
+            if (auto const level = ExperienceTable::level(c.status().xp); level > currentLevel)
+            {
+                leveledUp = true;
+                c.status().setLevel(level);
+                p.addStat(Stat::Level, level);
             }
 
             bool const nonZeroSp = loot->sp > 0;
@@ -235,27 +248,33 @@ void Actor::die()
             }
             c.player->connection().send(p);
 
-            std::optional<Network::Packet::Server::ChatSystemSayPacket> msg;
+            std::optional<SC::ChatSystemSayPacket> msg;
             /**/ if (nonZeroXp && nonZeroSp)
             {
                 msg.emplace(95);
-                *msg << SysMsgArg::Number(loot->xp) << SysMsgArg::Number(loot->sp);
+                *msg << SysMsgArg::Number{loot->xp} << SysMsgArg::Number{loot->sp};
             }
             else if (nonZeroXp)
             {
                 msg.emplace(45);
-                *msg << SysMsgArg::Number(loot->xp);
+                *msg << SysMsgArg::Number{loot->xp};
             }
             else
             {
                 msg.emplace(331);
-                *msg << SysMsgArg::Number(loot->sp);
+                *msg << SysMsgArg::Number{loot->sp};
             }
             c.player->connection().send(*msg);
+
+            if (leveledUp)
+            {
+                c.player->connection().send(SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation});
+                c.player->connection().send(SC::ChatSystemSayPacket{96});
+            }
         }
     }
 
-    World::broadcastAround(*this, Network::Packet::Server::ActorDiePacket(*this), true);
+    World::broadcastAround(*this, SC::ActorDiePacket(*this), true);
 
     if (this->type() != ActorType::Character || !static_cast<Character &>(*this).player)
         World::scheduleForDeletion(*this, 5s); // Corpse will disappear soon
@@ -268,12 +287,12 @@ void Actor::revive()
     addComponent<ActorAutoRegen>();
 
     World::unscheduleForDeletion(*this);
-    World::broadcastAround(*this, Network::Packet::Server::ActorRevivePacket{*this}, true);
+    World::broadcastAround(*this, SC::ActorRevivePacket{*this}, true);
 
     auto & stats = *component<Stats>();
     stats[StatId::CurHp] = stats[StatId::MaxHp] * 0.65;
 
-    Network::Packet::Server::StatsUpdatePacket p(*this);
+    SC::StatsUpdatePacket p(*this);
     p.addStat(Stat::CurHp, stats[StatId::CurHp]);
     World::broadcastToSubscribers(*this, std::move(p), true);
 }
