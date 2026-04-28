@@ -4,7 +4,7 @@
 #include "SkillAction.hpp"
 
 // Project includes
-#include "../../network/packets/server/ActionFailedPacket.hpp"
+#include "../../network/packets/server/action/ActionFailedPacket.hpp"
 #include "../../network/packets/server/skill/SkillCancelPacket.hpp"
 #include "../../network/packets/server/skill/SkillSetTargetsPacket.hpp"
 #include "../../network/packets/server/skill/SkillUsePacket.hpp"

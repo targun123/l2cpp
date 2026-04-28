@@ -9,7 +9,7 @@
 #include "../game/actor/Monster.hpp"
 #include "../game/components/Position.hpp"
 #include "../game/components/Stats.hpp"
-#include "../network/packets/server/ActionFailedPacket.hpp"
+#include "../network/packets/server/action/ActionFailedPacket.hpp"
 #include "../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
 #include "../network/packets/server/target/TargetSelectPacket.hpp"
