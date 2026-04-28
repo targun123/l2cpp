@@ -24,6 +24,6 @@ DamageEffect::DamageEffect(
 
 void DamageEffect::onTick()
 {
-    target().takeDamage(_damage);
+    target().takeDamage(source(), _damage);
 }
 

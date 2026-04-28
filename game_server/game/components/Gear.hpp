@@ -29,8 +29,8 @@ public:
     auto weapon() const -> OptRef<Item const>;
 
 public:
-    auto equipItem  (Item & item) -> GearTransaction;
-    auto unequipItem(Item & item) -> GearTransaction;
+    auto equipItem  (Item       & item) -> GearTransaction;
+    auto unequipItem(Item const & item) -> GearTransaction;
 
 private:
     struct GearImpl;

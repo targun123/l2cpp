@@ -5,7 +5,7 @@
 
 using namespace Network::Packet::Server;
 
-ProtocolHandshakeOkPacket::ProtocolHandshakeOkPacket(std::span<byte const> encryptionKey)
+ProtocolHandshakeOkPacket::ProtocolHandshakeOkPacket(std::span<byte const> const encryptionKey)
 {
     *this << encryptionKey;
 }

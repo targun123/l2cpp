@@ -26,7 +26,7 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
         c.addComponent<ActorAutoRegen>();
 
     conn.send(InventoryListPacket(false, c.inventory()));
-    conn.send(ChatSystemSayPacket(34)); // Welcome to the world of Lineage II
+    conn.send(ChatSystemSayPacket(SystemMessageId::WelcomeToTheWorldOfL2));
 
     // Send surrounding actors
     World::forEachActorAround(c, [&] (Actor & a)

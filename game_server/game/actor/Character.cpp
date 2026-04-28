@@ -5,7 +5,6 @@
 
 // Project includes
 #include "../../network/packets/server/ui/UiConfirmationModalShowPacket.hpp"
-#include "../Shortcut.hpp"
 #include "../World.hpp"
 #include "../components/CharacterStatus.hpp"
 #include "../components/Gear.hpp"
@@ -13,6 +12,7 @@
 #include "../components/SkillDirectory.hpp"
 #include "../inventory/ItemStorage.hpp"
 #include "../skill/SkillTemplateDirectory.hpp"
+#include "../ui/Shortcut.hpp"
 
 #include <l2cpp/Exception.hpp>
 // ReSharper disable once CppUnusedIncludeDirective
@@ -45,7 +45,7 @@ Character::Character(OptRef<Player> p)
     , player(std::move(p))
 {
     auto & appearance = addComponent<PlayerAppearance>();
-    appearance.collisionHeight = 23.5;
+    appearance.collisionHeight = 23;
     appearance.collisionRadius = 9;
 
     addComponent<CharacterStatus>();
@@ -125,6 +125,7 @@ Character::~Character() = default;
 
 auto Character::profession() const -> Profession { return _impl->profession; }
 
+auto Character::status()       -> CharacterStatus       & { return component<CharacterStatus>(); }
 auto Character::status() const -> CharacterStatus const & { return component<CharacterStatus>(); }
 
 auto Character::appearance()       -> PlayerAppearance       & { return component<PlayerAppearance>(); }

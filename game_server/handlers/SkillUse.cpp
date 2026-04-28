@@ -5,7 +5,7 @@
 #include "../game/actions/SkillAction.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/SkillDirectory.hpp"
-#include "../network/packets/server/ActionFailedPacket.hpp"
+#include "../network/packets/server/action/ActionFailedPacket.hpp"
 #include "../utils/Target.hpp"
 #include "_Common.hpp"
 

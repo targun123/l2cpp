@@ -16,6 +16,7 @@
 #include "actor/NpcDirectory.hpp"
 #include "components/ActorStatus.hpp"
 #include "components/DeletionTimer.hpp"
+#include "components/Loot.hpp"
 #include "components/NpcAppearance.hpp"
 #include "components/PlayerAppearance.hpp"
 #include "components/Position.hpp"
@@ -45,10 +46,7 @@ static void addGremlin()
     static u32 count = 1;
 
     if (auto const gremlin = World::addMonster(1))
-    {
         gremlin->setPosX(gremlin->position().x + (count++ % 2 ? 35 : -35));
-        gremlin->setPosY(gremlin->position().y + (count++ % 2 ? 35 : -35));
-    }
 }
 
 static void addDummy()
@@ -133,10 +131,17 @@ void World::update(ClockDuration const elapsed)
     }
 
     for (auto const & system : _systems)
-        for (auto const & a : _actors | std::views::values) system->update(elapsed, *a);
+    {
+        for (auto const & a : _actors | std::views::values)
+            system->update(elapsed, *a);
+    }
 
     // Death is handled outside the system loops because internals are modified upon death
-    for (auto const & a : _actors | std::views::values) if (a->dying()) a->die();
+    for (auto const & a : _actors | std::views::values)
+    {
+        if (a->dying())
+            a->die();
+    }
 
     for (Actor & a : _scheduledForDeletion | std::views::values)
         delActor(a);
@@ -196,29 +201,39 @@ auto World::addCharacter(OptRef<Player> p) -> Character & { return addActor<Char
 
 auto World::addMonster(u32 const id) -> OptRef<Monster>
 {
-    auto const result = addNpc(id);
-    return result && result->type() == ActorType::Monster ? OptRef(static_cast<Monster &>(*result)) : std::nullopt;
+    OptRef<Monster> m;
+
+    if (auto const npc = addNpc(id); npc && npc->type() == ActorType::Monster)
+    {
+        m = static_cast<Monster &>(*npc);
+
+        auto & loot = npc->addComponent<Loot>();
+        loot.xp = 29;
+        loot.sp = 2;
+    }
+
+    return m;
 }
 
 auto World::addNpc(u32 id) -> OptRef<Npc>
 {
-    OptRef<Monster> result;
+    OptRef<Npc> npc;
 
     if (auto const info = NpcDirectory::find(id))
     {
-        auto & npc = info->type == ActorType::Npc ? addActor<Npc>(id) : addActor<Monster>(id);
-        npc.setName(Utils::toWideString(info->name));
+        npc = info->type == ActorType::Npc ? addActor<Npc>(id) : addActor<Monster>(id);
+        npc->setName(Utils::toWideString(info->name));
 
         if (info->title.empty())
-            npc.setTitle(std::format(L"Lv. {}", npc.status().level()));
+            npc->setTitle(std::format(L"Lv. {}", npc->status().level()));
         else
-            npc.setTitle(Utils::toWideString(info->title));
+            npc->setTitle(Utils::toWideString(info->title));
 
-        npc.appearance().collisionHeight = 15;
-        npc.appearance().collisionRadius = 10;
+        npc->appearance().collisionHeight = 15;
+        npc->appearance().collisionRadius = 10;
     }
 
-    return result;
+    return npc;
 }
 
 void World::scheduleForDeletion(Actor & a, ClockDuration const timeFromNow)

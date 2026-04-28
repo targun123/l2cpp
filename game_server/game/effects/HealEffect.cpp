@@ -22,6 +22,6 @@ HealEffect::HealEffect(
 
 void HealEffect::onTick()
 {
-    target().takeDamage(-_healAmount);
+    target().takeDamage(std::nullopt, -_healAmount);
 }
 
