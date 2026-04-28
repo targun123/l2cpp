@@ -217,6 +217,7 @@ void Actor::die()
     World::send(*this, SC::AbnormalEffectListPacket{*this});
 
     delComponent<ActorAutoRegen>();
+    delComponent<AttackStanceTimer>();
 
     if (auto const emitter = _impl->lastHitEmitter; emitter && emitter->type() == ActorType::Character)
     {
