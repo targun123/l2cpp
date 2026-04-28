@@ -269,7 +269,7 @@ void Actor::die()
 
             if (leveledUp)
             {
-                c.player->connection().send(SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation});
+                World::broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
                 c.player->connection().send(SC::ChatSystemSayPacket{SystemMessageId::YourLevelHasIncreased});
             }
         }
