@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include "constants/ShortcutType.hpp"
+#include "../constants/ShortcutType.hpp"
 
 #include <l2cpp/Pimpl.hpp>
 #include <l2cpp/Typedefs.hpp>

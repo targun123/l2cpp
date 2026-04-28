@@ -5,7 +5,6 @@
 
 // Project includes
 #include "../../network/packets/server/ui/UiConfirmationModalShowPacket.hpp"
-#include "../Shortcut.hpp"
 #include "../World.hpp"
 #include "../components/CharacterStatus.hpp"
 #include "../components/Gear.hpp"
@@ -13,6 +12,7 @@
 #include "../components/SkillDirectory.hpp"
 #include "../inventory/ItemStorage.hpp"
 #include "../skill/SkillTemplateDirectory.hpp"
+#include "../ui/Shortcut.hpp"
 
 #include <l2cpp/Exception.hpp>
 // ReSharper disable once CppUnusedIncludeDirective
