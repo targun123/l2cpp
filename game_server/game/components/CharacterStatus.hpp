@@ -10,8 +10,8 @@
 
 struct CharacterStatus : public ActorStatus
 {
-    u32 xp, sp;
-    u32 pvpCount, pkCount, karma;
+    u32 xp = 0, sp = 0;
+    u32 pvpCount = 0, pkCount = 0, karma = 0;
 
     bool isNoble = false;
     bool isHero  = false;
