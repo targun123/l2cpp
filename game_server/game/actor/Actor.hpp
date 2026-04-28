@@ -12,6 +12,7 @@
 #include "../ecs/Entity.hpp"
 #include "../effects/AbnormalEffect.hpp"
 
+#include <l2cpp/Event.hpp>
 #include <l2cpp/Pimpl.hpp>
 
 class Gear;
@@ -36,6 +37,12 @@ public:
     bool operator==(Actor const &) const;
 
 public:
+    Event<> onAbnormalEffectListChanged;
+    Event<> onDied;
+    Event<> onLeveledUp;
+    Event<> onRevived;
+
+public:
     auto type()     const -> ActorType;
     auto name()     const -> std::wstring_view;
     auto title()    const -> std::wstring_view;
@@ -53,15 +60,15 @@ public:
 
     auto target() const -> OptRef<Actor>;
 
-    bool dying() const;
-    bool isAlive() const;
-    bool isDead()  const;
+    bool dying()            const;
+    bool isAlive()          const;
+    bool isDead()           const;
     bool isInCombatStance() const;
 
     auto currentAction() -> OptRef<Action>;
-    auto nextAction() -> OptRef<Action>;
+    auto nextAction()    -> OptRef<Action>;
 
-    auto abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> &;
+    auto abnormalEffects()       -> std::list<std::unique_ptr<AbnormalEffect>>       &;
     auto abnormalEffects() const -> std::list<std::unique_ptr<AbnormalEffect>> const &;
 
     virtual bool isAttackable() const = 0;

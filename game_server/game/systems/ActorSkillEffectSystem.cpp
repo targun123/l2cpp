@@ -38,5 +38,5 @@ void ActorSkillEffectSystem::updateImpl(ClockDuration const elapsed, Actor & act
     }
 
     if (updateList)
-        World::send(actor, Network::Packet::Server::AbnormalEffectListPacket{actor});
+        fire actor.onAbnormalEffectListChanged();
 }

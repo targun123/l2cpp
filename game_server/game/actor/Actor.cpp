@@ -6,15 +6,12 @@
 // Project includes
 #include "../../Player.hpp"
 #include "../../network/Connection.hpp"
-#include "../../network/packets/server/action/SocialActionPerformPacket.hpp"
 #include "../../network/packets/server/chat/ChatSystemSayPacket.hpp"
-#include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
-#include "../../network/packets/server/status/ActorDiePacket.hpp"
-#include "../../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../World.hpp"
 #include "../components/ActorAutoRegen.hpp"
 #include "../components/ActorIdentity.hpp"
+#include "../components/AttackStanceTimer.hpp"
 #include "../components/CharacterStatus.hpp"
 #include "../components/Gear.hpp"
 #include "../components/Loot.hpp"
@@ -214,7 +211,7 @@ void Actor::die()
     _impl->dying = false;
 
     _impl->_abnormalEffects.clear();
-    World::send(*this, SC::AbnormalEffectListPacket{*this});
+    fire onAbnormalEffectListChanged();
 
     delComponent<ActorAutoRegen>();
     delComponent<AttackStanceTimer>();
@@ -269,27 +266,21 @@ void Actor::die()
             c.player->connection().send(*msg);
 
             if (leveledUp)
-            {
-                World::broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
-                c.player->connection().send(SC::ChatSystemSayPacket{SystemMessageId::YourLevelHasIncreased});
-            }
+                fire onLeveledUp();
         }
     }
 
-    World::broadcastAround(*this, SC::ActorDiePacket(*this), true);
-
-    if (this->type() != ActorType::Character || !static_cast<Character &>(*this).player)
-        World::scheduleForDeletion(*this, 5s); // Corpse will disappear soon
+    fire onDied();
 }
 
 void Actor::revive()
 {
     if (isAlive())
         return;
+
     addComponent<ActorAutoRegen>();
 
-    World::unscheduleForDeletion(*this);
-    World::broadcastAround(*this, SC::ActorRevivePacket{*this}, true);
+    fire onRevived();
 
     auto & stats = *component<Stats>();
     stats[StatId::CurHp] = stats[StatId::MaxHp] * 0.65;

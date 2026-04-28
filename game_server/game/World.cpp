@@ -6,6 +6,11 @@
 // Project includes
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include "../network/packets/server/action/SocialActionPerformPacket.hpp"
+#include "../network/packets/server/chat/ChatSystemSayPacket.hpp"
+#include "../network/packets/server/status/AbnormalEffectListPacket.hpp"
+#include "../network/packets/server/status/ActorDiePacket.hpp"
+#include "../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
 #include "../utils/Conversion.hpp"
@@ -23,6 +28,8 @@
 #include "constants/Profession.hpp"
 #include "constants/Race.hpp"
 #include "constants/Sex.hpp"
+#include "constants/SocialAction.hpp"
+#include "constants/SystemMessageId.hpp"
 #include "ecs/System.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
@@ -61,6 +68,9 @@ static void addDummy()
     d.appearance().collisionHeight = 23;
     d.appearance().collisionRadius = 7.5;
     d.setProfession(Profession::ElvenMystic);
+
+    auto & loot = d.addComponent<Loot>();
+    loot.xp = 50;
 }
 
 void World::init()
@@ -203,7 +213,17 @@ void World::moveCharacterBackToPreviews(Character & c)
     _actors.erase(id);
 }
 
-auto World::addCharacter(OptRef<Player> p) -> Character & { return addActor<Character>(std::move(p)); }
+auto World::addCharacter(OptRef<Player> p) -> Character &
+{
+    auto & c = addActor<Character>(std::move(p));
+    c.onAbnormalEffectListChanged += [&c] { send(c, SC::AbnormalEffectListPacket{c}); };
+    c.onLeveledUp += [&c]
+    {
+        broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
+        send(c, SC::ChatSystemSayPacket{SystemMessageId::YourLevelHasIncreased});
+    };
+    return c;
+}
 
 auto World::addMonster(u32 const id) -> OptRef<Monster>
 {
@@ -237,6 +257,8 @@ auto World::addNpc(u32 id) -> OptRef<Npc>
 
         npc->appearance().collisionHeight = 15;
         npc->appearance().collisionRadius = 10;
+
+        npc->onDied += [&n = *npc] { scheduleForDeletion(n, 15s); };
     }
 
     return npc;
@@ -389,7 +411,16 @@ void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool
 auto World::addActor(std::unique_ptr<Actor> actor) -> Actor &
 {
     auto const id = actor->id();
-    return *_actors.try_emplace(id, std::move(actor)).first->second;
+    auto & a = *_actors.try_emplace(id, std::move(actor)).first->second;
+
+    a.onDied    += [&a] { broadcastAround(a, SC::ActorDiePacket{a}, true); };
+    a.onRevived += [&a]
+    {
+        unscheduleForDeletion(a);
+        broadcastAround(a, SC::ActorRevivePacket{a}, true);
+    };
+
+    return a;
 }
 
 // PRIVATE -------------------------------------------------------------------------------------------------------------
