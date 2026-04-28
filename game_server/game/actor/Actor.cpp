@@ -54,6 +54,7 @@ Actor::Actor(ActorType const type)
     addComponent<ActorIdentity>();
     addComponent<Gear>();
     addComponent<Position>(-83968, 244634, -3500); // Talking Island GK
+    // addComponent<Position>(-71338, 258271, -3104); // Human Fighter creation spawn point
 
     auto & skills = addComponent<SkillDirectory>();
     skills.learn(18,   1); // Hate Aura
@@ -77,10 +78,10 @@ Actor::Actor(ActorType const type)
     stats[StatId::BaseInt]           = 21;
     stats[StatId::BaseWit]           = 11;
     stats[StatId::BaseMen]           = 25;
-    stats[StatId::BasePAtk]          = 10;
+    stats[StatId::BasePAtk]          = 4;
     stats[StatId::BasePDef]          = 80;
     stats[StatId::BaseMAtk]          = 6;
-    stats[StatId::BaseMDef]          = 40;
+    stats[StatId::BaseMDef]          = 41;
     stats[StatId::BasePAtkSpeed]     = 300;
     stats[StatId::BaseMAtkSpeed]     = 333;
     stats[StatId::BasePAtkRange]     = 20;
