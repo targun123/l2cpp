@@ -4,7 +4,6 @@
 #pragma once
 
 // Project includes
-#include "../Gauge.hpp"
 #include "../ecs/Component.hpp"
 
 class ActorStatus : public Component
