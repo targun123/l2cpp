@@ -4,12 +4,25 @@
 #include "BuffEffect.hpp"
 
 // Project includes
-#include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
-#include "../actor/Character.hpp"
-#include "../components/Stats.hpp"
+#include "../../network/packets/server/status/NpcStatusUpdatePacket.hpp"
 #include "../World.hpp"
+#include "../actor/Character.hpp"
+#include "../actor/Npc.hpp"
+#include "../components/Stats.hpp"
+
+#include <l2cpp/utils/Enum.hpp>
+
+namespace
+{
+    bool isSpeedStat(StatId const statId)
+    {
+        using enum StatId;
+        return l2cpp::Utils::Enum::isAnyOf(statId, MoveSpeedMultiplier, MoveSpeedBonus,
+                                                   PAtkSpeedMultiplier, PAtkSpeedBonus);
+    }
+}
 
 BuffEffect::BuffEffect(
     Actor               & source
@@ -41,10 +54,19 @@ void BuffEffect::modifyStat(StatValue const newValue) const
     stats.compute(target());
 
     namespace SC   = Network::Packet::Server;
-    auto const & c = static_cast<Character &>(target());
 
-    World::send           (target(), Network::Packet::Server::AbnormalEffectListPacket{target()});
-    World::send           (target(), SC::CharacterStatusUpdatePacket{c});
-    World::broadcastAround(target(), SC::CharacterStatusUpdateBroadcastPacket{c});
+    if (target().type() == ActorType::Character)
+    {
+        auto const & c = static_cast<Character const &>(target());
+        World::send(c, SC::CharacterStatusUpdatePacket{c});
+
+        if (isSpeedStat(_modifiedStat))
+            World::broadcastAround(c, SC::CharacterStatusUpdateBroadcastPacket{c});
+    }
+    else
+    {
+        auto const & npc = static_cast<Npc const &>(target());
+        World::broadcastAround(npc, Network::Packet::Server::NpcStatusUpdatePacket(npc));
+    }
 }
 
