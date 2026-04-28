@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [0.21.0] - 2026-04-23
 ### Added
 - Load basic NPC table: `id`, `name`, `title`, default `titleColor`, `type` and `baseSpeed`
-- Can spawn a NPC by its name (case insensitive)
+- Can spawn a NPC by its name (case-insensitive)
 
 ### Changed
 - `NonPlayableActor` renamed to `Npc`
@@ -34,13 +34,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 - **World:**
-  - can lookup any actor by GameObjectId
+  - can look up any actor by GameObjectId
 - **Skill:**
   - Load operating type (active, passive, etc.)
   - Load physical/magical status
   - Split target type (single target, AoE, aura…) from target nature (ennemy, friendly, self…)
   - Demonstration skills: instant buff, toggle buff, single target damage, multiple targets damage, poison over time…
-  - Casting speed is dependant on mAtkSpeed/pAtkSpeed depending on physical/magical status
+  - Casting speed is dependent on mAtkSpeed/pAtkSpeed depending on physical/magical status
 - **Abnormal Effects:**
   - Buff and damage effects (instant + DoT) added
   - Can be reapplied or canceled

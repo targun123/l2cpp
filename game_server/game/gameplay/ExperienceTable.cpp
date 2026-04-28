@@ -7,8 +7,8 @@
 #include <array>
 
 inline constexpr std::array gExperienceTable{
-               -1u, // level 0 (unreachable)
-                0u,
+                0u, // level 0 (unreachable)
+                0u, // level 1
                68u,
               363u,
             1'168u,

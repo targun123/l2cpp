@@ -205,5 +205,5 @@ auto Gear::itemTemplateId(GearSlot const slot) const -> u32
 bool Gear::hasActiveWeapon() const { return weapon().has_value(); }
 auto Gear::weapon() const -> OptRef<Item const> { return item(GearSlot::RightHand); }
 
-auto Gear::equipItem(Item & item)   -> GearTransaction { return _impl->equipItem(item);   }
-auto Gear::unequipItem(Item & item) -> GearTransaction { return _impl->unequipItem(item); }
+auto Gear::equipItem  (Item &       item) -> GearTransaction { return _impl->equipItem(item);   }
+auto Gear::unequipItem(Item const & item) -> GearTransaction { return _impl->unequipItem(item); }
