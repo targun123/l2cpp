@@ -4,10 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Gain experience and levels when killing monsters;  
-- Skill usage/effects conditions; 
-- Loading basic NPC table (name, collision data);
+- Unit testing;
+- Event system;
+- Skill usage prerequisites + effects conditions; 
 - Store/Load data in-between runs.
+
+## [0.23.0] - 2026-04-28
+### Added
+- Monters can have a Loot component with xp/sp reward on killing
+- xp/sp rewards are notified in system chat
+- An experience table is loaded, players can level up when earning enough xp (with level up animation broadcasted)
+
+### Fixed
+- Monster data wasn't populated correctly at creation (while regular npcs were ok)
 
 ## [0.22.0] - 2026-04-26
 ### Added
