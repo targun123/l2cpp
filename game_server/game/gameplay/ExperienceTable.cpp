@@ -98,3 +98,13 @@ auto ExperienceTable::level(u32 const experience) -> u32
 
     return level - 1;
 }
+
+auto ExperienceTable::minLevel() -> u32
+{
+    return 1;
+}
+
+auto ExperienceTable::maxLevel() -> u32
+{
+    return static_cast<u32>(gExperienceTable.size()) - 2;
+}

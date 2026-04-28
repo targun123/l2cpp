@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../ecs/Component.hpp"
+#include "../gameplay/ExperienceTable.hpp"
 
 class ActorStatus : public Component
 {
@@ -12,8 +13,9 @@ public:
     auto level() const -> u32 { return _level; }
     void setLevel(u32 const level)
     {
-        L2CPP_B_ASSERT(0 < level && level <= 80,
-                       "Invalid attempt to set level to '{}' (should be between [ 1 ; 80 ])", level);
+        L2CPP_B_ASSERT(ExperienceTable::minLevel() <= level && level <= ExperienceTable::maxLevel(),
+                       "Invalid attempt to set level to '{}' (should be between [ {} ; {} ])",
+                       level, ExperienceTable::minLevel(), ExperienceTable::maxLevel());
 
         _level = level;
     }
