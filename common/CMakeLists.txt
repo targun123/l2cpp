@@ -14,8 +14,7 @@ target_sources(${PROJECT_NAME}
         l2cpp/network/SocketListener.cpp
 )
 target_sources(${PROJECT_NAME} PUBLIC
-    FILE_SET  HEADERS
-    BASE_DIRS l2cpp
+    FILE_SET HEADERS
     FILES
         l2cpp/CompileTimeConfig.hpp
         l2cpp/Exception.hpp

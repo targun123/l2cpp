@@ -6,7 +6,8 @@
 // Project includes
 #include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../World.hpp"
-#include "utils/Enum.hpp"
+
+#include <l2cpp/utils/Enum.hpp>
 
 /// Update the effect list if we remove any non-damage effect, or it's damage over time
 static bool needToUpdateList(bool const currentValue, AbnormalEffect const & effect)
