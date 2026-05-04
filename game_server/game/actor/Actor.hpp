@@ -60,7 +60,6 @@ public:
 
     auto target() const -> OptRef<Actor>;
 
-    bool dying()            const;
     bool isAlive()          const;
     bool isDead()           const;
     bool isInCombatStance() const;

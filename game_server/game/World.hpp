@@ -39,7 +39,7 @@ public:
 public:
     static void update(ClockDuration elapsed);
 
-    static void handleStatsUpdates(GameObjectId id, Stats const & stats);
+    static void handleStatsUpdates(GameObjectId id, Stats const & oldStats);
 
     template<typename T, typename... Args> requires std::is_base_of_v<System, T>
     static void registerSystem(Args &&... args) {

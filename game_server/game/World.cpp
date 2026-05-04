@@ -158,13 +158,6 @@ void World::update(ClockDuration const elapsed)
     for (auto const & [id, stats] : statSnapshots)
         handleStatsUpdates(id, stats);
 
-    // Death is handled outside the system loops because internals are modified upon death
-    for (auto const & a : _actors | std::views::values)
-    {
-        if (a->dying())
-            a->die();
-    }
-
     for (Actor & a : _scheduledForDeletion | std::views::values)
         delActor(a);
 
@@ -173,7 +166,7 @@ void World::update(ClockDuration const elapsed)
     statSnapshots.clear();
 }
 
-void World::handleStatsUpdates(GameObjectId const id, Stats const & stats)
+void World::handleStatsUpdates(GameObjectId const id, Stats const & oldStats)
 {
     auto const & actor    = _actors.at(id);
     auto const & newStats = actor->stats();
@@ -185,15 +178,15 @@ void World::handleStatsUpdates(GameObjectId const id, Stats const & stats)
 
     std::array<bool, std::to_underlying(StatId::Count)> needUpdate{};
     for (size_t i = 0; i < needUpdate.size(); ++i)
-        atLeastOneUpdate |= needUpdate[i] = stats[i] != newStats[i];
+        atLeastOneUpdate |= needUpdate[i] = oldStats[i] != newStats[i];
 
     if (!atLeastOneUpdate)
         return;
 
     static std::unordered_set publicStats { StatId::CurHp, StatId::MaxHp };
 
-    Network::Packet::Server::StatsUpdatePacket publicPacket(*actor);
-    Network::Packet::Server::StatsUpdatePacket privatePacket(*actor);
+    SC::StatsUpdatePacket publicPacket(*actor);
+    SC::StatsUpdatePacket privatePacket(*actor);
     for (size_t i = 0; i < needUpdate.size(); ++i)
     {
         auto const statId = static_cast<StatId>(i);
@@ -217,6 +210,9 @@ void World::handleStatsUpdates(GameObjectId const id, Stats const & stats)
         SPDLOG_DEBUG("Sending private packet with {} stat(s)", privatePacket.size());
         send(*actor, std::move(privatePacket));
     }
+
+    if (newStats[StatId::CurHp] == 0 && oldStats[StatId::CurHp] > 0) // actor died this update
+        actor->die();
 }
 
 auto World::getCharacterPreviews(std::wstring_view const playerAccount) -> std::vector<Ref<Character>>

@@ -31,7 +31,6 @@ struct Actor::ActorImpl
     ActorType type;
     Team team = Team::None;
 
-    bool dying = false;
     bool isInCombatStance = false;
 
     OptRef<Actor> target, lastHitEmitter;
@@ -130,7 +129,6 @@ auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDi
 
 auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
-bool Actor::dying()   const { return _impl->dying;                }
 bool Actor::isAlive() const { return stats()[StatId::CurHp] >= 1; }
 bool Actor::isDead()  const { return stats()[StatId::CurCp] < 1;  }
 
@@ -190,22 +188,12 @@ void Actor::takeDamage(OptRef<Actor> emitter, double const amount)
     auto & stats = *component<Stats>();
     auto & hp    = stats[StatId::CurHp] -= amount;
 
-    if (hp < 1)
-    {
-        hp = 0;
-        _impl->dying = true;
-    }
-    else if (hp > stats[StatId::MaxHp])
-        hp = stats[StatId::MaxHp];
+    /**/ if (hp < 1)                    hp = 0;
+    else if (hp > stats[StatId::MaxHp]) hp = stats[StatId::MaxHp];
 }
 
 void Actor::die()
 {
-    if (!isAlive() && !_impl->dying)
-        return;
-
-    _impl->dying = false;
-
     _impl->_abnormalEffects.clear();
     fire onAbnormalEffectListChanged();
 
