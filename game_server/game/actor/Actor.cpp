@@ -197,10 +197,6 @@ void Actor::takeDamage(OptRef<Actor> emitter, double const amount)
     }
     else if (hp > stats[StatId::MaxHp])
         hp = stats[StatId::MaxHp];
-
-    SC::StatsUpdatePacket p(*this);
-    p.addStat(Stat::CurHp, static_cast<u32>(stats[StatId::CurHp]));
-    World::broadcastToSubscribers(*this, std::move(p), true);
 }
 
 void Actor::die()

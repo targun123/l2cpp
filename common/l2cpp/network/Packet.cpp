@@ -97,7 +97,5 @@ void Packet::erase(size_t const size)
     _impl->erase(std::max(size, this->size() - sizeof(PacketHeader) - (_impl->opCode > 0xff ? 2 : 1)));
 }
 
-auto Packet::counterAtOffset(size_t const offset) -> void *
-{
-    return _impl->buffer.data() + offset;
-}
+auto Packet::counterAtOffset(size_t const offset)       -> void       * { return _impl->buffer.data() + offset; }
+auto Packet::counterAtOffset(size_t const offset) const -> void const * { return _impl->buffer.data() + offset; }

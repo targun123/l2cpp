@@ -17,6 +17,7 @@ class Character;
 class Monster;
 class Npc;
 class Player;
+struct Stats;
 struct System;
 
 namespace l2cpp::Network { class Packet; }
@@ -37,6 +38,8 @@ public:
 
 public:
     static void update(ClockDuration elapsed);
+
+    static void handleStatsUpdates(GameObjectId id, Stats const & stats);
 
     template<typename T, typename... Args> requires std::is_base_of_v<System, T>
     static void registerSystem(Args &&... args) {

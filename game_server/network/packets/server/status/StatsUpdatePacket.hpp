@@ -4,6 +4,8 @@
 #pragma once
 
 // Project includes
+#include "../../../../game/constants/StatId.hpp"
+
 #include <l2cpp/network/Packet.hpp>
 
 class Actor;
@@ -26,15 +28,15 @@ enum class Stat
     CurWeight  = 0x0e,
     MaxWeight  = 0x0f,
 
-    Patk       = 0x11,
-    PatkSpeed  = 0x12,
-    Pdef       = 0x13,
+    PAtk       = 0x11,
+    PAtkSpeed  = 0x12,
+    PDef       = 0x13,
     Evasion    = 0x14,
     Accuracy   = 0x15,
-    CritChance = 0x16,
-    Matk       = 0x17,
-    MatkSpeed  = 0x18,
-    Mdef       = 0x19,
+    PCritRate  = 0x16,
+    MAtk       = 0x17,
+    MAtkSpeed  = 0x18,
+    MDef       = 0x19,
     PvpFlag    = 0x1a,
     Karma      = 0x1b,
 
@@ -50,7 +52,12 @@ public:
     explicit StatsUpdatePacket(Actor const & emitter);
 
 public:
+    auto size() const -> size_t;
+    bool empty() const { return size() == 0; }
+
+public:
     auto addStat(Stat id, s32 value) -> Packet &;
+    auto addStat(StatId id, StatValue value) -> Packet &;
 
     template<typename T> requires std::integral<T> || std::floating_point<T>
     auto addStat(Stat const id, T const value) -> Packet & { return addStat(id, static_cast<s32>(value)); }

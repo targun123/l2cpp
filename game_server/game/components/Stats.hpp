@@ -18,6 +18,8 @@ struct Stats : public Component
 {
     Stats();
 
+    auto operator[](size_t const index)       -> StatValue & { return _stats[index];                     }
+    auto operator[](size_t const index) const -> StatValue   { return _stats[index];                     }
     auto operator[](StatId const index)       -> StatValue & { return _stats[std::to_underlying(index)]; }
     auto operator[](StatId const index) const -> StatValue   { return _stats[std::to_underlying(index)]; }
 
