@@ -35,7 +35,7 @@
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
-#include "systems/ActorSkillEffectSystem.hpp"
+#include "systems/ActorAbnormalEffectSystem.hpp"
 #include "systems/ActorStatsUpdateSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
@@ -81,7 +81,7 @@ void World::init()
     registerSystem<ActorAttackStanceTimerSystem>();
     registerSystem<ActorAutoRegenSystem>();
     registerSystem<ActorDeletionTimerSystem>();
-    registerSystem<ActorSkillEffectSystem>();
+    registerSystem<ActorAbnormalEffectSystem>();
     // Must be last!
     registerSystem<ActorStatsUpdateSystem>();
 

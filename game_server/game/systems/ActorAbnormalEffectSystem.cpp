@@ -1,10 +1,9 @@
 /// @author    Chnossos
 /// @date      Created on 2026-04-14
 
-#include "ActorSkillEffectSystem.hpp"
+#include "ActorAbnormalEffectSystem.hpp"
 
 // Project includes
-#include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../World.hpp"
 
 #include <l2cpp/utils/Enum.hpp>
@@ -18,7 +17,7 @@ static bool needToUpdateList(bool const currentValue, AbnormalEffect const & eff
         || effect.duration() != ClockDuration::zero();              // is damage or heal over time (it has an icon)
 }
 
-void ActorSkillEffectSystem::updateImpl(ClockDuration const elapsed, Actor & actor)
+void ActorAbnormalEffectSystem::updateImpl(ClockDuration const elapsed, Actor & actor)
 {
     bool updateList = false;
 
