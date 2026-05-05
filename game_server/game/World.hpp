@@ -14,9 +14,11 @@
 
 class Actor;
 class Character;
+struct Loot;
 class Monster;
 class Npc;
 class Player;
+struct Stats;
 struct System;
 
 namespace l2cpp::Network { class Packet; }
@@ -45,7 +47,7 @@ public:
 
     static auto getCharacterPreviews(std::wstring_view playerAccount) -> std::vector<Ref<Character>>;
     static auto addCharacterPreview(std::wstring_view playerAccount) -> Character &;
-    static auto loadCharacterFromPreview(Character &) -> Character &;
+    static auto loadCharacterFromPreview(Character const &) -> Character &;
     static void moveCharacterBackToPreviews(Character &);
 
     static auto addCharacter(OptRef<Player> = std::nullopt) -> Character &;
@@ -61,6 +63,8 @@ public:
     static void subscribeToTarget(Actor const & target, Actor const & listener);
     static void unsubscribeFromTarget(Actor const & target, Actor const & listener);
     static void unsubscribeAllTargetListeners(Actor const & target);
+
+    static void distributeLoot(Loot const &, DamageDealtTable const & attackerDamageAmounts);
 
     static void forEachActorAround(Actor const & source, std::function<void(Actor &)> const &);
 

@@ -18,6 +18,7 @@ target_sources(${PROJECT_NAME} PUBLIC
     FILES
         l2cpp/CompileTimeConfig.hpp
         l2cpp/Exception.hpp
+        l2cpp/Event.hpp
         l2cpp/Misc.hpp
         l2cpp/OptRef.hpp
         l2cpp/Pimpl.hpp

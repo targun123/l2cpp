@@ -9,6 +9,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Skill usage prerequisites + effects conditions; 
 - Store/Load data in-between runs.
 
+## [0.23.1] - 2026-05-05
+### Changed
+- Use an internal event system to notify changes
+- StatsUpdatePacket is now sent only once per world update
+- Loot is distributed outside of Actor now
+
+### Fixed
+- AttackStance is disabled right upon death
+- CharacterStatus (xp, sp…) was uninitialized
+- Character instances moving in and out of preview were broken
+
 ## [0.23.0] - 2026-04-28
 ### Added
 - Monters can have a Loot component with xp/sp reward on killing

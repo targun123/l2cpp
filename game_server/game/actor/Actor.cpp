@@ -6,23 +6,15 @@
 // Project includes
 #include "../../Player.hpp"
 #include "../../network/Connection.hpp"
-#include "../../network/packets/server/action/SocialActionPerformPacket.hpp"
-#include "../../network/packets/server/chat/ChatSystemSayPacket.hpp"
-#include "../../network/packets/server/status/AbnormalEffectListPacket.hpp"
-#include "../../network/packets/server/status/ActorDiePacket.hpp"
-#include "../../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../World.hpp"
 #include "../components/ActorAutoRegen.hpp"
 #include "../components/ActorIdentity.hpp"
-#include "../components/CharacterStatus.hpp"
+#include "../components/AttackStanceTimer.hpp"
 #include "../components/Gear.hpp"
-#include "../components/Loot.hpp"
 #include "../components/Position.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
-#include "../gameplay/ExperienceTable.hpp"
-#include "Character.hpp"
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
@@ -34,13 +26,14 @@ struct Actor::ActorImpl
     ActorType type;
     Team team = Team::None;
 
-    bool dying = false;
     bool isInCombatStance = false;
 
-    OptRef<Actor> target, lastHitEmitter;
+    OptRef<Actor> target;
     std::unique_ptr<Action> currentAction, nextAction;
 
     std::list<std::unique_ptr<AbnormalEffect>> _abnormalEffects;
+
+    DamageDealtTable attackerDamageAmounts;
 };
 
 template class Pimpl<Actor::ActorImpl>;
@@ -133,7 +126,6 @@ auto Actor::skills() const -> SkillDirectory const & { return *component<SkillDi
 
 auto Actor::target() const -> OptRef<Actor> { return _impl->target; }
 
-bool Actor::dying()   const { return _impl->dying;                }
 bool Actor::isAlive() const { return stats()[StatId::CurHp] >= 1; }
 bool Actor::isDead()  const { return stats()[StatId::CurCp] < 1;  }
 
@@ -154,9 +146,16 @@ auto Actor::currentAction() -> OptRef<Action>
 
 auto Actor::nextAction() -> OptRef<Action> { return _impl->nextAction ? OptRef(*_impl->nextAction) : std::nullopt; }
 
-auto Actor::abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> & { return _impl->_abnormalEffects; }
+auto Actor::abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> & {
+    return _impl->_abnormalEffects;
+}
+
 auto Actor::abnormalEffects() const -> std::list<std::unique_ptr<AbnormalEffect>> const & {
     return _impl->_abnormalEffects;
+}
+
+auto Actor::attackerDamageAmounts() const -> DamageDealtTable const & {
+    return _impl->attackerDamageAmounts;
 }
 
 // SETTERS -------------------------------------------------------------------------------------------------------------
@@ -188,107 +187,35 @@ void Actor::takeDamage(OptRef<Actor> emitter, double const amount)
     if (!isAlive() || amount == 0)
         return;
 
-    _impl->lastHitEmitter = std::move(emitter);
+    if (emitter && amount > 0)
+        _impl->attackerDamageAmounts[emitter->id()] += amount;
 
     auto & stats = *component<Stats>();
     auto & hp    = stats[StatId::CurHp] -= amount;
 
-    if (hp < 1)
-    {
-        hp = 0;
-        _impl->dying = true;
-    }
-    else if (hp > stats[StatId::MaxHp])
-        hp = stats[StatId::MaxHp];
-
-    SC::StatsUpdatePacket p(*this);
-    p.addStat(Stat::CurHp, static_cast<u32>(stats[StatId::CurHp]));
-    World::broadcastToSubscribers(*this, std::move(p), true);
+    /**/ if (hp < 1)                    hp = 0;
+    else if (hp > stats[StatId::MaxHp]) hp = stats[StatId::MaxHp];
 }
 
 void Actor::die()
 {
-    if (!isAlive() && !_impl->dying)
-        return;
-
-    _impl->dying = false;
-
     _impl->_abnormalEffects.clear();
-    World::send(*this, SC::AbnormalEffectListPacket{*this});
+    fire onAbnormalEffectListChanged();
 
     delComponent<ActorAutoRegen>();
+    delComponent<AttackStanceTimer>();
 
-    if (auto const emitter = _impl->lastHitEmitter; emitter && emitter->type() == ActorType::Character)
-    {
-        auto & c = static_cast<Character &>(*emitter);
-        if (auto const loot = component<Loot>())
-        {
-            SC::StatsUpdatePacket p(c);
-
-            bool const nonZeroXp = loot->xp > 0;
-            if (nonZeroXp)
-            {
-                c.status().xp += loot->xp;
-                p.addStat(Stat::Xp, c.status().xp);
-            }
-
-            bool leveledUp = false;
-            auto const currentLevel = c.status().level();
-            if (auto const level = ExperienceTable::level(c.status().xp); level > currentLevel)
-            {
-                leveledUp = true;
-                c.status().setLevel(level);
-                p.addStat(Stat::Level, level);
-            }
-
-            bool const nonZeroSp = loot->sp > 0;
-            if (nonZeroSp)
-            {
-                c.status().sp += loot->sp;
-                p.addStat(Stat::Sp, c.status().sp);
-            }
-            c.player->connection().send(p);
-
-            std::optional<SC::ChatSystemSayPacket> msg;
-            /**/ if (nonZeroXp && nonZeroSp)
-            {
-                msg.emplace(SystemMessageId::EarnedXpAndSp);
-                *msg << SysMsgArg::Number{loot->xp} << SysMsgArg::Number{loot->sp};
-            }
-            else if (nonZeroXp)
-            {
-                msg.emplace(SystemMessageId::EarnedXp);
-                *msg << SysMsgArg::Number{loot->xp};
-            }
-            else
-            {
-                msg.emplace(SystemMessageId::EarnedSp);
-                *msg << SysMsgArg::Number{loot->sp};
-            }
-            c.player->connection().send(*msg);
-
-            if (leveledUp)
-            {
-                World::broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
-                c.player->connection().send(SC::ChatSystemSayPacket{SystemMessageId::YourLevelHasIncreased});
-            }
-        }
-    }
-
-    World::broadcastAround(*this, SC::ActorDiePacket(*this), true);
-
-    if (this->type() != ActorType::Character || !static_cast<Character &>(*this).player)
-        World::scheduleForDeletion(*this, 5s); // Corpse will disappear soon
+    fire onDied();
 }
 
 void Actor::revive()
 {
     if (isAlive())
         return;
+
     addComponent<ActorAutoRegen>();
 
-    World::unscheduleForDeletion(*this);
-    World::broadcastAround(*this, SC::ActorRevivePacket{*this}, true);
+    fire onRevived();
 
     auto & stats = *component<Stats>();
     stats[StatId::CurHp] = stats[StatId::MaxHp] * 0.65;

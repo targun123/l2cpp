@@ -6,7 +6,7 @@
 // Project includes
 #include "../ecs/ActorSystem.hpp"
 
-struct ActorSkillEffectSystem : public ActorSystem
+struct ActorAbnormalEffectSystem : public ActorSystem
 {
     void updateImpl(ClockDuration elapsed, Actor &) override;
 };

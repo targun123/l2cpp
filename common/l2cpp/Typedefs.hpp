@@ -10,6 +10,7 @@
 // C++ includes
 #include <chrono>
 #include <cstdint>
+#include <unordered_map>
 
 using namespace std::literals;
 
@@ -40,6 +41,8 @@ using PacketOpCode = u16;
 using SkillId    = u16;
 using SkillLevel = u16;
 using StatValue  = double;
+
+using DamageDealtTable = std::unordered_map<GameObjectId, StatValue>;
 
 constexpr u8  operator""_u8 (u64 const nbr) { return static_cast<u8> (nbr); }
 constexpr u16 operator""_u16(u64 const nbr) { return static_cast<u16>(nbr); }

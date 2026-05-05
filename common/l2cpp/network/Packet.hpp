@@ -88,6 +88,11 @@ protected:
         return *static_cast<T *>(counterAtOffset(static_cast<size_t>(offset)));
     }
 
+    template<typename T> requires Utils::Traits::isAnyOf<T, u16, u32>
+    auto counterAtOffset(T const offset) const -> T {
+        return *static_cast<T const *>(counterAtOffset(static_cast<size_t>(offset)));
+    }
+
     void erase(size_t size);
 
 private:
@@ -96,6 +101,7 @@ private:
     }
 
     auto counterAtOffset(size_t offset) -> void *;
+    auto counterAtOffset(size_t offset) const -> void const *;
 
 private:
     struct PacketImpl;

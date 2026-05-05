@@ -6,6 +6,11 @@
 // Project includes
 #include "../Player.hpp"
 #include "../network/Connection.hpp"
+#include "../network/packets/server/action/SocialActionPerformPacket.hpp"
+#include "../network/packets/server/chat/ChatSystemSayPacket.hpp"
+#include "../network/packets/server/status/AbnormalEffectListPacket.hpp"
+#include "../network/packets/server/status/ActorDiePacket.hpp"
+#include "../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
 #include "../utils/Conversion.hpp"
@@ -15,6 +20,7 @@
 #include "actor/Npc.hpp"
 #include "actor/NpcDirectory.hpp"
 #include "components/ActorStatus.hpp"
+#include "components/CharacterStatus.hpp"
 #include "components/DeletionTimer.hpp"
 #include "components/Loot.hpp"
 #include "components/NpcAppearance.hpp"
@@ -23,11 +29,14 @@
 #include "constants/Profession.hpp"
 #include "constants/Race.hpp"
 #include "constants/Sex.hpp"
+#include "constants/SocialAction.hpp"
+#include "constants/SystemMessageId.hpp"
 #include "ecs/System.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
-#include "systems/ActorSkillEffectSystem.hpp"
+#include "systems/ActorAbnormalEffectSystem.hpp"
+#include "systems/ActorStatsUpdateSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
 
@@ -36,6 +45,7 @@
 
 // C++ includes
 #include <ranges>
+#include <unordered_set>
 
 namespace SC = Network::Packet::Server; // Server -> Client
 
@@ -61,6 +71,9 @@ static void addDummy()
     d.appearance().collisionHeight = 23;
     d.appearance().collisionRadius = 7.5;
     d.setProfession(Profession::ElvenMystic);
+
+    auto & loot = d.addComponent<Loot>();
+    loot.xp = 50;
 }
 
 void World::init()
@@ -68,7 +81,9 @@ void World::init()
     registerSystem<ActorAttackStanceTimerSystem>();
     registerSystem<ActorAutoRegenSystem>();
     registerSystem<ActorDeletionTimerSystem>();
-    registerSystem<ActorSkillEffectSystem>();
+    registerSystem<ActorAbnormalEffectSystem>();
+    // Must be last!
+    registerSystem<ActorStatsUpdateSystem>();
 
     auto & c1 = addCharacterPreview(L"Admin");
     c1.setName(L"test" + std::to_wstring(c1.id()));
@@ -136,13 +151,6 @@ void World::update(ClockDuration const elapsed)
             system->update(elapsed, *a);
     }
 
-    // Death is handled outside the system loops because internals are modified upon death
-    for (auto const & a : _actors | std::views::values)
-    {
-        if (a->dying())
-            a->die();
-    }
-
     for (Actor & a : _scheduledForDeletion | std::views::values)
         delActor(a);
 
@@ -164,22 +172,28 @@ auto World::addCharacterPreview(std::wstring_view const playerAccount) -> Charac
 {
     L2CPP_B_ASSERT(!playerAccount.empty(), "Player account name unknown, cannot create character preview");
 
-    Character  c;
-    auto const id = c.id();
+    Ref c = addCharacter();
+    auto const id = c.get().id();
     _characterPreviewsIndex[playerAccount].emplace_back(id);
-    return *_characterPreviews.try_emplace(id, std::make_unique<Character>(std::move(c))).first->second;
+    c = *_characterPreviews.try_emplace(id, static_cast<Character *>(_actors[id].release())).first->second;
+    _actors.erase(id);
+    return c;
 }
 
-auto World::loadCharacterFromPreview(Character & c) -> Character &
+auto World::loadCharacterFromPreview(Character const & c) -> Character &
 {
+    L2CPP_B_ASSERT(_characterPreviews.contains(c.id()), "Character '{}' is not loaded in previews", c.id());
+
     auto const id    = c.id();
-    auto const & ptr = _actors.try_emplace(id, std::make_unique<Character>(std::move(c))).first->second;
+    auto const & ptr = _actors.try_emplace(id, _characterPreviews[id].release()).first->second;
     _characterPreviews.erase(id);
     return static_cast<Character &>(*ptr);
 }
 
 void World::moveCharacterBackToPreviews(Character & c)
 {
+    L2CPP_B_ASSERT(_actors.contains(c.id()), "Character '{}' is not present in the world", c.id());
+
     if (auto const target = c.target())
     {
         unsubscribeFromTarget(target, c);
@@ -197,7 +211,17 @@ void World::moveCharacterBackToPreviews(Character & c)
     _actors.erase(id);
 }
 
-auto World::addCharacter(OptRef<Player> p) -> Character & { return addActor<Character>(std::move(p)); }
+auto World::addCharacter(OptRef<Player> p) -> Character &
+{
+    auto & c = addActor<Character>(std::move(p));
+    c.onAbnormalEffectListChanged += [&c] { send(c, SC::AbnormalEffectListPacket{c}); };
+    c.onLeveledUp += [&c]
+    {
+        broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
+        send(c, SC::ChatSystemSayPacket{SystemMessageId::YourLevelHasIncreased});
+    };
+    return c;
+}
 
 auto World::addMonster(u32 const id) -> OptRef<Monster>
 {
@@ -231,6 +255,13 @@ auto World::addNpc(u32 id) -> OptRef<Npc>
 
         npc->appearance().collisionHeight = 15;
         npc->appearance().collisionRadius = 10;
+
+        npc->onDied += [&n = *npc]
+        {
+            scheduleForDeletion(n, 15s);
+            if (auto const loot = n.component<Loot>())
+                distributeLoot(loot, n.attackerDamageAmounts());
+        };
     }
 
     return npc;
@@ -316,6 +347,51 @@ void World::unsubscribeAllTargetListeners(Actor const & target)
     _targetSubscribers[target.id()].clear();
 }
 
+void World::distributeLoot(Loot const & loot, DamageDealtTable const & attackerDamageAmounts)
+{
+    std::map<StatValue, Ref<Character>> participants;
+
+    for (auto const [id, dmg] : attackerDamageAmounts)
+    {
+        if (auto const c = character(id))
+            participants.try_emplace(dmg, c);
+    }
+
+    auto & c = participants.rbegin()->second.get(); // For now, select the one who dealt the most damage
+
+    c.status().xp += loot.xp;
+    c.status().sp += loot.sp;
+
+    auto const oldLevel = c.status().level();
+    auto const newLevel = ExperienceTable::level(c.status().xp);
+    bool const leveledUp = newLevel > oldLevel;
+    if (leveledUp)
+        c.status().setLevel(newLevel);
+
+    std::optional<SC::ChatSystemSayPacket> msg;
+    /**/ if (loot.xp && loot.sp)
+    {
+        msg.emplace(SystemMessageId::EarnedXpAndSp);
+        *msg << SysMsgArg::Number{loot.xp} << SysMsgArg::Number{loot.sp};
+    }
+    else if (loot.xp)
+    {
+        msg.emplace(SystemMessageId::EarnedXp);
+        *msg << SysMsgArg::Number{loot.xp};
+    }
+    else
+    {
+        msg.emplace(SystemMessageId::EarnedSp);
+        *msg << SysMsgArg::Number{loot.sp};
+    }
+
+    if (msg)
+        send(c, std::move(*msg));
+
+    if (leveledUp)
+        fire c.onLeveledUp();
+}
+
 void World::forEachActorAround(Actor const & source, std::function<void(Actor &)> const & f)
 {
     if (f)
@@ -383,7 +459,16 @@ void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool
 auto World::addActor(std::unique_ptr<Actor> actor) -> Actor &
 {
     auto const id = actor->id();
-    return *_actors.try_emplace(id, std::move(actor)).first->second;
+    auto & a = *_actors.try_emplace(id, std::move(actor)).first->second;
+
+    a.onDied    += [&a] { broadcastAround(a, SC::ActorDiePacket{a}, true); };
+    a.onRevived += [&a]
+    {
+        unscheduleForDeletion(a);
+        broadcastAround(a, SC::ActorRevivePacket{a}, true);
+    };
+
+    return a;
 }
 
 // PRIVATE -------------------------------------------------------------------------------------------------------------
