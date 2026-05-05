@@ -27,7 +27,19 @@ void ActorStatsUpdateSystem::updateImpl(ClockDuration, Actor & actor)
     if (auto const it = statSnapshots.find(actor.id()); it != statSnapshots.end())
     {
         if (actor.type() == ActorType::Character)
-            updateCharacterStats(static_cast<Character &>(actor), it->second);
+        {
+            SC::StatsUpdatePacket privatePacket(actor), publicPacket(actor);
+            updateCharacterStats (privatePacket, publicPacket,
+                                  static_cast<Character &>(actor), it->second);
+            updateCharacterStatus(privatePacket, publicPacket,
+                                  static_cast<Character &>(actor), statusSnapshots.at(actor.id()));
+
+            if (!privatePacket.empty())
+                World::send(actor, std::move(privatePacket));
+
+            if (!publicPacket.empty())
+                World::broadcastAround(actor, std::move(publicPacket));
+        }
         else
             updateNpcStats(static_cast<Npc &>(actor), it->second);
     }
@@ -38,11 +50,12 @@ void ActorStatsUpdateSystem::updateImpl(ClockDuration, Actor & actor)
         statusSnapshots.insert_or_assign(actor.id(), static_cast<Character const &>(actor).status());
 }
 
-void ActorStatsUpdateSystem::updateCharacterStats(Character & c, Stats const & oldStats) const
+void ActorStatsUpdateSystem::updateCharacterStats(SC::StatsUpdatePacket & privatePacket,
+                                                  SC::StatsUpdatePacket & /*publicPacket*/,
+                                                  Character & c, Stats const & oldStats) const
 {
     auto const & newStats = c.stats();
 
-    SC::StatsUpdatePacket privatePacket(c);
     for (size_t i = 0; i < std::to_underlying(StatId::Count); ++i)
     {
         if (oldStats[i] != newStats[i])
@@ -52,11 +65,25 @@ void ActorStatsUpdateSystem::updateCharacterStats(Character & c, Stats const & o
         }
     }
 
-    if (!privatePacket.empty())
-        World::send(c, std::move(privatePacket));
-
     if (newStats[StatId::CurHp] == 0 && oldStats[StatId::CurHp] > 0)
         c.die();
+}
+
+void ActorStatsUpdateSystem::updateCharacterStatus(SC::StatsUpdatePacket & privatePacket,
+                                                   SC::StatsUpdatePacket & /*publicPacket*/,
+                                                   Character & c, CharacterStatus const & oldStatus) const
+{
+    auto const & newStatus = c.status();
+
+    if (newStatus.xp != oldStatus.xp)
+        privatePacket.addStat(Stat::Xp, newStatus.xp);
+
+    if (newStatus.sp != oldStatus.sp)
+        privatePacket.addStat(Stat::Sp, newStatus.sp);
+
+    auto const currentLevel = ExperienceTable::level(newStatus.xp);
+    if (currentLevel > ExperienceTable::level(oldStatus.xp))
+        privatePacket.addStat(Stat::Level, currentLevel);
 }
 
 void ActorStatsUpdateSystem::updateNpcStats(Npc & npc, Stats const & oldStats) const

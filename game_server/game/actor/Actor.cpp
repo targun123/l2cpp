@@ -205,39 +205,22 @@ void Actor::die()
         auto & c = static_cast<Character &>(*emitter);
         if (auto const loot = component<Loot>())
         {
-            SC::StatsUpdatePacket p(c);
+            c.status().xp += loot->xp;
+            c.status().sp += loot->sp;
 
-            bool const nonZeroXp = loot->xp > 0;
-            if (nonZeroXp)
-            {
-                c.status().xp += loot->xp;
-                p.addStat(Stat::Xp, c.status().xp);
-            }
-
-            bool leveledUp = false;
-            auto const currentLevel = c.status().level();
-            if (auto const level = ExperienceTable::level(c.status().xp); level > currentLevel)
-            {
-                leveledUp = true;
-                c.status().setLevel(level);
-                p.addStat(Stat::Level, level);
-            }
-
-            bool const nonZeroSp = loot->sp > 0;
-            if (nonZeroSp)
-            {
-                c.status().sp += loot->sp;
-                p.addStat(Stat::Sp, c.status().sp);
-            }
-            c.player->connection().send(p);
+            auto const oldLevel = c.status().level();
+            auto const newLevel = ExperienceTable::level(c.status().xp);
+            bool const leveledUp = newLevel > oldLevel;
+            if (leveledUp)
+                c.status().setLevel(newLevel);
 
             std::optional<SC::ChatSystemSayPacket> msg;
-            /**/ if (nonZeroXp && nonZeroSp)
+            /**/ if (loot->xp && loot->sp)
             {
                 msg.emplace(SystemMessageId::EarnedXpAndSp);
                 *msg << SysMsgArg::Number{loot->xp} << SysMsgArg::Number{loot->sp};
             }
-            else if (nonZeroXp)
+            else if (loot->xp)
             {
                 msg.emplace(SystemMessageId::EarnedXp);
                 *msg << SysMsgArg::Number{loot->xp};
@@ -247,10 +230,12 @@ void Actor::die()
                 msg.emplace(SystemMessageId::EarnedSp);
                 *msg << SysMsgArg::Number{loot->sp};
             }
-            c.player->connection().send(*msg);
+
+            if (msg)
+                World::send(c, std::move(*msg));
 
             if (leveledUp)
-                fire onLeveledUp();
+                fire c.onLeveledUp();
         }
     }
 
