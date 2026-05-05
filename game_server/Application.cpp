@@ -12,6 +12,7 @@
 #include "network/Connection.hpp"
 #include "network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "network/packets/server/client/ClientForceDisconnectPacket.hpp"
+#include "services/Database.hpp"
 #include "utils/Chrono.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
@@ -65,7 +66,9 @@ template class Pimpl<Application::ApplicationImpl>;
 
 bool Application::ApplicationImpl::load() const try
 {
-    SPDLOG_INFO("[Loading static data]");
+    SPDLOG_INFO("Initializing database…");
+    Database::init();
+    SPDLOG_INFO("Database initialization done.");
 
     SPDLOG_INFO("Loading skills…");
     SkillTemplateDirectory::load("data/skillname-e.txt", "data/skillgrp.txt");
@@ -76,11 +79,9 @@ bool Application::ApplicationImpl::load() const try
     SPDLOG_INFO("Registered {:L} NPC templates ({:L} NPCs; {:L} monsters)",
                 NpcDirectory::totalCount(), NpcDirectory::npcCount(), NpcDirectory::monsterCount());
 
-    SPDLOG_INFO("Loading ECS systems");
+    SPDLOG_INFO("Loading World systems…");
     World::init();
-    SPDLOG_INFO("Loaded");
-
-    SPDLOG_INFO("Static data loading done.");
+    SPDLOG_INFO("World systems loaded.");
     return true;
 }
 catch (l2cpp::Exception const & e)
