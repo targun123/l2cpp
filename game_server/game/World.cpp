@@ -20,12 +20,12 @@
 #include "actor/Npc.hpp"
 #include "actor/NpcDirectory.hpp"
 #include "components/ActorStatus.hpp"
+#include "components/CharacterStatus.hpp"
 #include "components/DeletionTimer.hpp"
 #include "components/Loot.hpp"
 #include "components/NpcAppearance.hpp"
 #include "components/PlayerAppearance.hpp"
 #include "components/Position.hpp"
-#include "components/Stats.hpp"
 #include "constants/Profession.hpp"
 #include "constants/Race.hpp"
 #include "constants/Sex.hpp"
@@ -256,7 +256,12 @@ auto World::addNpc(u32 id) -> OptRef<Npc>
         npc->appearance().collisionHeight = 15;
         npc->appearance().collisionRadius = 10;
 
-        npc->onDied += [&n = *npc] { scheduleForDeletion(n, 15s); };
+        npc->onDied += [&n = *npc]
+        {
+            scheduleForDeletion(n, 15s);
+            if (auto const loot = n.component<Loot>())
+                distributeLoot(loot, n.attackerDamageAmounts());
+        };
     }
 
     return npc;
@@ -340,6 +345,51 @@ void World::unsubscribeAllTargetListeners(Actor const & target)
     }
 
     _targetSubscribers[target.id()].clear();
+}
+
+void World::distributeLoot(Loot const & loot, DamageDealtTable const & attackerDamageAmounts)
+{
+    std::map<StatValue, Ref<Character>> participants;
+
+    for (auto const [id, dmg] : attackerDamageAmounts)
+    {
+        if (auto const c = character(id))
+            participants.try_emplace(dmg, c);
+    }
+
+    auto & c = participants.rbegin()->second.get(); // For now, select the one who dealt the most damage
+
+    c.status().xp += loot.xp;
+    c.status().sp += loot.sp;
+
+    auto const oldLevel = c.status().level();
+    auto const newLevel = ExperienceTable::level(c.status().xp);
+    bool const leveledUp = newLevel > oldLevel;
+    if (leveledUp)
+        c.status().setLevel(newLevel);
+
+    std::optional<SC::ChatSystemSayPacket> msg;
+    /**/ if (loot.xp && loot.sp)
+    {
+        msg.emplace(SystemMessageId::EarnedXpAndSp);
+        *msg << SysMsgArg::Number{loot.xp} << SysMsgArg::Number{loot.sp};
+    }
+    else if (loot.xp)
+    {
+        msg.emplace(SystemMessageId::EarnedXp);
+        *msg << SysMsgArg::Number{loot.xp};
+    }
+    else
+    {
+        msg.emplace(SystemMessageId::EarnedSp);
+        *msg << SysMsgArg::Number{loot.sp};
+    }
+
+    if (msg)
+        send(c, std::move(*msg));
+
+    if (leveledUp)
+        fire c.onLeveledUp();
 }
 
 void World::forEachActorAround(Actor const & source, std::function<void(Actor &)> const & f)

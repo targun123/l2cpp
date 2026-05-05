@@ -6,20 +6,15 @@
 // Project includes
 #include "../../Player.hpp"
 #include "../../network/Connection.hpp"
-#include "../../network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../World.hpp"
 #include "../components/ActorAutoRegen.hpp"
 #include "../components/ActorIdentity.hpp"
 #include "../components/AttackStanceTimer.hpp"
-#include "../components/CharacterStatus.hpp"
 #include "../components/Gear.hpp"
-#include "../components/Loot.hpp"
 #include "../components/Position.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
-#include "../gameplay/ExperienceTable.hpp"
-#include "Character.hpp"
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
@@ -33,10 +28,12 @@ struct Actor::ActorImpl
 
     bool isInCombatStance = false;
 
-    OptRef<Actor> target, lastHitEmitter;
+    OptRef<Actor> target;
     std::unique_ptr<Action> currentAction, nextAction;
 
     std::list<std::unique_ptr<AbnormalEffect>> _abnormalEffects;
+
+    DamageDealtTable attackerDamageAmounts;
 };
 
 template class Pimpl<Actor::ActorImpl>;
@@ -149,9 +146,16 @@ auto Actor::currentAction() -> OptRef<Action>
 
 auto Actor::nextAction() -> OptRef<Action> { return _impl->nextAction ? OptRef(*_impl->nextAction) : std::nullopt; }
 
-auto Actor::abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> & { return _impl->_abnormalEffects; }
+auto Actor::abnormalEffects() -> std::list<std::unique_ptr<AbnormalEffect>> & {
+    return _impl->_abnormalEffects;
+}
+
 auto Actor::abnormalEffects() const -> std::list<std::unique_ptr<AbnormalEffect>> const & {
     return _impl->_abnormalEffects;
+}
+
+auto Actor::attackerDamageAmounts() const -> DamageDealtTable const & {
+    return _impl->attackerDamageAmounts;
 }
 
 // SETTERS -------------------------------------------------------------------------------------------------------------
@@ -183,7 +187,8 @@ void Actor::takeDamage(OptRef<Actor> emitter, double const amount)
     if (!isAlive() || amount == 0)
         return;
 
-    _impl->lastHitEmitter = std::move(emitter);
+    if (emitter && amount > 0)
+        _impl->attackerDamageAmounts[emitter->id()] += amount;
 
     auto & stats = *component<Stats>();
     auto & hp    = stats[StatId::CurHp] -= amount;
@@ -199,45 +204,6 @@ void Actor::die()
 
     delComponent<ActorAutoRegen>();
     delComponent<AttackStanceTimer>();
-
-    if (auto const emitter = _impl->lastHitEmitter; emitter && emitter->type() == ActorType::Character)
-    {
-        auto & c = static_cast<Character &>(*emitter);
-        if (auto const loot = component<Loot>())
-        {
-            c.status().xp += loot->xp;
-            c.status().sp += loot->sp;
-
-            auto const oldLevel = c.status().level();
-            auto const newLevel = ExperienceTable::level(c.status().xp);
-            bool const leveledUp = newLevel > oldLevel;
-            if (leveledUp)
-                c.status().setLevel(newLevel);
-
-            std::optional<SC::ChatSystemSayPacket> msg;
-            /**/ if (loot->xp && loot->sp)
-            {
-                msg.emplace(SystemMessageId::EarnedXpAndSp);
-                *msg << SysMsgArg::Number{loot->xp} << SysMsgArg::Number{loot->sp};
-            }
-            else if (loot->xp)
-            {
-                msg.emplace(SystemMessageId::EarnedXp);
-                *msg << SysMsgArg::Number{loot->xp};
-            }
-            else
-            {
-                msg.emplace(SystemMessageId::EarnedSp);
-                *msg << SysMsgArg::Number{loot->sp};
-            }
-
-            if (msg)
-                World::send(c, std::move(*msg));
-
-            if (leveledUp)
-                fire c.onLeveledUp();
-        }
-    }
 
     fire onDied();
 }

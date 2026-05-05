@@ -14,6 +14,7 @@
 
 class Actor;
 class Character;
+struct Loot;
 class Monster;
 class Npc;
 class Player;
@@ -62,6 +63,8 @@ public:
     static void subscribeToTarget(Actor const & target, Actor const & listener);
     static void unsubscribeFromTarget(Actor const & target, Actor const & listener);
     static void unsubscribeAllTargetListeners(Actor const & target);
+
+    static void distributeLoot(Loot const &, DamageDealtTable const & attackerDamageAmounts);
 
     static void forEachActorAround(Actor const & source, std::function<void(Actor &)> const &);
 

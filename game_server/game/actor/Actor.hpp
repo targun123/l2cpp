@@ -70,6 +70,8 @@ public:
     auto abnormalEffects()       -> std::list<std::unique_ptr<AbnormalEffect>>       &;
     auto abnormalEffects() const -> std::list<std::unique_ptr<AbnormalEffect>> const &;
 
+    auto attackerDamageAmounts() const -> DamageDealtTable const &;
+
     virtual bool isAttackable() const = 0;
 
 public:
