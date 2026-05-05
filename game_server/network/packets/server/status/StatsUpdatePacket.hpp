@@ -52,8 +52,8 @@ public:
     explicit StatsUpdatePacket(Actor const & emitter);
 
 public:
-    auto size() const -> size_t;
-    bool empty() const { return size() == 0; }
+    auto count() const -> size_t;
+    bool empty() const { return count() == 0; }
 
 public:
     auto addStat(Stat id, s32 value) -> Packet &;

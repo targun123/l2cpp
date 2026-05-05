@@ -16,7 +16,7 @@ StatsUpdatePacket::StatsUpdatePacket(Actor const & emitter)
     appendCounterAndStoreOffset(_statsCountOffset);
 }
 
-auto StatsUpdatePacket::size() const -> size_t { return counterAtOffset(_statsCountOffset); }
+auto StatsUpdatePacket::count() const -> size_t { return counterAtOffset(_statsCountOffset); }
 
 auto StatsUpdatePacket::addStat(Stat const id, s32 const value) -> Packet &
 {
@@ -55,7 +55,7 @@ auto StatsUpdatePacket::addStat(StatId const id, StatValue const value) -> Packe
 #undef  CASE
 
         default:
-            L2CPP_THROW("StatId '{}' cannot be sent as an update", std::to_underlying(id));
+            return *this;
     }
 
     return addStat(s, static_cast<s32>(value));

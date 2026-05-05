@@ -11,7 +11,6 @@
 #include "../network/packets/server/status/AbnormalEffectListPacket.hpp"
 #include "../network/packets/server/status/ActorDiePacket.hpp"
 #include "../network/packets/server/status/ActorRevivePacket.hpp"
-#include "../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
 #include "../utils/Conversion.hpp"
@@ -37,6 +36,7 @@
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
 #include "systems/ActorSkillEffectSystem.hpp"
+#include "systems/ActorStatsUpdateSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
 
@@ -82,6 +82,8 @@ void World::init()
     registerSystem<ActorAutoRegenSystem>();
     registerSystem<ActorDeletionTimerSystem>();
     registerSystem<ActorSkillEffectSystem>();
+    // Must be last!
+    registerSystem<ActorStatsUpdateSystem>();
 
     auto & c1 = addCharacterPreview(L"Admin");
     c1.setName(L"test" + std::to_wstring(c1.id()));
@@ -126,12 +128,6 @@ void World::update(ClockDuration const elapsed)
 {
     using namespace std::chrono;
 
-    static std::unordered_map<GameObjectId, Stats> statSnapshots;
-    statSnapshots.reserve(_actors.size());
-
-    for (auto const & a : _actors | std::views::values)
-        statSnapshots.try_emplace(a->id(), a->component<Stats>());
-
     for (auto const & a : _actors | std::views::values)
     {
         try
@@ -155,64 +151,10 @@ void World::update(ClockDuration const elapsed)
             system->update(elapsed, *a);
     }
 
-    for (auto const & [id, stats] : statSnapshots)
-        handleStatsUpdates(id, stats);
-
     for (Actor & a : _scheduledForDeletion | std::views::values)
         delActor(a);
 
     _scheduledForDeletion.clear();
-
-    statSnapshots.clear();
-}
-
-void World::handleStatsUpdates(GameObjectId const id, Stats const & oldStats)
-{
-    auto const & actor    = _actors.at(id);
-    auto const & newStats = actor->stats();
-
-    if (newStats[StatId::CurHp] >= newStats[StatId::MaxHp])
-        return;
-
-    bool atLeastOneUpdate = false;
-
-    std::array<bool, std::to_underlying(StatId::Count)> needUpdate{};
-    for (size_t i = 0; i < needUpdate.size(); ++i)
-        atLeastOneUpdate |= needUpdate[i] = oldStats[i] != newStats[i];
-
-    if (!atLeastOneUpdate)
-        return;
-
-    static std::unordered_set publicStats { StatId::CurHp, StatId::MaxHp };
-
-    SC::StatsUpdatePacket publicPacket(*actor);
-    SC::StatsUpdatePacket privatePacket(*actor);
-    for (size_t i = 0; i < needUpdate.size(); ++i)
-    {
-        auto const statId = static_cast<StatId>(i);
-        if (needUpdate[i])
-        {
-            privatePacket.addStat(statId, newStats[i]);
-
-            if (publicStats.contains(statId))
-                publicPacket.addStat(statId, newStats[i]);
-        }
-    }
-
-    if (!publicPacket.empty())
-    {
-        SPDLOG_DEBUG("Sending public packet with {} stat(s)", publicPacket.size());
-        broadcastToSubscribers(*actor, std::move(publicPacket));
-    }
-
-    if (!privatePacket.empty() && actor->type() == ActorType::Character)
-    {
-        SPDLOG_DEBUG("Sending private packet with {} stat(s)", privatePacket.size());
-        send(*actor, std::move(privatePacket));
-    }
-
-    if (newStats[StatId::CurHp] == 0 && oldStats[StatId::CurHp] > 0) // actor died this update
-        actor->die();
 }
 
 auto World::getCharacterPreviews(std::wstring_view const playerAccount) -> std::vector<Ref<Character>>
