@@ -13,7 +13,7 @@
 #include "../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
-#include "../services/Database.hpp"
+#include "../orm/Lobby.hpp"
 #include "../utils/Conversion.hpp"
 #include "../utils/Maths.hpp"
 #include "actor/Character.hpp"
@@ -27,7 +27,6 @@
 #include "components/NpcAppearance.hpp"
 #include "components/PlayerAppearance.hpp"
 #include "components/Position.hpp"
-#include "components/Stats.hpp"
 #include "constants/Profession.hpp"
 #include "constants/Race.hpp"
 #include "constants/Sex.hpp"
@@ -86,14 +85,6 @@ void World::init()
     registerSystem<ActorAbnormalEffectSystem>();
     // Must be last!
     registerSystem<ActorStatsUpdateSystem>();
-
-    auto & c1 = addCharacterPreview(L"Admin");
-    c1.setName(L"test" + std::to_wstring(c1.id()));
-    c1.setTitle(L"Admin");
-
-    auto & c2 = addCharacterPreview(L"Admin2");
-    c2.setName(L"test" + std::to_wstring(c2.id()));
-    c2.setTitle(L"Admin2");
 
     addGremlin();
     addGremlin();
@@ -161,83 +152,33 @@ void World::update(ClockDuration const elapsed)
 
 auto World::createCharacter(Player const & p, CharacterCreationParameters const & params) -> CharacterCreationResult
 {
-    try
-    {
-        SQLite::Statement accountIdQuery(Database::instance(), R"(SELECT id FROM accounts WHERE name LIKE :name)");
-        accountIdQuery.bind(":name", Utils::toString(p.accountName()));
-        L2CPP_B_ASSERT(accountIdQuery.executeStep(),
-                       "Failed to fetch account id for player '{}'", p.connection().id());
-        auto const accountId = accountIdQuery.getColumn(0).getUInt();
-
-        SQLite::Transaction tr(Database::instance());
-
-        SQLite::Statement charQuery(Database::instance(), R"(
-            INSERT INTO characters (name, race, sex, hair_style, hair_color, face)
-                VALUES (:name, :race, :sex, :hair_style, :hair_color, :face)
-        )");
-        charQuery.bind(":name",       Utils::toString(params.name));
-        charQuery.bind(":race",       std::to_underlying(params.race));
-        charQuery.bind(":sex",        std::to_underlying(params.sex));
-        charQuery.bind(":hair_style", params.hairStyle);
-        charQuery.bind(":hair_color", params.hairColor);
-        charQuery.bind(":face",       params.face);
-        charQuery.exec();
-
-        auto const charId = Database::instance().getLastInsertRowid();
-
-        SQLite::Statement charOwnerQuery(Database::instance(),
-                                         R"(INSERT INTO character_owners VALUES (:account_id, :character_id))");
-        charOwnerQuery.bind(":account_id",   accountId);
-        charOwnerQuery.bind(":character_id", charId);
-        charOwnerQuery.exec();
-
-        SQLite::Statement unselectCharPreviews(Database::instance(), R"(
-            UPDATE character_previews SET selected = FALSE WHERE character_id = (
-                SELECT character_id FROM character_owners WHERE account_id = :account_id)
-        )");
-        unselectCharPreviews.bind(":account_id", accountId);
-        unselectCharPreviews.exec();
-
-        SQLite::Statement charPreviewQuery(Database::instance(),
-                                           R"(INSERT INTO character_previews (character_id) VALUES (:character_id))");
-        charPreviewQuery.bind(":character_id", charId);
-        charPreviewQuery.exec();
-
-        tr.commit();
-    }
-    catch (SQLite::Exception const & e)
-    {
-        SPDLOG_ERROR(L"Failed to create new character for player '{}': SQL error '{}' (code: {})",
-                     p.accountName(), Utils::toWideString(e.what()), e.getErrorCode());
-        return CharacterCreationResult::Failure;
-    }
-
+    Orm::createCharacter(p.accountId(), params);
     auto & c = addCharacterPreview(p.accountName());
-    c.setName(std::move(params.name));
-    c.appearance().race        = params.race;
-    c.appearance().sex         = params.sex;
+    c.setName(params.name);
+    c.appearance().race = static_cast<Race>(params.race);
+    c.appearance().sex  = static_cast<Sex >(params.sex);
     c.appearance().hairStyleId = params.hairStyle;
     c.appearance().hairColorId = params.hairColor;
     c.appearance().faceId      = params.face;
-    c.setProfession(params.profession);
     c.selected = 1;
-
-    auto & stats = c.stats();
-    stats[StatId::BaseInt] = params.INT;
-    stats[StatId::BaseStr] = params.STR;
-    stats[StatId::BaseCon] = params.CON;
-    stats[StatId::BaseMen] = params.MEN;
-    stats[StatId::BaseDex] = params.DEX;
-    stats[StatId::BaseWit] = params.WIT;
-
     return CharacterCreationResult::Success;
 }
 
-auto World::getCharacterPreviews(std::wstring_view const playerAccount) -> std::vector<Ref<Character>>
+auto World::getCharacterPreviews(Player const & p) -> std::vector<Ref<Character>>
 {
     std::vector<Ref<Character>> result;
 
-    auto const & index = _characterPreviewsIndex[playerAccount];
+    if (!_characterPreviewsIndex.contains(p.accountName())) // no index means first connection since server booted
+    {
+        for (auto & c : Orm::fetchCharacterPreviews(p.accountId())) // cache all characters, load rest of data on demand
+        {
+            auto const id = c->id();
+            _characterPreviewsIndex[p.accountName()].emplace_back(id);
+            _characterPreviews.try_emplace(id, c.release());
+        }
+    }
+
+    auto const & index = _characterPreviewsIndex[p.accountName()];
     for (result.reserve(index.size()); auto const id : index)
         result.emplace_back(*_characterPreviews.at(id));
 

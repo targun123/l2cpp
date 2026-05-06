@@ -33,7 +33,7 @@ public:
 public:
     u32 accessLevel = 1;
     u32 deleteTime = 0;
-    u32 selected = 1;
+    u32 selected = 0;
     u16 evalAmount = 32, evalScore = 0;
 
     std::vector<u16> cubics;

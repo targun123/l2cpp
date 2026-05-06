@@ -13,7 +13,7 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
     u32 index;
     reader >> index;
 
-    auto const characterPreviews = World::getCharacterPreviews(player.accountName());
+    auto const characterPreviews = World::getCharacterPreviews(player);
     L2CPP_B_ASSERT(index < characterPreviews.size(),
                    "Invalid character selection index '{}': should be less than {}", index, characterPreviews.size());
 

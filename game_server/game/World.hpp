@@ -49,7 +49,7 @@ public:
     }
 
     static auto createCharacter(Player const &, CharacterCreationParameters const &) -> CharacterCreationResult;
-    static auto getCharacterPreviews(std::wstring_view playerAccount) -> std::vector<Ref<Character>>;
+    static auto getCharacterPreviews(Player const &) -> std::vector<Ref<Character>>;
     static auto addCharacterPreview(std::wstring_view playerAccount) -> Character &;
     static auto loadCharacterFromPreview(Character const &) -> Character &;
     static void moveCharacterBackToPreviews(Character &);

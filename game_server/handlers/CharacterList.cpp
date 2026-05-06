@@ -8,5 +8,5 @@
 
 DEFINE_PACKET_HANDLER(CharacterList)
 {
-    player.connection().send(CharacterListPacket(player, World::getCharacterPreviews(player.accountName())));
+    player.connection().send(CharacterListPacket(player, World::getCharacterPreviews(player)));
 }
