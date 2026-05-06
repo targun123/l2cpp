@@ -27,7 +27,7 @@ public:
     ~Connection();
 
 public:
-    auto id()            const -> u64;
+    auto id()            const -> ConnectionId;
     bool isAlive()       const;
     auto readBuffer()    const -> std::span<byte const>;
     auto encryptionKey() const -> std::span<byte const>;

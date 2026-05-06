@@ -20,6 +20,9 @@ public:
     ~Player();
 
 public:
+    auto id()        const -> u32;
+    auto accountId() const -> AccountId;
+
     auto connection()       -> Network::Connection &;
     auto connection() const -> Network::Connection const &;
 
@@ -29,8 +32,9 @@ public:
     auto playOk1()       const -> u32;
 
 public:
-    void setAccountName(std::wstring userName);
-    void setPlayOk1(u32 playOk1);
+    void setAccountId(AccountId);
+    void setAccountName(std::wstring);
+    void setPlayOk1(u32);
 
     void setCurrentCharacter(Character &);
     void unsetCurrentCharacter();

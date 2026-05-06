@@ -34,6 +34,8 @@ using Ref = std::reference_wrapper<T>;
 template<typename T>
 using PairOf = std::pair<T, T>;
 
+using ConnectionId = u32;
+using AccountId    = u32;
 using GameObjectId = u32;
 using PacketHeader = u16;
 using PacketOpCode = u16;

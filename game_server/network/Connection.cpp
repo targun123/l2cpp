@@ -28,12 +28,12 @@ constexpr EncryptionKey gEncryptionKey{{0x94, 0x35, 0x00, 0x00, 0xa1, 0x6c, 0x54
 
 struct Connection::ConnectionImpl
 {
-    u64 id;
+    ConnectionId                 id;
     boost::asio::ip::tcp::socket socket;
-    std::vector<byte> readBuffer;
+    std::vector<byte>            readBuffer;
     std::optional<EncryptionKey> encryptionKey, decryptionKey;
-    ConnectionClosedHandler closedHandler;
-    PacketReceivedHandler packetHandler;
+    ConnectionClosedHandler      closedHandler;
+    PacketReceivedHandler        packetHandler;
 
     explicit ConnectionImpl(boost::asio::ip::tcp::socket && socket);
 
@@ -51,7 +51,7 @@ template class Pimpl<Connection::ConnectionImpl>;
 Connection::ConnectionImpl::ConnectionImpl(boost::asio::ip::tcp::socket && socket)
     : socket(std::move(socket))
 {
-    static u64 uid = 0;
+    static decltype(id) uid = 0;
     id = ++uid;
     readBuffer.resize(sizeof(PacketHeader));
 }
@@ -154,7 +154,7 @@ Connection::Connection(boost::asio::ip::tcp::socket && socket)
 
 Connection::~Connection() { _impl->close(); }
 
-auto Connection::id()            const -> u64                   { return _impl->id;               }
+auto Connection::id()            const -> ConnectionId          { return _impl->id;               }
 auto Connection::isAlive()       const -> bool                  { return _impl->socket.is_open(); }
 auto Connection::readBuffer()    const -> std::span<byte const> { return _impl->readBuffer;       }
 auto Connection::encryptionKey() const -> std::span<byte const> { return gEncryptionKey;          }
