@@ -12,8 +12,8 @@ void Database::init()
     db.exec(R"(CREATE TABLE IF NOT EXISTS accounts (
         id            INTEGER          PRIMARY KEY,
         name          TEXT    NOT NULL UNIQUE,
-        password      TEXT    NOT NULL,
-        creation_date TEXT    NOT NULL DEFAULT DATETIME
+        password      BLOB    NOT NULL,
+        creation_date TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
     INSERT OR IGNORE INTO accounts (name, password) VALUES ("Admin", "a");
     )");
