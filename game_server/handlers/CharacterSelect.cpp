@@ -4,7 +4,7 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/World.hpp"
-#include "../network/packets/server/char_select/CharacterSelectPacket.hpp"
+#include "../network/packets/server/lobby/CharacterSelectPacket.hpp"
 
 DEFINE_PACKET_HANDLER(CharacterSelect)
 {

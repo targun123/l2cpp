@@ -28,7 +28,7 @@ CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encr
         << 0 // clanId
         << 0 // ?
         << c.appearance().sex
-        << c.appearance().race()
+        << c.appearance().race
         << c.profession()
         << 1 // active (?)
         << c.position()

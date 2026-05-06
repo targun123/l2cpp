@@ -15,9 +15,9 @@
 
 class ItemStorage;
 class Player;
-class PlayerAppearance;
 class Shortcut;
 struct CharacterStatus;
+struct PlayerAppearance;
 
 class Character : public Actor
 {

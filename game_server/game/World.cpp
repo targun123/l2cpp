@@ -13,6 +13,7 @@
 #include "../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
+#include "../services/Database.hpp"
 #include "../utils/Conversion.hpp"
 #include "../utils/Maths.hpp"
 #include "actor/Character.hpp"
@@ -26,12 +27,14 @@
 #include "components/NpcAppearance.hpp"
 #include "components/PlayerAppearance.hpp"
 #include "components/Position.hpp"
+#include "components/Stats.hpp"
 #include "constants/Profession.hpp"
 #include "constants/Race.hpp"
 #include "constants/Sex.hpp"
 #include "constants/SocialAction.hpp"
 #include "constants/SystemMessageId.hpp"
 #include "ecs/System.hpp"
+#include "lobby/CharacterCreationParameters.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
@@ -45,7 +48,6 @@
 
 // C++ includes
 #include <ranges>
-#include <unordered_set>
 
 namespace SC = Network::Packet::Server; // Server -> Client
 
@@ -66,7 +68,7 @@ static void addDummy()
     auto & d = World::addCharacter();
     d.setPosY(d.position().y + (count++ % 2 ? 35 : -35));
     d.setName(std::format(L"dummy{}", d.id()));
-    d.appearance().setRace(Race::Elf);
+    d.appearance().race = Race::Elf;
     d.appearance().sex = Sex::Female;
     d.appearance().collisionHeight = 23;
     d.appearance().collisionRadius = 7.5;
@@ -155,6 +157,80 @@ void World::update(ClockDuration const elapsed)
         delActor(a);
 
     _scheduledForDeletion.clear();
+}
+
+auto World::createCharacter(Player const & p, CharacterCreationParameters const & params) -> CharacterCreationResult
+{
+    try
+    {
+        SQLite::Statement accountIdQuery(Database::instance(), R"(SELECT id FROM accounts WHERE name LIKE :name)");
+        accountIdQuery.bind(":name", Utils::toString(p.accountName()));
+        L2CPP_B_ASSERT(accountIdQuery.executeStep(),
+                       "Failed to fetch account id for player '{}'", p.connection().id());
+        auto const accountId = accountIdQuery.getColumn(0).getUInt();
+
+        SQLite::Transaction tr(Database::instance());
+
+        SQLite::Statement charQuery(Database::instance(), R"(
+            INSERT INTO characters (name, race, sex, hair_style, hair_color, face)
+                VALUES (:name, :race, :sex, :hair_style, :hair_color, :face)
+        )");
+        charQuery.bind(":name",       Utils::toString(params.name));
+        charQuery.bind(":race",       std::to_underlying(params.race));
+        charQuery.bind(":sex",        std::to_underlying(params.sex));
+        charQuery.bind(":hair_style", params.hairStyle);
+        charQuery.bind(":hair_color", params.hairColor);
+        charQuery.bind(":face",       params.face);
+        charQuery.exec();
+
+        auto const charId = Database::instance().getLastInsertRowid();
+
+        SQLite::Statement charOwnerQuery(Database::instance(),
+                                         R"(INSERT INTO character_owners VALUES (:account_id, :character_id))");
+        charOwnerQuery.bind(":account_id",   accountId);
+        charOwnerQuery.bind(":character_id", charId);
+        charOwnerQuery.exec();
+
+        SQLite::Statement unselectCharPreviews(Database::instance(), R"(
+            UPDATE character_previews SET selected = FALSE WHERE character_id = (
+                SELECT character_id FROM character_owners WHERE account_id = :account_id)
+        )");
+        unselectCharPreviews.bind(":account_id", accountId);
+        unselectCharPreviews.exec();
+
+        SQLite::Statement charPreviewQuery(Database::instance(),
+                                           R"(INSERT INTO character_previews (character_id) VALUES (:character_id))");
+        charPreviewQuery.bind(":character_id", charId);
+        charPreviewQuery.exec();
+
+        tr.commit();
+    }
+    catch (SQLite::Exception const & e)
+    {
+        SPDLOG_ERROR(L"Failed to create new character for player '{}': SQL error '{}' (code: {})",
+                     p.accountName(), Utils::toWideString(e.what()), e.getErrorCode());
+        return CharacterCreationResult::Failure;
+    }
+
+    auto & c = addCharacterPreview(p.accountName());
+    c.setName(std::move(params.name));
+    c.appearance().race        = params.race;
+    c.appearance().sex         = params.sex;
+    c.appearance().hairStyleId = params.hairStyle;
+    c.appearance().hairColorId = params.hairColor;
+    c.appearance().faceId      = params.face;
+    c.setProfession(params.profession);
+    c.selected = 1;
+
+    auto & stats = c.stats();
+    stats[StatId::BaseInt] = params.INT;
+    stats[StatId::BaseStr] = params.STR;
+    stats[StatId::BaseCon] = params.CON;
+    stats[StatId::BaseMen] = params.MEN;
+    stats[StatId::BaseDex] = params.DEX;
+    stats[StatId::BaseWit] = params.WIT;
+
+    return CharacterCreationResult::Success;
 }
 
 auto World::getCharacterPreviews(std::wstring_view const playerAccount) -> std::vector<Ref<Character>>

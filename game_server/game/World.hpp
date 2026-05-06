@@ -4,6 +4,8 @@
 #pragma once
 
 // Project includes
+#include "constants/CharacterCreationResult.hpp"
+
 #include <l2cpp/Typedefs.hpp>
 
 // C++ includes
@@ -14,6 +16,7 @@
 
 class Actor;
 class Character;
+struct CharacterCreationParameters;
 struct Loot;
 class Monster;
 class Npc;
@@ -45,6 +48,7 @@ public:
         _systems.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
+    static auto createCharacter(Player const &, CharacterCreationParameters const &) -> CharacterCreationResult;
     static auto getCharacterPreviews(std::wstring_view playerAccount) -> std::vector<Ref<Character>>;
     static auto addCharacterPreview(std::wstring_view playerAccount) -> Character &;
     static auto loadCharacterFromPreview(Character const &) -> Character &;

@@ -27,7 +27,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << c.appearance().headAngle
         << c.id()
         << c.name()
-        << c.appearance().race()
+        << c.appearance().race
         << c.appearance().sex
         << c.profession()
         << c.status().level()

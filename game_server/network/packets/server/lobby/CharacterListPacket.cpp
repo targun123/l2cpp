@@ -34,7 +34,7 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << 0 // clanId
             << 0 // ?
             << c.appearance().sex
-            << c.appearance().race()
+            << c.appearance().race
             << c.profession()
             << 1 // active (?)
             << c.position()

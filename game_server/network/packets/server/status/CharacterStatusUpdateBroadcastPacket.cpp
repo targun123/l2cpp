@@ -28,7 +28,7 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0 // vehicleId
         << c.id()
         << c.name()
-        << appearance.race()
+        << appearance.race
         << appearance.sex
         << c.profession()
         << 0 // ?
