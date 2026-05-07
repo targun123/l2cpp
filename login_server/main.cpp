@@ -207,9 +207,7 @@ int main() try
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-    if constexpr (Config::isDebugMode)
-        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
-
+    spdlog::set_pattern("[%^%R:%S.%e%$] [%L] %v [%s:%#]");
     spdlog::set_level(spdlog::level::trace);
 
     SPDLOG_INFO("Initializing database…");

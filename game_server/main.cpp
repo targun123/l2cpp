@@ -52,7 +52,7 @@ int main(int const argc, char const * const argv[])
 
 void setupLogger()
 {
-    spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
+    spdlog::set_pattern("[%^%R:%S.%e%$] [%L] %v [%s:%#]");
     spdlog::set_level(spdlog::level::trace);
 }
 
