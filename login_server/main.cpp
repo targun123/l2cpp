@@ -38,7 +38,7 @@ static void handleGameGuardPacket(Connection & conn)
 
 static void handleAuthPacket(Connection & conn)
 {
-    auto const body = std::span(conn.readBuffer).subspan(sizeof(PacketHeader) + sizeof(PacketOpCode));
+    auto const body = std::span(conn.readBuffer).subspan(sizeof(PacketHeader) + 1);
 
     try
     {
