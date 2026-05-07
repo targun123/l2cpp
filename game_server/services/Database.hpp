@@ -7,9 +7,12 @@
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Transaction.h>
 
+// C++ includes
+#include <filesystem>
+
 class Database
 {
 public:
-    static void init();
+    static void init(std::vector<std::filesystem::path> const & files);
     static auto instance() -> SQLite::Database &;
 };

@@ -12,6 +12,7 @@ target_sources(${PROJECT_NAME}
         l2cpp/Misc.cpp
         l2cpp/network/Packet.cpp
         l2cpp/network/SocketListener.cpp
+        l2cpp/utils/File.cpp
 )
 target_sources(${PROJECT_NAME} PUBLIC
     FILE_SET HEADERS
@@ -23,6 +24,7 @@ target_sources(${PROJECT_NAME} PUBLIC
         l2cpp/OptRef.hpp
         l2cpp/Pimpl.hpp
         l2cpp/Typedefs.hpp
+        l2cpp/utils/File.hpp
         l2cpp/utils/Enum.hpp
         l2cpp/utils/EnumMask.hpp
         l2cpp/utils/Traits.hpp

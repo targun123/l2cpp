@@ -35,10 +35,10 @@
 #include "constants/SystemMessageId.hpp"
 #include "ecs/System.hpp"
 #include "lobby/CharacterCreationParameters.hpp"
+#include "systems/ActorAbnormalEffectSystem.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
-#include "systems/ActorAbnormalEffectSystem.hpp"
 #include "systems/ActorStatsUpdateSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>

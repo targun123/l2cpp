@@ -67,7 +67,15 @@ template class Pimpl<Application::ApplicationImpl>;
 bool Application::ApplicationImpl::load() const try
 {
     SPDLOG_INFO("Initializing database…");
-    Database::init();
+    Database::init({
+        // Order is significant
+        "sql/accounts.sql",
+        "sql/characters.sql",
+        "sql/character_owners.sql",
+        "sql/character_previews.sql",
+        "sql/ls_data.sql",
+        "sql/gs_data.sql",
+    });
     SPDLOG_INFO("Database initialization done.");
 
     SPDLOG_INFO("Loading skills…");
