@@ -3,13 +3,13 @@
 
 // Project includes
 #include "Constants.hpp"
+#include "Orm.hpp"
 #include "crypto/Blowfish.hpp"
 #include "crypto/Checksum.hpp"
 #include "crypto/Rsa.hpp"
 #include "network/Connection.hpp"
 #include "network/OpCodes.hpp"
 
-#include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Packet.hpp>
@@ -37,23 +37,11 @@ static void handleGameGuardPacket(Connection & conn)
     conn.send(Packet(ServerOpCode::GameGuard) << ignoreGg);
 }
 
-static void handleAuthPacket(Connection & conn)
+static void handleAuthPacket(Connection & conn) try
 {
     auto const body = std::span(conn.readBuffer).subspan(sizeof(PacketHeader) + 1);
 
-    try
-    {
-        Rsa::instance().decrypt(body);
-    }
-    catch (l2cpp::Exception const & e)
-    {
-        SPDLOG_ERROR("Rsa::decrypt() failed:\n{}", l2cpp::formatExceptionStack(e));
-        return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 20); // system error
-    }
-
-    conn.userName = reinterpret_cast<char const *>(body.data() + 0x62);
-    conn.password = reinterpret_cast<char const *>(body.data() + 0x70);
-
+    // AuthenticationFailed argument meaning
     //  0: ""
     //  1: "System error, please log in again later." (448)
     //  2: "Password does not match this account. Confirm your account information and log in again later." (449+450)
@@ -89,36 +77,40 @@ static void handleAuthPacket(Connection & conn)
     // 34: ""
     // 35: "You are using a computer that does not allow you to log in with two accounts at the same time." (1407)
 
-    SQLite::Statement query(Database::instance(), "SELECT password FROM accounts WHERE name LIKE ?");
-    query.bindNoCopy(1, conn.userName);
-    if (query.executeStep())
+    Rsa::instance().decrypt(body);
+
+    conn.userName = reinterpret_cast<char const *>(body.data() + 0x62);
+    conn.password = reinterpret_cast<char const *>(body.data() + 0x70);
+
+    if (conn.password.empty())
+        return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 21); // access failed
+
+    std::optional<std::vector<byte>> password;
+    L2CPP_F_ASSERT([&] { password = Orm::fetchAccountPassword(conn.userName); },
+                   "Failed to fetch password for account '{}", conn.userName);
+
+    if (password)
     {
-        if (static_cast<char const *>(query.getColumn("password").getBlob()) != conn.password)
+        std::vector<byte> tmp;
+        tmp.append_range(conn.password);
+        if (password != tmp)
             return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 2); // password does not match
     }
-    else if (conn.password.empty())
-        return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 21); // access failed
     else /*if (Config::autoCreateAccountEnabled)*/
     {
         SPDLOG_TRACE("Creating new account '{}'", conn.userName);
-        SQLite::Statement insertQuery(Database::instance(), "INSERT INTO accounts (name, password) VALUES (?, ?)");
-        insertQuery.bindNoCopy(1, conn.userName);
-        insertQuery.bindNoCopy(2, conn.password);
-        try
-        {
-            insertQuery.exec();
-        }
-        catch (SQLite::Exception const & e)
-        {
-            SPDLOG_ERROR("Failed to create account '{}': SQL error '{}' (code: {})",
-                         conn.userName, e.what(), e.getErrorCode());
-            return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 1); // system error retry later
-        }
+        L2CPP_F_ASSERT([&] { Orm::createAccount(conn.userName, conn.password); },
+                       "Failed to create new account '{}'", conn.userName);
     }
 
     std::array<byte, sizeof(u64)> loginKey;
     RAND_bytes(loginKey.data(), static_cast<int>(loginKey.size()));
     conn.send(Packet(ServerOpCode::AuthenticationSuccess) << loginKey);
+}
+catch (std::exception const & e)
+{
+    SPDLOG_ERROR("Failed to authenticate user:\n{}", l2cpp::formatExceptionStack(e));
+    conn.send(Packet(ServerOpCode::AuthenticationFailed) << 20); // system error
 }
 
 static void handleServerListPacket(Connection & conn)
