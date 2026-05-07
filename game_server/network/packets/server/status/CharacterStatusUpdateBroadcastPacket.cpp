@@ -78,15 +78,16 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0_u8  // private store type
     ;
 
-    *this << static_cast<u16>(c.cubics.size());
-    for (auto const id : c.cubics)
+    std::array<u16, 0> const cubics;
+    *this << static_cast<u16>(cubics.size());
+    for (auto const id : cubics)
         *this << id;
 
     *this
         << false // looking for party members
         << 0     // abnormal visual effects
-        << static_cast<u8>(c.evalAmount)
-        << c.evalScore
+        << 0_u8  // evalAmount
+        << 0_u16 // evalScore
         << c.profession()
         << static_cast<u32>(stats[StatId::MaxCp])
         << static_cast<u32>(stats[StatId::CurCp])

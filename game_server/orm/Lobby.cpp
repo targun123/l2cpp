@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../game/actor/Character.hpp"
+#include "../game/components/CharacterSelectionData.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/lobby/CharacterCreationParameters.hpp"
 #include "../services/Database.hpp"
@@ -36,7 +37,9 @@ try
         c->appearance().hairStyleId = query.getColumn("hair_style").getUInt();
         c->appearance().hairColorId = query.getColumn("hair_color").getUInt();
         c->appearance().faceId      = query.getColumn("face"      ).getUInt();
-        c->selected                 = query.getColumn("selected"  ).getUInt();
+
+        auto & data = c->addComponent<CharacterSelectionData>();
+        data.selected = query.getColumn("selected").getUInt();
     }
     return previews;
 }

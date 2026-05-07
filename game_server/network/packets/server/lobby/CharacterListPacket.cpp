@@ -6,6 +6,7 @@
 // Project includes
 #include "../../../../Player.hpp"
 #include "../../../../game/actor/Character.hpp"
+#include "../../../../game/components/CharacterSelectionData.hpp"
 #include "../../../../game/components/CharacterStatus.hpp"
 #include "../../../../game/components/Gear.hpp"
 #include "../../../../game/components/PlayerAppearance.hpp"
@@ -82,9 +83,9 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << c.appearance().faceId
             << c.stats()[StatId::MaxHp]
             << c.stats()[StatId::MaxMp]
-            << c.deleteTime
+            << 0 // remainingSecondsBeforeDeletion
             << c.profession()
-            << c.selected
+            << (c.component<CharacterSelectionData>()->selected ? 1 : 0)
             << (weapon ? weapon->enchantLevel : 0_u8)
         ;
     }

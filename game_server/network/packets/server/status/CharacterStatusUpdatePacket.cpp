@@ -119,8 +119,9 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << c.status().pvpCount
     ;
 
-    *this << static_cast<u16>(c.cubics.size());
-    for (auto const id : c.cubics)
+    std::array<u16, 0> const cubics;
+    *this << static_cast<u16>(cubics.size());
+    for (auto const id : cubics)
         *this << id;
 
     *this
@@ -135,9 +136,9 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << 0     // ?
         << 0     // ?
         << 0     // ?
-        << c.evalAmount
-        << c.evalScore
-        << 0 // ?
+        << 0_u16 // evalAmount
+        << 0_u16 // evalScore
+        << 0     // ?
         << c.inventory().limit()
         << c.profession()
         << 0 // special effects? circles around player...

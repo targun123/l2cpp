@@ -21,6 +21,7 @@
 #include "actor/Npc.hpp"
 #include "actor/NpcDirectory.hpp"
 #include "components/ActorStatus.hpp"
+#include "components/CharacterSelectionData.hpp"
 #include "components/CharacterStatus.hpp"
 #include "components/DeletionTimer.hpp"
 #include "components/Loot.hpp"
@@ -160,7 +161,7 @@ auto World::createCharacter(Player const & p, CharacterCreationParameters const 
     c.appearance().hairStyleId = params.hairStyle;
     c.appearance().hairColorId = params.hairColor;
     c.appearance().faceId      = params.face;
-    c.selected = 1;
+    c.addComponent<CharacterSelectionData>().selected = true;
     return CharacterCreationResult::Success;
 }
 
