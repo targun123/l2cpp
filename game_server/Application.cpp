@@ -12,7 +12,6 @@
 #include "network/Connection.hpp"
 #include "network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "network/packets/server/client/ClientForceDisconnectPacket.hpp"
-#include "services/Database.hpp"
 #include "utils/Chrono.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
@@ -22,6 +21,7 @@
 #include <l2cpp/details/Pimpl.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/SocketListener.hpp>
+#include <l2cpp/services/Database.hpp>
 
 // Third-party includes
 #include <boost/asio.hpp>

@@ -8,8 +8,9 @@
 #include "../game/components/CharacterSelectionData.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/lobby/CharacterCreationParameters.hpp"
-#include "../services/Database.hpp"
 #include "../utils/Conversion.hpp"
+
+#include <l2cpp/services/Database.hpp>
 
 // Third-party includes
 #include <spdlog/spdlog.h>
