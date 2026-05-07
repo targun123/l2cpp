@@ -14,6 +14,7 @@
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/SocketListener.hpp>
+#include <l2cpp/services/Database.hpp>
 
 // Third-party includes
 #include <boost/asio/signal_set.hpp>
@@ -47,11 +48,73 @@ static void handleAuthPacket(Connection & conn)
     catch (l2cpp::Exception const & e)
     {
         SPDLOG_ERROR("Rsa::decrypt() failed:\n{}", l2cpp::formatExceptionStack(e));
-        return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 0x01); // system error
+        return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 20); // system error
     }
 
     conn.userName = reinterpret_cast<char const *>(body.data() + 0x62);
     conn.password = reinterpret_cast<char const *>(body.data() + 0x70);
+
+    //  0: ""
+    //  1: "System error, please log in again later." (448)
+    //  2: "Password does not match this account. Confirm your account information and log in again later." (449+450)
+    // ...
+    //  4: "Access failed. Please try again later. ." (461+462+463)
+    //  5: "Your account information is incorrect.
+    //      For more details, please contact our customer service center at http://support.lineage2.com" (453+454)
+    //  6: "Access failed. Please try again later. ." (461+462+463)
+    //  7: "The account is already in use. Access denied. " (455)
+    //  8: "Access failed. Please try again later. ." (461+462+463)
+    // ...
+    // 12: "Lineage II game services may be used by individuals 15 years of age or older except for PvP servers,
+    //      which may only be used by adults 18 years of age and older. (Korea Only)" (456)
+    // 13: "Access failed. Please try again later. ." (461+462+463)
+    // ...
+    // 15: "Due to a large number of users currently accessing our server, your login attempt has failed.
+    //      Please wait a little while and attempt to log in again." (1650)
+    // 16: "Server under maintenance. Please try again later. " (457)
+    // 17: "Please login after changing your temporary password." (396)
+    // 18: "Your usage term has expired.  Please visit the official Lineage II website at http://www.lineage2.com to
+    //      reactivate your account." (458+459+460)
+    // 19: "You have no more time left on your account." (398)
+    // 20: "System error." (399)
+    // 21: "Access failed. " (461)
+    // 22: "This server is reserved for players in Korea.
+    //      To use Lineage II game services, please connect to the server in your region. " (621)
+    // 23: ""
+    // ...
+    // 30: "This week’s usage time has finished." (756)
+    // 31: "The security card number is invalid." (1243)
+    // 32: "Users who have not verified their age cannot log in between 10:00 p.m. and 6:00 a.m." (1242)
+    // 33: "This server cannot be accessed by the coupon you are using." (1340)
+    // 34: ""
+    // 35: "You are using a computer that does not allow you to log in with two accounts at the same time." (1407)
+
+    SQLite::Statement query(Database::instance(), "SELECT password FROM accounts WHERE name LIKE ?");
+    query.bindNoCopy(1, conn.userName);
+    if (query.executeStep())
+    {
+        if (static_cast<char const *>(query.getColumn("password").getBlob()) != conn.password)
+            return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 2); // password does not match
+    }
+    else if (conn.password.empty())
+        return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 21); // access failed
+    else /*if (Config::autoCreateAccountEnabled)*/
+    {
+        SPDLOG_TRACE("Creating new account '{}'", conn.userName);
+        SQLite::Statement insertQuery(Database::instance(), "INSERT INTO accounts (name, password) VALUES (?, ?)");
+        insertQuery.bindNoCopy(1, conn.userName);
+        insertQuery.bindNoCopy(2, conn.password);
+        try
+        {
+            insertQuery.exec();
+        }
+        catch (SQLite::Exception const & e)
+        {
+            SPDLOG_ERROR("Failed to create account '{}': SQL error '{}' (code: {})",
+                         conn.userName, e.what(), e.getErrorCode());
+            return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 1); // system error retry later
+        }
+    }
 
     std::array<byte, sizeof(u64)> loginKey;
     RAND_bytes(loginKey.data(), static_cast<int>(loginKey.size()));
@@ -148,6 +211,10 @@ int main() try
         spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
 
     spdlog::set_level(spdlog::level::trace);
+
+    SPDLOG_INFO("Initializing database…");
+    Database::init({"sql/accounts.sql", "sql/ls_data.sql"});
+    SPDLOG_INFO("Database initialization done.");
 
     std::list<Connection> connections;
 
