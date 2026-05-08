@@ -1,6 +1,8 @@
 /// @author    Chnossos
 /// @date      Created on 2026-05-05
 
+// ReSharper disable CppUnusedIncludeDirective
+
 #pragma once
 
 // Third-party includes

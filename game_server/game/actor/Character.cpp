@@ -136,9 +136,6 @@ auto Character::inventory() const -> ItemStorage const & { return _impl->invento
 
 bool Character::isAttackable() const { return false; }
 
-template<typename T, typename F>
-void assign(T & t, F f) { t = static_cast<T>(f); }
-
 void Character::setProfession(Profession const profession) { _impl->profession = profession; }
 
 auto Character::setShortcut(Shortcut shortcut) -> Shortcut &

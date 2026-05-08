@@ -19,7 +19,7 @@ auto Orm::fetchCharacterPreviews(AccountId const accountId) -> std::vector<std::
 try
 {
     static SQLite::Statement query(Database::instance(), R"(
-        SELECT name, race, sex, hair_style, hair_color, face, selected FROM characters
+        SELECT name, starting_profession, sex, hair_style, hair_color, face, selected FROM characters
         JOIN character_previews cp ON cp.character_id = characters.id
         WHERE id IN (SELECT character_id FROM character_owners WHERE account_id = ?)
         ORDER BY creation_date
@@ -33,11 +33,11 @@ try
     {
         auto const & c = previews.emplace_back(std::make_unique<Character>());
         c->setName(Utils::toWideString(query.getColumn("name").getString()));
-        c->appearance().race        = static_cast<Race>(query.getColumn("race").getUInt());
-        c->appearance().sex         = static_cast<Sex >(query.getColumn("sex" ).getUInt());
-        c->appearance().hairStyleId = query.getColumn("hair_style").getUInt();
-        c->appearance().hairColorId = query.getColumn("hair_color").getUInt();
-        c->appearance().faceId      = query.getColumn("face"      ).getUInt();
+        c->appearance().setStartingProfession(static_cast<Profession>(query.getColumn("starting_profession").getUInt()));
+        c->appearance().setSex               (static_cast<Sex>(query.getColumn("sex").getUInt()));
+        c->appearance().setHairStyle         (query.getColumn("hair_style").getUInt());
+        c->appearance().setHairColor         (query.getColumn("hair_color").getUInt());
+        c->appearance().setFace              (query.getColumn("face").getUInt());
 
         auto & data = c->addComponent<CharacterSelectionData>();
         data.selected = query.getColumn("selected").getUInt();
@@ -51,22 +51,20 @@ catch (SQLite::Exception const & e)
     return {};
 }
 
-void Orm::createCharacter(AccountId const accountId, CharacterCreationParameters const & params)
-
-try
+void Orm::createCharacter(AccountId const accountId, CharacterCreationParameters const & params) try
 {
     SQLite::Transaction tr(Database::instance());
 
     SQLite::Statement charQuery(Database::instance(), R"(
-        INSERT INTO characters (name, race, sex, hair_style, hair_color, face)
-            VALUES (:name, :race, :sex, :hair_style, :hair_color, :face)
+        INSERT INTO characters (name, starting_profession, sex, hair_style, hair_color, face)
+            VALUES (:name, :starting_profession, :sex, :hair_style, :hair_color, :face)
     )");
-    charQuery.bind(":name",       Utils::toString(params.name));
-    charQuery.bind(":race",       std::to_underlying(params.race));
-    charQuery.bind(":sex",        std::to_underlying(params.sex));
-    charQuery.bind(":hair_style", params.hairStyle);
-    charQuery.bind(":hair_color", params.hairColor);
-    charQuery.bind(":face",       params.face);
+    charQuery.bind(":name",                Utils::toString(params.name));
+    charQuery.bind(":starting_profession", std::to_underlying(params.profession));
+    charQuery.bind(":sex",                 std::to_underlying(params.sex));
+    charQuery.bind(":hair_style",          params.hairStyle);
+    charQuery.bind(":hair_color",          params.hairColor);
+    charQuery.bind(":face",                params.face);
     charQuery.exec();
 
     auto const charId = Database::instance().getLastInsertRowid();

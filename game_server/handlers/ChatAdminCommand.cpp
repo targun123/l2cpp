@@ -123,11 +123,11 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         auto & d = World::addCharacter();
         d.setName(L"dummy");
         d.setPosition(c.position());
-        d.appearance().race = Race::Elf;
-        d.appearance().sex  = Sex::Female;
+        d.appearance().setStartingProfession(Profession::ElvenMystic);
+        d.appearance().setSex(Sex::Female);
         d.appearance().collisionHeight = 23;
         d.appearance().collisionRadius = 7.5;
-        d.setProfession(Profession::ElvenMystic);
+        d.setProfession(d.appearance().startingProfession());
         World::broadcastAround(d, CharacterStatusUpdateBroadcastPacket(d));
     }
 }

@@ -27,9 +27,9 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << c.appearance().headAngle
         << c.id()
         << c.name()
-        << c.appearance().race
-        << c.appearance().sex
-        << c.profession()
+        << c.appearance().race()
+        << c.appearance().sex()
+        << c.appearance().startingProfession()
         << c.status().level()
         << c.status().xp
         << static_cast<u32>(stats[StatId::Str])
@@ -102,9 +102,9 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << stats[StatId::PAtkSpeed] / stats[StatId::BasePAtkSpeed]
         << c.appearance().collisionRadius
         << c.appearance().collisionHeight
-        << c.appearance().hairStyleId
-        << c.appearance().hairColorId
-        << c.appearance().faceId
+        << c.appearance().hairStyle()
+        << c.appearance().hairColor()
+        << c.appearance().face()
         << (c.accessLevel > 0 ? 1 : 0)
         << c.title()
         << 0                  // clanId
@@ -153,6 +153,6 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z
-        << c.appearance().nameColor
+        << c.appearance().nameColor()
     ;
 }

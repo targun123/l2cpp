@@ -34,9 +34,9 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << player.playOk1()
             << 0 // clanId
             << 0 // ?
-            << c.appearance().sex
-            << c.appearance().race
-            << c.profession()
+            << c.appearance().sex()
+            << c.appearance().race()
+            << c.appearance().startingProfession()
             << 1 // active (?)
             << c.position()
             << c.stats()[StatId::CurHp]
@@ -78,9 +78,9 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << c.gear().itemTemplateId(Back)
             << c.gear().itemTemplateId(RightHand)
             << c.gear().itemTemplateId(Hair)
-            << c.appearance().hairStyleId
-            << c.appearance().hairColorId
-            << c.appearance().faceId
+            << c.appearance().hairStyle()
+            << c.appearance().hairColor()
+            << c.appearance().face()
             << c.stats()[StatId::MaxHp]
             << c.stats()[StatId::MaxMp]
             << 0 // remainingSecondsBeforeDeletion

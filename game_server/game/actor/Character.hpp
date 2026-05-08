@@ -12,9 +12,9 @@
 
 class ItemStorage;
 class Player;
+class PlayerAppearance;
 class Shortcut;
 struct CharacterStatus;
-struct PlayerAppearance;
 
 class Character : public Actor
 {
@@ -45,7 +45,7 @@ public:
     bool isAttackable() const override;
 
 public:
-    void setProfession(Profession profession);
+    void setProfession(Profession);
 
     auto setShortcut(Shortcut shortcut) -> Shortcut &;
     void delShortcut(size_t index);

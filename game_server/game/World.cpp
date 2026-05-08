@@ -68,11 +68,11 @@ static void addDummy()
     auto & d = World::addCharacter();
     d.setPosY(d.position().y + (count++ % 2 ? 35 : -35));
     d.setName(std::format(L"dummy{}", d.id()));
-    d.appearance().race = Race::Elf;
-    d.appearance().sex = Sex::Female;
+    d.appearance().setStartingProfession(Profession::ElvenMystic);
+    d.appearance().setSex(Sex::Female);
     d.appearance().collisionHeight = 23;
     d.appearance().collisionRadius = 7.5;
-    d.setProfession(Profession::ElvenMystic);
+    d.setProfession(d.appearance().startingProfession());
 
     auto & loot = d.addComponent<Loot>();
     loot.xp = 50;
@@ -156,11 +156,11 @@ auto World::createCharacter(Player const & p, CharacterCreationParameters const 
     Orm::createCharacter(p.accountId(), params);
     auto & c = addCharacterPreview(p.accountName());
     c.setName(params.name);
-    c.appearance().race = static_cast<Race>(params.race);
-    c.appearance().sex  = static_cast<Sex >(params.sex);
-    c.appearance().hairStyleId = params.hairStyle;
-    c.appearance().hairColorId = params.hairColor;
-    c.appearance().faceId      = params.face;
+    c.appearance().setStartingProfession(params.profession);
+    c.appearance().setSex(params.sex);
+    c.appearance().setHairStyle(params.hairStyle);
+    c.appearance().setHairColor(params.hairColor);
+    c.appearance().setFace(params.face);
     c.addComponent<CharacterSelectionData>().selected = true;
     return CharacterCreationResult::Success;
 }

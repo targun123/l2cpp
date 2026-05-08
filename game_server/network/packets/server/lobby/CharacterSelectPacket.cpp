@@ -27,9 +27,9 @@ CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encr
         << encryptionKey
         << 0 // clanId
         << 0 // ?
-        << c.appearance().sex
-        << c.appearance().race
-        << c.profession()
+        << c.appearance().sex()
+        << c.appearance().race()
+        << c.appearance().startingProfession()
         << 1 // active (?)
         << c.position()
         << stats[StatId::CurHp]

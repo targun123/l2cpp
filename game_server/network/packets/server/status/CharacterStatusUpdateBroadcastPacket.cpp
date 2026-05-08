@@ -28,9 +28,9 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0 // vehicleId
         << c.id()
         << c.name()
-        << appearance.race
-        << appearance.sex
-        << c.profession()
+        << appearance.race()
+        << appearance.sex()
+        << c.appearance().startingProfession()
         << 0 // ?
         << gear.itemTemplateId(Head)
         << gear.itemTemplateId(RightHand)
@@ -60,9 +60,9 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << stats[StatId::PAtkSpeed] / stats[StatId::BasePAtkSpeed]
         << appearance.collisionRadius
         << appearance.collisionHeight
-        << appearance.hairStyleId
-        << appearance.hairColorId
-        << appearance.faceId
+        << appearance.hairStyle()
+        << appearance.hairColor()
+        << appearance.face()
         << c.title()
         << 0     // clanId
         << 0     // clan crest id
@@ -100,6 +100,6 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z
-        << appearance.nameColor
+        << appearance.nameColor()
     ;
 }
