@@ -13,4 +13,5 @@ namespace Orm
 {
     auto fetchCharacterPreviews(AccountId) -> std::vector<std::unique_ptr<Character>>;
     void createCharacter(AccountId, CharacterCreationParameters const &);
+    void selectCharacter(AccountId, std::wstring_view selectedCharName);
 }

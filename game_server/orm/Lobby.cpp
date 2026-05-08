@@ -93,3 +93,27 @@ catch (SQLite::Exception const & e)
 {
     L2CPP_THROW(e.getErrorCode(), "SQL error '{}'", e.what());
 }
+
+void Orm::selectCharacter(AccountId const accountId, std::wstring_view const selectedCharName)
+try
+{
+    SQLite::Transaction tr(Database::instance());
+
+    SQLite::Statement query(Database::instance(), R"(
+        UPDATE character_previews SET selected = FALSE WHERE character_id IN
+            (SELECT character_id FROM character_owners WHERE account_id = ?))");
+    query.bind(1, accountId);
+    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to unselect all characters");
+
+    query = SQLite::Statement(Database::instance(), R"(
+        UPDATE character_previews SET selected = TRUE WHERE character_id = (
+            SELECT id FROM characters WHERE name LIKE ?))");
+    query.bind(1, Utils::toString(selectedCharName));
+    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to select character");
+
+    tr.commit();
+}
+catch (SQLite::Exception const & e)
+{
+    L2CPP_THROW(e.getErrorCode(), "SQL error '{}'", e.what());
+}

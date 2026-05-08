@@ -1,4 +1,3 @@
--- DROP TABLE IF EXISTS characters;
 CREATE TABLE IF NOT EXISTS characters (
     id                  INTEGER          PRIMARY KEY,
     name                TEXT    NOT NULL UNIQUE,
