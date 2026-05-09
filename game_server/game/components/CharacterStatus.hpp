@@ -4,9 +4,8 @@
 #pragma once
 
 // Project includes
+#include "../../Typedefs.hpp"
 #include "ActorStatus.hpp"
-
-#include <l2cpp/Typedefs.hpp>
 
 struct CharacterStatus : public ActorStatus
 {

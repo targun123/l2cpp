@@ -4,11 +4,10 @@
 #pragma once
 
 // Project includes
+#include "../../Typedefs.hpp"
 #include "../constants/Profession.hpp"
 #include "../constants/Race.hpp"
 #include "../constants/Sex.hpp"
-
-#include <l2cpp/Typedefs.hpp>
 
 struct CharacterCreationParameters
 {

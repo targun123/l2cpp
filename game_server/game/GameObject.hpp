@@ -4,8 +4,9 @@
 #pragma once
 
 // Project includes
+#include "../Typedefs.hpp"
+
 #include <l2cpp/Pimpl.hpp>
-#include <l2cpp/Typedefs.hpp>
 
 class GameObject
 {

@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include <l2cpp/Typedefs.hpp>
+#include "../../Typedefs.hpp"
 
 enum class ItemCategory : s16
 {

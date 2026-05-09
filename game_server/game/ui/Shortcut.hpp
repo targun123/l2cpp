@@ -4,14 +4,11 @@
 #pragma once
 
 // Project includes
+#include "../../Typedefs.hpp"
 #include "../constants/ShortcutType.hpp"
 
 #include <l2cpp/Pimpl.hpp>
-#include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Serialization.hpp>
-
-// C++ includes
-#include <optional>
 
 class Shortcut
 {

@@ -4,9 +4,8 @@
 #pragma once
 
 // Project includes
+#include "../../../Typedefs.hpp"
 #include "../../constants/AbnormalEffectType.hpp"
-
-#include <l2cpp/Typedefs.hpp>
 
 class Actor;
 class SkillTemplate;

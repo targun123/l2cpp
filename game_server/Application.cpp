@@ -5,6 +5,7 @@
 
 // Project includes
 #include "Player.hpp"
+#include "Typedefs.hpp"
 #include "game/World.hpp"
 #include "game/actor/NpcDirectory.hpp"
 #include "game/skill/SkillTemplateDirectory.hpp"
@@ -17,7 +18,6 @@
 #include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Misc.hpp>
-#include <l2cpp/Typedefs.hpp>
 #include <l2cpp/details/Pimpl.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/SocketListener.hpp>

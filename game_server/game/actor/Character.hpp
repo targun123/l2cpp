@@ -4,11 +4,11 @@
 #pragma once
 
 // Project includes
-#include "Actor.hpp"
+#include "../../Typedefs.hpp"
 #include "../constants/Profession.hpp"
+#include "Actor.hpp"
 
 #include <l2cpp/Pimpl.hpp>
-#include <l2cpp/Typedefs.hpp>
 
 class ItemStorage;
 class Player;

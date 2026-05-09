@@ -6,10 +6,13 @@
 // Project includes
 #include <l2cpp/Typedefs.hpp>
 
+// C++ includes
+#include <string_view>
+
 namespace Constants
 {
-    constexpr inline auto host = "127.0.0.1"sv;
-    constexpr inline auto port = 2106;
+    constexpr inline std::string_view host = "127.0.0.1";
+    constexpr inline auto             port = 2106;
 
     constexpr inline u32  protocol        = 0xc621;
     constexpr inline byte blowfishToken[] = "_;5.]94-31==-%xT!^[$"; // trailing zero is included by sizeof()

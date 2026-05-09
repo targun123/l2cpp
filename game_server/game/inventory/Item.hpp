@@ -4,8 +4,8 @@
 #pragma once
 
 // Project includes
-#include "ItemTemplate.hpp"
 #include "../GameObject.hpp"
+#include "ItemTemplate.hpp"
 
 #include <l2cpp/network/Serialization.hpp>
 

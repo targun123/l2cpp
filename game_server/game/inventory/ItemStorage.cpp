@@ -4,8 +4,9 @@
 #include "ItemStorage.hpp"
 
 // Project includes
+#include "../../Typedefs.hpp"
+
 #include <l2cpp/Exception.hpp>
-#include <l2cpp/Typedefs.hpp>
 #include <l2cpp/details/Pimpl.hpp>
 
 // C++ includes

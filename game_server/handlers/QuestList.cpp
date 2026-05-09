@@ -7,5 +7,5 @@
 DEFINE_PACKET_HANDLER(QuestList)
 {
     constexpr u16 questAmount = 0, questItems = 0;
-    player.connection().send(Packet(0x80) << questAmount << questItems);
+    player.connection().send(Packet(0x80, "QuestList") << questAmount << questItems);
 }
