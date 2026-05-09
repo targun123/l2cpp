@@ -153,7 +153,6 @@ void World::update(ClockDuration const elapsed)
 
 auto World::createCharacter(Player const & p, CharacterCreationParameters const & params) -> CharacterCreationResult
 {
-    Orm::createCharacter(p.accountId(), params);
     auto & c = addCharacterPreview(p.accountName());
     c.setName(params.name);
     c.appearance().setStartingProfession(params.profession);
@@ -162,6 +161,9 @@ auto World::createCharacter(Player const & p, CharacterCreationParameters const 
     c.appearance().setHairColor(params.hairColor);
     c.appearance().setFace(params.face);
     c.addComponent<CharacterSelectionData>().selected = true;
+    // FIXME: change values depending on race & class
+    c.setPosition(-83968, 244634, -3500); // Talking Island GK
+    Orm::createCharacter(p.accountId(), c);
     return CharacterCreationResult::Success;
 }
 

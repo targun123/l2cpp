@@ -7,11 +7,10 @@
 #include "../Typedefs.hpp"
 
 class Character;
-struct CharacterCreationParameters;
 
 namespace Orm
 {
     auto fetchCharacterPreviews(AccountId) -> std::vector<std::unique_ptr<Character>>;
-    void createCharacter(AccountId, CharacterCreationParameters const &);
+    void createCharacter(AccountId, Character const &);
     void selectCharacter(AccountId, std::wstring_view selectedCharName);
 }

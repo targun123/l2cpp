@@ -166,9 +166,10 @@ void Actor::setTitle(std::wstring title) { component<ActorIdentity>()->title = s
 void Actor::setPosition(Position const & position)             { *component<Position>() = position; }
 void Actor::setPosition(s32 const x, s32 const y, s32 const z) { setPosition(Position{x, y, z});    }
 
-void Actor::setPosX(s32 const x) { component<Position>()->x = x; }
-void Actor::setPosY(s32 const y) { component<Position>()->y = y; }
-void Actor::setPosZ(s32 const z) { component<Position>()->z = z; }
+void Actor::setPosX       (s32 const x) { component<Position>()->x           = x; }
+void Actor::setPosY       (s32 const y) { component<Position>()->y           = y; }
+void Actor::setPosZ       (s32 const z) { component<Position>()->z           = z; }
+void Actor::setOrientation(s32 const o) { component<Position>()->orientation = o; }
 
 void Actor::setTeam(Team const team) { _impl->team = team; }
 

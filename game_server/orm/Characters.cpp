@@ -5,6 +5,7 @@
 
 // Project includes
 #include "../game/actor/Character.hpp"
+#include "../game/components/Position.hpp"
 #include "../utils/Conversion.hpp"
 
 #include <l2cpp/services/Database.hpp>
@@ -15,22 +16,31 @@ void Orm::saveCharacter(Character const & c)
         UPDATE
             characters
         SET
-            title = :title
+            title       = :title
+          , pos_x       = :pos_x
+          , pos_y       = :pos_y
+          , pos_z       = :pos_z
+          , orientation = :orientation
         WHERE
             name LIKE :name
     )");
 
-    query.bind(":name",  Utils::toString(c.name()));
-    query.bind(":title", Utils::toString(c.title()));
+    query.bind(":name",        Utils::toString(c.name()));
+    query.bind(":title",       Utils::toString(c.title()));
+    query.bind(":pos_x",       c.position().x);
+    query.bind(":pos_y",       c.position().y);
+    query.bind(":pos_z",       c.position().z);
+    query.bind(":orientation", c.position().orientation);
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to save character");
 }
 
 void Orm::loadCharacter(Character & c)
 {
-    // Here we do not load the preview parameters again
+    // Here we do not load the preview fields again, we load the rest in order to enter the World
     SQLite::Statement query(Database::instance(), R"(
         SELECT
             title
+          , orientation
         FROM
             characters
         WHERE
@@ -40,4 +50,5 @@ void Orm::loadCharacter(Character & c)
     L2CPP_B_ASSERT(query.executeStep(), "Failed to load character");
 
     c.setTitle(Utils::toWideString(query.getColumn("title").getString()));
+    c.setOrientation(query.getColumn("orientation").getInt());
 }

@@ -7,7 +7,7 @@
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterSelectionData.hpp"
 #include "../game/components/PlayerAppearance.hpp"
-#include "../game/lobby/CharacterCreationParameters.hpp"
+#include "../game/components/Position.hpp"
 #include "../utils/Conversion.hpp"
 
 #include <l2cpp/services/Database.hpp>
@@ -19,10 +19,25 @@ auto Orm::fetchCharacterPreviews(AccountId const accountId) -> std::vector<std::
 try
 {
     static SQLite::Statement query(Database::instance(), R"(
-        SELECT name, starting_profession, sex, hair_style, hair_color, face, selected FROM characters
-        JOIN character_previews cp ON cp.character_id = characters.id
-        WHERE id IN (SELECT character_id FROM character_owners WHERE account_id = ?)
-        ORDER BY creation_date
+        SELECT
+            name
+          , starting_profession
+          , sex
+          , hair_style
+          , hair_color
+          , face
+          , pos_x
+          , pos_y
+          , pos_z
+          , selected
+        FROM
+            characters
+        JOIN
+            character_previews cp ON cp.character_id = characters.id
+        WHERE
+            id IN (SELECT character_id FROM character_owners WHERE account_id = ?)
+        ORDER BY
+            creation_date
     )");
 
     query.reset();
@@ -37,7 +52,11 @@ try
         c->appearance().setSex               (static_cast<Sex>(query.getColumn("sex").getUInt()));
         c->appearance().setHairStyle         (query.getColumn("hair_style").getUInt());
         c->appearance().setHairColor         (query.getColumn("hair_color").getUInt());
-        c->appearance().setFace              (query.getColumn("face").getUInt());
+        c->appearance().setFace              (query.getColumn("face"      ).getUInt());
+
+        c->setPosX(query.getColumn("pos_x").getInt());
+        c->setPosY(query.getColumn("pos_y").getInt());
+        c->setPosZ(query.getColumn("pos_z").getInt());
 
         auto & data = c->addComponent<CharacterSelectionData>();
         data.selected = query.getColumn("selected").getUInt();
@@ -51,41 +70,69 @@ catch (SQLite::Exception const & e)
     return {};
 }
 
-void Orm::createCharacter(AccountId const accountId, CharacterCreationParameters const & params) try
+void Orm::createCharacter(AccountId const accountId, Character const & c) try
 {
     SQLite::Transaction tr(Database::instance());
 
-    SQLite::Statement charQuery(Database::instance(), R"(
-        INSERT INTO characters (name, starting_profession, sex, hair_style, hair_color, face)
-            VALUES (:name, :starting_profession, :sex, :hair_style, :hair_color, :face)
+    SQLite::Statement query(Database::instance(), R"(
+        INSERT INTO characters (
+            name
+          , starting_profession
+          , sex
+          , hair_style
+          , hair_color
+          , face
+          , pos_x
+          , pos_y
+          , pos_z
+        ) VALUES (
+            :name
+          , :starting_profession
+          , :sex
+          , :hair_style
+          , :hair_color
+          , :face
+          , :pos_x
+          , :pos_y
+          , :pos_z
+        )
     )");
-    charQuery.bind(":name",                Utils::toString(params.name));
-    charQuery.bind(":starting_profession", std::to_underlying(params.profession));
-    charQuery.bind(":sex",                 std::to_underlying(params.sex));
-    charQuery.bind(":hair_style",          params.hairStyle);
-    charQuery.bind(":hair_color",          params.hairColor);
-    charQuery.bind(":face",                params.face);
-    charQuery.exec();
+    query.bind(":name",                Utils::toString(c.name()));
+    query.bind(":starting_profession", std::to_underlying(c.appearance().startingProfession()));
+    query.bind(":sex",                 std::to_underlying(c.appearance().sex()));
+    query.bind(":hair_style",          c.appearance().hairStyle());
+    query.bind(":hair_color",          c.appearance().hairColor());
+    query.bind(":face",                c.appearance().face());
+    query.bind(":pos_x",               c.position().x);
+    query.bind(":pos_y",               c.position().y);
+    query.bind(":pos_z",               c.position().z);
+    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert a new character");
 
     auto const charId = Database::instance().getLastInsertRowid();
 
-    SQLite::Statement charOwnerQuery(Database::instance(),
-                                     R"(INSERT INTO character_owners VALUES (:account_id, :character_id))");
-    charOwnerQuery.bind(":account_id",   accountId);
-    charOwnerQuery.bind(":character_id", charId);
-    charOwnerQuery.exec();
-
-    SQLite::Statement unselectCharPreviews(Database::instance(), R"(
-        UPDATE character_previews SET selected = FALSE WHERE character_id = (
-            SELECT character_id FROM character_owners WHERE account_id = :account_id)
+    query = SQLite::Statement(Database::instance(), R"(
+        INSERT INTO character_owners VALUES (:account_id, :character_id)
     )");
-    unselectCharPreviews.bind(":account_id", accountId);
-    unselectCharPreviews.exec();
+    query.bind(":account_id",   accountId);
+    query.bind(":character_id", charId);
+    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character owner");
 
-    SQLite::Statement charPreviewQuery(Database::instance(),
-                                       R"(INSERT INTO character_previews (character_id) VALUES (:character_id))");
-    charPreviewQuery.bind(":character_id", charId);
-    charPreviewQuery.exec();
+    query = SQLite::Statement(Database::instance(), R"(
+        UPDATE
+            character_previews
+        SET
+            selected = FALSE
+        WHERE
+            character_id = (SELECT character_id FROM character_owners WHERE account_id = :account_id)
+    )");
+    query.bind(":account_id", accountId);
+    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to unselect other characters");
+
+    query = SQLite::Statement(Database::instance(), R"(
+        INSERT INTO character_previews (character_id) VALUES (:character_id)
+    )");
+    query.bind(":character_id", charId);
+    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character preview");
 
     tr.commit();
 }
@@ -100,14 +147,24 @@ try
     SQLite::Transaction tr(Database::instance());
 
     SQLite::Statement query(Database::instance(), R"(
-        UPDATE character_previews SET selected = FALSE WHERE character_id IN
-            (SELECT character_id FROM character_owners WHERE account_id = ?))");
+        UPDATE
+            character_previews
+        SET
+            selected = FALSE
+        WHERE
+            character_id IN (SELECT character_id FROM character_owners WHERE account_id = ?)
+    )");
     query.bind(1, accountId);
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to unselect all characters");
 
     query = SQLite::Statement(Database::instance(), R"(
-        UPDATE character_previews SET selected = TRUE WHERE character_id = (
-            SELECT id FROM characters WHERE name LIKE ?))");
+        UPDATE
+            character_previews
+        SET
+            selected = TRUE
+        WHERE
+            character_id = (SELECT id FROM characters WHERE name LIKE ?)
+    )");
     query.bind(1, Utils::toString(selectedCharName));
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to select character");
 
