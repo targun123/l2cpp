@@ -13,6 +13,7 @@
 #include "../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
+#include "../orm/Characters.hpp"
 #include "../orm/Lobby.hpp"
 #include "../utils/Conversion.hpp"
 #include "../utils/Maths.hpp"
@@ -29,7 +30,6 @@
 #include "components/PlayerAppearance.hpp"
 #include "components/Position.hpp"
 #include "constants/Profession.hpp"
-#include "constants/Race.hpp"
 #include "constants/Sex.hpp"
 #include "constants/SocialAction.hpp"
 #include "constants/SystemMessageId.hpp"
@@ -205,7 +205,10 @@ auto World::loadCharacterFromPreview(Character const & c) -> Character &
     auto const id    = c.id();
     auto const & ptr = _actors.try_emplace(id, _characterPreviews[id].release()).first->second;
     _characterPreviews.erase(id);
-    return static_cast<Character &>(*ptr);
+
+    auto & character = static_cast<Character &>(*ptr);
+    Orm::loadCharacter(character);
+    return character;
 }
 
 void World::moveCharacterBackToPreviews(Character & c)
@@ -224,8 +227,11 @@ void World::moveCharacterBackToPreviews(Character & c)
     if (c.player)
         c.player->unsetCurrentCharacter();
 
+    Orm::saveCharacter(c);
+
     auto const id = c.id();
-    _characterPreviews.try_emplace(id, std::make_unique<Character>(std::move(c)));
+    auto & ptr = _actors.at(id);
+    _characterPreviews.try_emplace(id, static_cast<Character *>(ptr.release()));
     _actors.erase(id);
 }
 

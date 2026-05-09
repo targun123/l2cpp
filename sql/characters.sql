@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS characters (
     sex                 INTEGER NOT NULL,
     hair_style          INTEGER NOT NULL,
     hair_color          INTEGER NOT NULL,
-    face                INTEGER NOT NULL
+    face                INTEGER NOT NULL,
+    title               TEXT    NOT NULL DEFAULT ''
 );

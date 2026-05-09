@@ -5,11 +5,12 @@
 #include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterSelectionData.hpp"
+#include "../network/packets/server/client/ClientForceDisconnectPacket.hpp"
 #include "../network/packets/server/lobby/CharacterSelectPacket.hpp"
 #include "../orm/Lobby.hpp"
 #include "_Common.hpp"
 
-DEFINE_PACKET_HANDLER(CharacterSelect)
+DEFINE_PACKET_HANDLER(CharacterSelect) try
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
@@ -28,4 +29,11 @@ DEFINE_PACKET_HANDLER(CharacterSelect)
 
     player.setCurrentCharacter(World::loadCharacterFromPreview(characterPreviews[index]));
     player.connection().send(CharacterSelectPacket(player.currentCharacter(), player.playOk1()));
+}
+catch (...)
+{
+    // Any exception would get the client stuck during the login screen; force disconnect him instead.
+    player.connection().send(ClientForceDisconnectPacket());
+    player.connection().close();
+    throw;
 }
