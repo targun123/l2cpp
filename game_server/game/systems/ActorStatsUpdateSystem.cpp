@@ -11,9 +11,6 @@
 #include "../components/CharacterStatus.hpp"
 #include "../components/Stats.hpp"
 
-// Third-party includes
-#include <spdlog/spdlog.h>
-
 // C++ includes
 #include <unordered_set>
 
@@ -75,15 +72,14 @@ void ActorStatsUpdateSystem::updateCharacterStatus(SC::StatsUpdatePacket & priva
 {
     auto const & newStatus = c.status();
 
-    if (newStatus.xp != oldStatus.xp)
-        privatePacket.addStat(Stat::Xp, newStatus.xp);
+    if (newStatus.xp() != oldStatus.xp())
+        privatePacket.addStat(Stat::Xp, newStatus.xp());
 
-    if (newStatus.sp != oldStatus.sp)
-        privatePacket.addStat(Stat::Sp, newStatus.sp);
+    if (newStatus.sp() != oldStatus.sp())
+        privatePacket.addStat(Stat::Sp, newStatus.sp());
 
-    auto const currentLevel = ExperienceTable::level(newStatus.xp);
-    if (currentLevel > ExperienceTable::level(oldStatus.xp))
-        privatePacket.addStat(Stat::Level, currentLevel);
+    if (newStatus.level() != oldStatus.level())
+        privatePacket.addStat(Stat::Level, newStatus.level());
 }
 
 void ActorStatsUpdateSystem::updateNpcStats(Npc & npc, Stats const & oldStats) const

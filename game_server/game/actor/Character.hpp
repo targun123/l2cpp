@@ -10,11 +10,11 @@
 
 #include <l2cpp/Pimpl.hpp>
 
+class CharacterStatus;
 class ItemStorage;
 class Player;
 class PlayerAppearance;
 class Shortcut;
-struct CharacterStatus;
 
 class Character : public Actor
 {

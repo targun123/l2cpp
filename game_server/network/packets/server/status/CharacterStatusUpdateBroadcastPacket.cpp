@@ -43,11 +43,11 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << gear.itemTemplateId(RightHand)
         << gear.itemTemplateId(Hair)
         << 0 // (c.isPvpFlagged ? 1 : 0)
-        << c.status().karma
+        << c.status().karma()
         << static_cast<u32>(stats[StatId::MAtkSpeed])
         << static_cast<u32>(stats[StatId::PAtkSpeed])
         << 0 // (c.isPvpFlagged ? 1 : 0) // repeated
-        << c.status().karma              // repeated
+        << c.status().karma()            // repeated
         << static_cast<u32>(stats[StatId::BaseRunSpeed])
         << static_cast<u32>(stats[StatId::BaseWalkSpeed])
         << static_cast<u32>(stats[StatId::BaseSwimRunSpeed])
@@ -94,8 +94,8 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan large crest id
-        << c.status().isNoble
-        << c.status().isHero
+        << c.status().isNoblesse()
+        << c.status().isHero()
         << false // fishing
         << 0 // fish x
         << 0 // fish y

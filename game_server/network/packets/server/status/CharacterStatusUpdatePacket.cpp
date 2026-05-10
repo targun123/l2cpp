@@ -31,7 +31,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << c.appearance().sex()
         << c.appearance().startingProfession()
         << c.status().level()
-        << c.status().xp
+        << c.status().xp()
         << static_cast<u32>(stats[StatId::Str])
         << static_cast<u32>(stats[StatId::Dex])
         << static_cast<u32>(stats[StatId::Con])
@@ -42,7 +42,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << static_cast<u32>(stats[StatId::CurHp])
         << static_cast<u32>(stats[StatId::MaxMp])
         << static_cast<u32>(stats[StatId::CurMp])
-        << c.status().sp
+        << c.status().sp()
         << static_cast<u32>(stats[StatId::CurWeight])
         << static_cast<u32>(stats[StatId::MaxWeight])
         << (c.gear().hasActiveWeapon() ? 20 : 40)
@@ -89,7 +89,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << static_cast<u32>(stats[StatId::BasePAtkSpeed])
         << static_cast<u32>(stats[StatId::MDef])
         << 0 // (c.isPvpFlagged ? 1 : 0)
-        << c.status().karma
+        << c.status().karma()
         << static_cast<u32>(stats[StatId::BaseRunSpeed])
         << static_cast<u32>(stats[StatId::BaseWalkSpeed])
         << static_cast<u32>(stats[StatId::BaseSwimRunSpeed])
@@ -115,8 +115,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << static_cast<u8>(0) // mount type
         << static_cast<u8>(0) // private store type
         << false              // can dwarven craft
-        << c.status().pkCount
-        << c.status().pvpCount
+        << c.status().pkCount()
+        << c.status().pvpCount()
     ;
 
     std::array<u16, 0> const cubics;
@@ -147,8 +147,8 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan crest large id
-        << c.status().isNoble // noble symbol in status window
-        << c.status().isHero  // hero aura
+        << c.status().isNoblesse() // noblesse symbol in status window
+        << c.status().isHero()     // hero aura
         << false // is fishing
         << 0 // fish x
         << 0 // fish y

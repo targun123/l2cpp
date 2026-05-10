@@ -11,4 +11,5 @@ CREATE TABLE IF NOT EXISTS characters (
   , pos_y               INTEGER NOT NULL
   , pos_z               INTEGER NOT NULL
   , orientation         INTEGER NOT NULL DEFAULT 0
+  , current_profession  INTEGER NOT NULL
 );

@@ -6,8 +6,8 @@
 // Project includes
 #include "../../../../game/actor/Character.hpp"
 #include "../../../../game/actor/Monster.hpp"
-#include "../../../../game/components/ActorStatus.hpp"
 #include "../../../../game/components/CharacterStatus.hpp"
+#include "../../../../game/components/NpcStatus.hpp"
 
 using Network::Packet::Server::TargetMonsterSelectPacket;
 

@@ -41,10 +41,10 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << c.position()
             << c.stats()[StatId::CurHp]
             << c.stats()[StatId::CurMp]
-            << c.status().sp
-            << c.status().xp
+            << c.status().sp()
+            << c.status().xp()
             << c.status().level()
-            << c.status().karma
+            << c.status().karma()
             << std::array<u32, 9>{} // unknown
             << c.gear().itemId(Underwear)
             << c.gear().itemId(LeftEar)

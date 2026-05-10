@@ -21,12 +21,12 @@
 #include "actor/Monster.hpp"
 #include "actor/Npc.hpp"
 #include "actor/NpcDirectory.hpp"
-#include "components/ActorStatus.hpp"
 #include "components/CharacterSelectionData.hpp"
 #include "components/CharacterStatus.hpp"
 #include "components/DeletionTimer.hpp"
 #include "components/Loot.hpp"
 #include "components/NpcAppearance.hpp"
+#include "components/NpcStatus.hpp"
 #include "components/PlayerAppearance.hpp"
 #include "components/Position.hpp"
 #include "constants/Profession.hpp"
@@ -385,11 +385,10 @@ void World::distributeLoot(Loot const & loot, DamageDealtTable const & attackerD
 
     auto & c = participants.rbegin()->second.get(); // For now, select the one who dealt the most damage
 
-    c.status().xp += loot.xp;
-    c.status().sp += loot.sp;
-
     auto const oldLevel = c.status().level();
-    auto const newLevel = ExperienceTable::level(c.status().xp);
+    c.status().addXp(loot.xp);
+    c.status().addSp(loot.sp);
+    auto const newLevel = c.status().level();
     bool const leveledUp = newLevel > oldLevel;
     if (leveledUp)
         c.status().setLevel(newLevel);

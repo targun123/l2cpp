@@ -6,6 +6,7 @@
 // Project includes
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterSelectionData.hpp"
+#include "../game/components/CharacterStatus.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/components/Position.hpp"
 #include "../utils/Conversion.hpp"
@@ -29,11 +30,18 @@ try
           , pos_x
           , pos_y
           , pos_z
+          , current_profession
+          , xp
+          , sp
           , selected
         FROM
             characters
         JOIN
-            character_previews cp ON cp.character_id = characters.id
+            character_professions AS professions
+            ON  professions.character_id = characters.id
+            AND professions.profession   = characters.current_profession
+        JOIN
+            character_previews previews ON previews.character_id = characters.id
         WHERE
             id IN (SELECT character_id FROM character_owners WHERE account_id = ?)
         ORDER BY
@@ -57,6 +65,9 @@ try
         c->setPosX(query.getColumn("pos_x").getInt());
         c->setPosY(query.getColumn("pos_y").getInt());
         c->setPosZ(query.getColumn("pos_z").getInt());
+
+        c->status().setXp(query.getColumn("xp").getUInt());
+        c->status().setSp(query.getColumn("sp").getUInt());
 
         auto & data = c->addComponent<CharacterSelectionData>();
         data.selected = query.getColumn("selected").getUInt();
@@ -85,6 +96,7 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
           , pos_x
           , pos_y
           , pos_z
+          , current_profession
         ) VALUES (
             :name
           , :starting_profession
@@ -95,6 +107,7 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
           , :pos_x
           , :pos_y
           , :pos_z
+          , :current_profession
         )
     )");
     query.bind(":name",                Utils::toString(c.name()));
@@ -106,6 +119,7 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
     query.bind(":pos_x",               c.position().x);
     query.bind(":pos_y",               c.position().y);
     query.bind(":pos_z",               c.position().z);
+    query.bind(":current_profession",  std::to_underlying(c.profession()));
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert a new character");
 
     auto const charId = Database::instance().getLastInsertRowid();
