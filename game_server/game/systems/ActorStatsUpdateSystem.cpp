@@ -79,7 +79,11 @@ void ActorStatsUpdateSystem::updateCharacterStatus(SC::StatsUpdatePacket & priva
         privatePacket.addStat(Stat::Sp, newStatus.sp());
 
     if (newStatus.level() != oldStatus.level())
+    {
         privatePacket.addStat(Stat::Level, newStatus.level());
+        if (newStatus.level() > oldStatus.level())
+            fire c.onLeveledUp();
+    }
 }
 
 void ActorStatsUpdateSystem::updateNpcStats(Npc & npc, Stats const & oldStats) const

@@ -15,12 +15,11 @@
 
 class Actor;
 class Character;
-struct CharacterCreationParameters;
-struct Loot;
 class Monster;
 class Npc;
 class Player;
-struct Stats;
+struct CharacterCreationParameters;
+struct Loot;
 struct System;
 
 namespace l2cpp::Network { class Packet; }
@@ -34,10 +33,10 @@ public:
     static void init();
 
 public:
-    static auto actor(GameObjectId)     -> OptRef<Actor>;
+    static auto actor    (GameObjectId) -> OptRef<Actor>;
     static auto character(GameObjectId) -> OptRef<Character>;
-    static auto monster(GameObjectId)   -> OptRef<Monster>;
-    static auto npc(GameObjectId)       -> OptRef<Npc>;
+    static auto monster  (GameObjectId) -> OptRef<Monster>;
+    static auto npc      (GameObjectId) -> OptRef<Npc>;
 
 public:
     static void update(ClockDuration elapsed);
@@ -49,7 +48,7 @@ public:
 
     static auto createCharacter(Player const &, CharacterCreationParameters const &) -> CharacterCreationResult;
     static auto getCharacterPreviews(Player const &) -> std::vector<Ref<Character>>;
-    static auto addCharacterPreview(std::wstring_view playerAccount) -> Character &;
+    static auto addCharacterPreview(AccountId) -> Character &;
     static auto loadCharacterFromPreview(Character const &) -> Character &;
     static void moveCharacterBackToPreviews(Character &);
 
@@ -104,8 +103,7 @@ private:
 private:
     static std::vector<std::unique_ptr<System>> _systems;
 
-    static std::unordered_map<std::wstring_view, std::vector<GameObjectId>> _characterPreviewsIndex;
-
+    static std::unordered_map<AccountId,    std::vector<GameObjectId>>  _characterPreviewsIndex;
     static std::unordered_map<GameObjectId, std::unique_ptr<Character>> _characterPreviews;
     static std::unordered_map<GameObjectId, std::unique_ptr<Actor>>     _actors;
 

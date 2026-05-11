@@ -153,7 +153,7 @@ void World::update(ClockDuration const elapsed)
 
 auto World::createCharacter(Player const & p, CharacterCreationParameters const & params) -> CharacterCreationResult
 {
-    auto & c = addCharacterPreview(p.accountName());
+    auto & c = addCharacterPreview(p.accountId());
     c.setName(params.name);
     c.appearance().setStartingProfession(params.profession);
     c.appearance().setSex(params.sex);
@@ -171,30 +171,27 @@ auto World::getCharacterPreviews(Player const & p) -> std::vector<Ref<Character>
 {
     std::vector<Ref<Character>> result;
 
-    if (!_characterPreviewsIndex.contains(p.accountName())) // no index means first connection since server booted
+    if (!_characterPreviewsIndex.contains(p.accountId())) // no index means first connection since server booted
+        result = Orm::fetchCharacterPreviews(p.accountId());
+    else
     {
-        for (auto & c : Orm::fetchCharacterPreviews(p.accountId())) // cache all characters, load rest of data on demand
-        {
-            auto const id = c->id();
-            _characterPreviewsIndex[p.accountName()].emplace_back(id);
-            _characterPreviews.try_emplace(id, c.release());
-        }
-    }
+        auto const & index = _characterPreviewsIndex[p.accountId()];
+        result.reserve(index.size());
 
-    auto const & index = _characterPreviewsIndex[p.accountName()];
-    for (result.reserve(index.size()); auto const id : index)
-        result.emplace_back(*_characterPreviews.at(id));
+        for (auto const id : index)
+            result.emplace_back(*_characterPreviews.at(id));
+    }
 
     return result;
 }
 
-auto World::addCharacterPreview(std::wstring_view const playerAccount) -> Character &
+auto World::addCharacterPreview(AccountId const accountId) -> Character &
 {
-    L2CPP_B_ASSERT(!playerAccount.empty(), "Player account name unknown, cannot create character preview");
+    L2CPP_B_ASSERT(accountId, "Player account id unknown, cannot create character preview");
 
     Ref c = addCharacter();
     auto const id = c.get().id();
-    _characterPreviewsIndex[playerAccount].emplace_back(id);
+    _characterPreviewsIndex[accountId].emplace_back(id);
     c = *_characterPreviews.try_emplace(id, static_cast<Character *>(_actors[id].release())).first->second;
     _actors.erase(id);
     return c;
@@ -241,10 +238,10 @@ auto World::addCharacter(OptRef<Player> p) -> Character &
 {
     auto & c = addActor<Character>(std::move(p));
     c.onAbnormalEffectListChanged += [&c] { send(c, SC::AbnormalEffectListPacket{c}); };
-    c.onLeveledUp += [&c]
+    c.onLeveledUp                 += [&c]
     {
-        broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
         send(c, SC::ChatSystemSayPacket{SystemMessageId::YourLevelHasIncreased});
+        broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
     };
     return c;
 }
@@ -514,9 +511,9 @@ void World::delActor(Actor & a)
     }
 }
 
-std::vector<std::unique_ptr<System>>                             World::_systems;
-std::unordered_map<std::wstring_view, std::vector<GameObjectId>> World::_characterPreviewsIndex;
-std::unordered_map<GameObjectId, std::unique_ptr<Character>>     World::_characterPreviews;
-std::unordered_map<GameObjectId, std::unique_ptr<Actor>>         World::_actors;
-std::unordered_map<GameObjectId, Ref<Actor>>                     World::_scheduledForDeletion;
-std::unordered_map<GameObjectId, std::list<GameObjectId>>        World::_targetSubscribers;
+std::vector<std::unique_ptr<System>>                         World::_systems;
+std::unordered_map<AccountId,    std::vector<GameObjectId>>  World::_characterPreviewsIndex;
+std::unordered_map<GameObjectId, std::unique_ptr<Character>> World::_characterPreviews;
+std::unordered_map<GameObjectId, std::unique_ptr<Actor>>     World::_actors;
+std::unordered_map<GameObjectId, Ref<Actor>>                 World::_scheduledForDeletion;
+std::unordered_map<GameObjectId, std::list<GameObjectId>>    World::_targetSubscribers;

@@ -4,6 +4,7 @@
 #include "Lobby.hpp"
 
 // Project includes
+#include "../game/World.hpp"
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterSelectionData.hpp"
 #include "../game/components/CharacterStatus.hpp"
@@ -16,10 +17,10 @@
 // Third-party includes
 #include <spdlog/spdlog.h>
 
-auto Orm::fetchCharacterPreviews(AccountId const accountId) -> std::vector<std::unique_ptr<Character>>
+auto Orm::fetchCharacterPreviews(AccountId const accountId) -> std::vector<Ref<Character>>
 try
 {
-    static SQLite::Statement query(Database::instance(), R"(
+    SQLite::Statement query(Database::instance(), R"(
         SELECT
             name
           , starting_profession
@@ -47,30 +48,28 @@ try
         ORDER BY
             creation_date
     )");
-
-    query.reset();
     query.bind(1, accountId);
 
-    std::vector<std::unique_ptr<Character>> previews;
+    std::vector<Ref<Character>> previews;
     while (query.executeStep())
     {
-        auto const & c = previews.emplace_back(std::make_unique<Character>());
-        c->setName(Utils::toWideString(query.getColumn("name").getString()));
-        c->appearance().setStartingProfession(static_cast<Profession>(query.getColumn("starting_profession").getUInt()));
-        c->appearance().setSex               (static_cast<Sex>(query.getColumn("sex").getUInt()));
-        c->appearance().setHairStyle         (query.getColumn("hair_style").getUInt());
-        c->appearance().setHairColor         (query.getColumn("hair_color").getUInt());
-        c->appearance().setFace              (query.getColumn("face"      ).getUInt());
+        auto & c = previews.emplace_back(World::addCharacterPreview(accountId)).get();
+        c.setName(Utils::toWideString(query.getColumn("name").getString()));
+        c.appearance().setStartingProfession(static_cast<Profession>(query.getColumn("starting_profession").getUInt()));
+        c.appearance().setSex               (static_cast<Sex>(query.getColumn("sex").getUInt()));
+        c.appearance().setHairStyle         (query.getColumn("hair_style").getUInt());
+        c.appearance().setHairColor         (query.getColumn("hair_color").getUInt());
+        c.appearance().setFace              (query.getColumn("face"      ).getUInt());
 
-        c->setPosX(query.getColumn("pos_x").getInt());
-        c->setPosY(query.getColumn("pos_y").getInt());
-        c->setPosZ(query.getColumn("pos_z").getInt());
+        c.setPosX(query.getColumn("pos_x").getInt());
+        c.setPosY(query.getColumn("pos_y").getInt());
+        c.setPosZ(query.getColumn("pos_z").getInt());
 
-        c->setProfession(static_cast<Profession>(query.getColumn("current_profession").getUInt()));
-        c->status().setXp(query.getColumn("xp").getUInt());
-        c->status().setSp(query.getColumn("sp").getUInt());
+        c.setProfession(static_cast<Profession>(query.getColumn("current_profession").getUInt()));
+        c.status().setXp(query.getColumn("xp").getUInt());
+        c.status().setSp(query.getColumn("sp").getUInt());
 
-        auto & data = c->addComponent<CharacterSelectionData>();
+        auto & data = c.addComponent<CharacterSelectionData>();
         data.selected = query.getColumn("selected").getUInt();
     }
     return previews;
