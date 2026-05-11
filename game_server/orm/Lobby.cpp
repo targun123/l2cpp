@@ -66,6 +66,7 @@ try
         c->setPosY(query.getColumn("pos_y").getInt());
         c->setPosZ(query.getColumn("pos_z").getInt());
 
+        c->setProfession(static_cast<Profession>(query.getColumn("current_profession").getUInt()));
         c->status().setXp(query.getColumn("xp").getUInt());
         c->status().setSp(query.getColumn("sp").getUInt());
 
