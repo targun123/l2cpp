@@ -21,6 +21,8 @@
 #include "actor/Monster.hpp"
 #include "actor/Npc.hpp"
 #include "actor/NpcDirectory.hpp"
+#include "components/ActorAutoRegen.hpp"
+#include "components/AttackStanceTimer.hpp"
 #include "components/CharacterSelectionData.hpp"
 #include "components/CharacterStatus.hpp"
 #include "components/DeletionTimer.hpp"
@@ -213,6 +215,14 @@ auto World::loadCharacterFromPreview(Character const & c) -> Character &
 void World::moveCharacterBackToPreviews(Character & c)
 {
     L2CPP_B_ASSERT(_actors.contains(c.id()), "Character '{}' is not present in the world", c.id());
+
+    c.onAbnormalEffectListChanged.clear();
+    c.onDied                     .clear();
+    c.onLeveledUp                .clear();
+    c.onRevived                  .clear();
+
+    c.delComponent<ActorAutoRegen>();
+    c.delComponent<AttackStanceTimer>();
 
     if (auto const target = c.target())
     {
