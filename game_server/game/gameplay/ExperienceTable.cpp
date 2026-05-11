@@ -91,7 +91,7 @@ inline constexpr std::array gExperienceTable{
     1'511'275'834u, // level 78
     // Unreachable with normal means; listed for completeness
     2'099'275'834u, // level 79 (decrement by 1 to get to lv. 78 100%)
-    2'099'325'832u, // level 79 (100%)
+    2'099'325'832u, // level 80
 };
 
 auto ExperienceTable::level(u32 const experience) -> u32
@@ -113,7 +113,7 @@ auto ExperienceTable::floor(u32 const level) -> u32
 auto ExperienceTable::ceil(u32 const level) -> u32
 {
     L2CPP_B_ASSERT(minLevel() <= level && level <= maxLevel(), "Invalid level '{}'", level);
-    return gExperienceTable[level + 1] - (level == maxLevel() ? 0 : 1);
+    return gExperienceTable[level + 1] - 1;
 }
 
 auto ExperienceTable::minLevel() -> u32 { return 1;                                             }

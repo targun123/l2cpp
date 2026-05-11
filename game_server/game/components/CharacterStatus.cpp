@@ -26,7 +26,7 @@ void CharacterStatus::setLevel(u32 const level, double percent)
     else if (percent > 100) percent = 100;
 
     /**/ if (percent == 0)   _xp = ExperienceTable::floor(level);
-    else if (percent == 100) _xp = ExperienceTable::ceil (level);
+    else if (percent == 100) _xp = ExperienceTable::ceil (level) + (level < ExperienceTable::maxLevel());
     else
     {
         _xp  = ExperienceTable::floor(level);
@@ -34,14 +34,21 @@ void CharacterStatus::setLevel(u32 const level, double percent)
     }
 }
 
-void CharacterStatus::setXp      (u32 const xp)       { _xp       = xp;       }
-void CharacterStatus::setSp      (u32 const sp)       { _sp       = sp;       }
+void CharacterStatus::setXp      (u32 const xp)       { _xp = std::min<u32>(std::numeric_limits<s32>::max(), xp); }
+void CharacterStatus::setSp      (u32 const sp)       { _sp = std::min<u32>(std::numeric_limits<s32>::max(), sp); }
 void CharacterStatus::setPvpCount(u32 const pvpCount) { _pvpCount = pvpCount; }
 void CharacterStatus::setPkCount (u32 const pkCount)  { _pkCount  = pkCount;  }
 void CharacterStatus::setKarma   (u32 const karma)    { _karma    = karma;    }
 
-void CharacterStatus::addXp(u32 const xp) { _xp += std::min(std::numeric_limits<decltype(_xp)>::max() - _xp, xp); }
-void CharacterStatus::addSp(u32 const sp) { _sp += std::min(std::numeric_limits<decltype(_sp)>::max() - _sp, sp); }
+void CharacterStatus::addXp(u32 const xp)
+{
+    _xp += std::min(ExperienceTable::ceil(ExperienceTable::maxLevel()) - _xp, xp);
+}
+
+void CharacterStatus::addSp(u32 const sp)
+{
+    _sp += std::min(std::numeric_limits<s32>::max() - _sp, sp);
+}
 
 void CharacterStatus::setNoblesse(bool const b) { _isNoblesse = b; }
 void CharacterStatus::setHero    (bool const b) { _isHero     = b; }
