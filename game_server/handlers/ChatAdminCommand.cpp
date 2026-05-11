@@ -8,6 +8,7 @@
 #include "../game/actor/Character.hpp"
 #include "../game/actor/Monster.hpp"
 #include "../game/actor/NpcDirectory.hpp"
+#include "../game/components/CharacterStatus.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/components/SkillDirectory.hpp"
 #include "../network/packets/server/chat/ChatSystemSayPacket.hpp"
@@ -129,5 +130,16 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         d.appearance().collisionRadius = 7.5;
         d.setProfession(d.appearance().startingProfession());
         World::broadcastAround(d, CharacterStatusUpdateBroadcastPacket(d));
+    }
+    else if (args[0] == L"xp" || args[0] == L"sp")
+    {
+        std::wistringstream iss(text);
+        std::wstring cmd, subCmd;
+        u32 nbr = 0;
+        iss >> cmd >> nbr;
+        if (cmd == L"xp")
+            c.status().setXp(nbr);
+        else
+            c.status().setSp(nbr);
     }
 }
