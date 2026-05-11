@@ -393,28 +393,35 @@ void World::distributeLoot(Loot const & loot, DamageDealtTable const & attackerD
     auto & c = participants.rbegin()->second.get(); // For now, select the one who dealt the most damage
 
     auto const oldLevel = c.status().level();
+    auto const oldXp    = c.status().xp();
+    auto const oldSp    = c.status().sp();
+
     c.status().addXp(loot.xp);
     c.status().addSp(loot.sp);
-    auto const newLevel = c.status().level();
+
+    auto const newLevel  = c.status().level();
     bool const leveledUp = newLevel > oldLevel;
+    auto const newXp     = c.status().xp();
+    auto const newSp     = c.status().sp();
+
     if (leveledUp)
         c.status().setLevel(newLevel);
 
     std::optional<SC::ChatSystemSayPacket> msg;
-    /**/ if (loot.xp && loot.sp)
+    /**/ if (newXp > oldXp && newSp > oldSp)
     {
         msg.emplace(SystemMessageId::EarnedXpAndSp);
-        *msg << SysMsgArg::Number{loot.xp} << SysMsgArg::Number{loot.sp};
+        *msg << SysMsgArg::Number{newXp - oldXp} << SysMsgArg::Number{newSp - oldSp};
     }
-    else if (loot.xp)
+    else if (newXp > oldXp)
     {
         msg.emplace(SystemMessageId::EarnedXp);
-        *msg << SysMsgArg::Number{loot.xp};
+        *msg << SysMsgArg::Number{newXp - oldXp};
     }
-    else
+    else if (newSp > oldSp)
     {
         msg.emplace(SystemMessageId::EarnedSp);
-        *msg << SysMsgArg::Number{loot.sp};
+        *msg << SysMsgArg::Number{newSp - oldSp};
     }
 
     if (msg)
