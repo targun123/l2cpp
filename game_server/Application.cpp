@@ -97,7 +97,7 @@ catch (l2cpp::Exception const & e)
     return false;
 }
 
-int Application::ApplicationImpl::run()
+int Application::ApplicationImpl::run() try
 {
     signalSet.async_wait([this] (auto const & ec, int s) { onSignal(ec, s); });
 
@@ -128,6 +128,14 @@ int Application::ApplicationImpl::run()
 
     SPDLOG_INFO("Goodbye.");
     return EXIT_SUCCESS;
+}
+catch (...)
+{
+    SPDLOG_CRITICAL("Unhandled exception caught! Performing emergency shutdown…");
+    signalSet.cancel();
+    shutdown();
+    ioContext.run();
+    throw;
 }
 
 void Application::ApplicationImpl::shutdown()
