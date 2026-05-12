@@ -137,7 +137,7 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
         SET
             selected = FALSE
         WHERE
-            character_id = (SELECT character_id FROM character_owners WHERE account_id = :account_id)
+            character_id IN (SELECT character_id FROM character_owners WHERE account_id = :account_id)
     )");
     query.bind(":account_id", accountId);
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to unselect other characters");
