@@ -205,9 +205,9 @@ try
         SET
             selected = TRUE
         WHERE
-            character_id = (SELECT id FROM characters WHERE name LIKE ? LIMIT 1)
+            character_id = (SELECT id FROM characters WHERE name = :name LIMIT 1)
     )");
-    query.bind(1, Utils::toString(selectedCharName));
+    query.bind(":name", Utils::toString(selectedCharName));
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to select character");
 
     tr.commit();

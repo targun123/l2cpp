@@ -24,7 +24,7 @@ void Orm::saveCharacter(Character const & c)
           , pos_z       = :pos_z
           , orientation = :orientation
         WHERE
-            name LIKE :name
+            name = :name
     )");
     query.bind(":name",        Utils::toString(c.name()));
     query.bind(":title",       Utils::toString(c.title()));
@@ -67,7 +67,9 @@ void Orm::loadCharacter(Character & c)
         FROM
             characters
         WHERE
-            name LIKE :name
+            name = :name
+        LIMIT
+            1
     )");
     query.bind(":name", Utils::toString(c.name()));
     L2CPP_B_ASSERT(query.executeStep(), "Failed to load character");
