@@ -148,6 +148,13 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
     query.bind(":character_id", charId);
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character preview");
 
+    query = SQLite::Statement(Database::instance(), R"(
+        INSERT INTO character_professions VALUES (:character_id, :profession)
+    )");
+    query.bind(":character_id", charId);
+    query.bind(":profession",   std::to_underlying(c.profession()));
+    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character profession");
+
     tr.commit();
 }
 catch (SQLite::Exception const & e)
