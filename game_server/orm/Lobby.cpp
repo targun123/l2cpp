@@ -10,6 +10,7 @@
 #include "../game/components/CharacterStatus.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/components/Position.hpp"
+#include "../game/components/Stats.hpp"
 #include "../utils/Conversion.hpp"
 
 #include <l2cpp/services/Database.hpp>
@@ -34,13 +35,16 @@ try
           , current_profession
           , xp
           , sp
+          , hp
+          , mp
+          , cp
           , selected
         FROM
             characters
         JOIN
-            character_professions AS professions
-            ON  professions.character_id = characters.id
-            AND professions.profession   = characters.current_profession
+            character_statuses AS status
+            ON  status.character_id = characters.id
+            AND status.profession   = characters.current_profession
         JOIN
             character_previews previews ON previews.character_id = characters.id
         WHERE
@@ -69,8 +73,13 @@ try
         c.status().setXp(query.getColumn("xp").getUInt());
         c.status().setSp(query.getColumn("sp").getUInt());
 
-        auto & data = c.addComponent<CharacterSelectionData>();
+        auto & data   = c.addComponent<CharacterSelectionData>();
         data.selected = query.getColumn("selected").getUInt();
+
+        auto & stats = c.stats();
+        stats[StatId::CurHp] = query.getColumn("hp").getUInt();
+        stats[StatId::CurMp] = query.getColumn("mp").getUInt();
+        stats[StatId::CurCp] = query.getColumn("cp").getUInt();
     }
     return previews;
 }
@@ -154,6 +163,18 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
     query.bind(":character_id", charId);
     query.bind(":profession",   std::to_underlying(c.profession()));
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character profession");
+
+    query = SQLite::Statement(Database::instance(), R"(
+        INSERT
+            INTO character_statuses ( character_id,  profession,  hp,  mp,  cp)
+            VALUES                  (:character_id, :profession, :hp, :mp, :cp)
+    )");
+    query.bind(":character_id", charId);
+    query.bind(":profession",   std::to_underlying(c.profession()));
+    query.bind(":hp",           static_cast<u32>(c.stats()[StatId::MaxHp]));
+    query.bind(":mp",           static_cast<u32>(c.stats()[StatId::MaxMp]));
+    query.bind(":cp",           static_cast<u32>(c.stats()[StatId::MaxCp]));
+    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character status");
 
     tr.commit();
 }

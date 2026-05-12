@@ -7,6 +7,7 @@
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterStatus.hpp"
 #include "../game/components/Position.hpp"
+#include "../game/components/Stats.hpp"
 #include "../utils/Conversion.hpp"
 
 #include <l2cpp/services/Database.hpp>
@@ -35,16 +36,22 @@ void Orm::saveCharacter(Character const & c)
 
     query = SQLite::Statement(Database::instance(), R"(
         UPDATE
-            character_professions
+            character_statuses
         SET
             xp = :xp
           , sp = :sp
+          , hp = :hp
+          , mp = :mp
+          , cp = :cp
         WHERE
             character_id = (SELECT id FROM characters WHERE name LIKE :name LIMIT 1)
             AND profession = :profession
     )");
     query.bind(":xp",         c.status().xp());
     query.bind(":sp",         c.status().sp());
+    query.bind(":hp",         static_cast<u32>(c.stats()[StatId::CurHp]));
+    query.bind(":mp",         static_cast<u32>(c.stats()[StatId::CurMp]));
+    query.bind(":cp",         static_cast<u32>(c.stats()[StatId::CurCp]));
     query.bind(":name",       Utils::toString(c.name()));
     query.bind(":profession", std::to_underlying(c.profession()));
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to save character's profession");
