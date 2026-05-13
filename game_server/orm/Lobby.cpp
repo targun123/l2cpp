@@ -8,9 +8,12 @@
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterSelectionData.hpp"
 #include "../game/components/CharacterStatus.hpp"
+#include "../game/components/Gear.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/components/Position.hpp"
 #include "../game/components/Stats.hpp"
+#include "../game/inventory/ItemStorage.hpp"
+#include "../game/inventory/ItemTemplateDirectory.hpp"
 #include "../utils/Conversion.hpp"
 
 #include <l2cpp/services/Database.hpp>
@@ -23,7 +26,8 @@ try
 {
     SQLite::Statement query(Database::instance(), R"(
         SELECT
-            name
+            id
+          , name
           , starting_profession
           , sex
           , hair_style
@@ -80,6 +84,38 @@ try
         stats[StatId::CurHp] = query.getColumn("hp").getUInt();
         stats[StatId::CurMp] = query.getColumn("mp").getUInt();
         stats[StatId::CurCp] = query.getColumn("cp").getUInt();
+
+        SQLite::Statement gearQuery(Database::instance(), R"(
+            SELECT
+                template_id
+              , enchant_level
+            FROM
+                items
+            WHERE
+                owner_id = :character_id AND equipped = TRUE
+        )");
+        gearQuery.bind(":character_id", query.getColumn("id").getUInt());
+
+        auto & inventory = c.inventory();
+        auto & gear      = c.gear();
+        while (gearQuery.executeStep())
+        {
+            auto const     id = gearQuery.getColumn("template_id").getUInt();
+            auto itemTemplate = ItemTemplateDirectory::find(id);
+            if (!itemTemplate)
+            {
+                SPDLOG_ERROR("ItemTemplate id '{}' not loaded but a character requests it", id);
+                continue;
+            }
+
+            auto const enchantLevel = gearQuery.getColumn("enchant_level");
+
+            Item item;
+            item.tmplate      = std::move(*itemTemplate);
+            item.enchantLevel = static_cast<u8>(enchantLevel.isNull() ? 0 : enchantLevel.getUInt());
+
+            gear.equipItem(inventory.add(std::move(item)));
+        }
     }
     return previews;
 }

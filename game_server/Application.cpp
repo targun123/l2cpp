@@ -75,6 +75,8 @@ bool Application::ApplicationImpl::load() const try
         "sql/character_previews.sql",
         "sql/character_professions.sql",
         "sql/item_templates.sql",
+        "sql/items.sql",
+        "sql/starting_items.sql",
         "sql/gs_data.sql",
     });
     SPDLOG_INFO("Database initialization done.");
