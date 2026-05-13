@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS item_templates (
-    id        INTEGER          PRIMARY KEY
+    id        INTEGER PRIMARY KEY
   , name      TEXT    NOT NULL
   , category  INTEGER NOT NULL
   , grade     INTEGER NOT NULL

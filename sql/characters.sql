@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS characters (
-    id                  INTEGER          PRIMARY KEY
+    id                  INTEGER PRIMARY KEY
   , name                TEXT    NOT NULL UNIQUE
   , starting_profession INTEGER NOT NULL
   , sex                 INTEGER NOT NULL
