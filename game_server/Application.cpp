@@ -8,6 +8,7 @@
 #include "Typedefs.hpp"
 #include "game/World.hpp"
 #include "game/actor/NpcDirectory.hpp"
+#include "game/inventory/ItemTemplateDirectory.hpp"
 #include "game/skill/SkillTemplateDirectory.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
@@ -73,9 +74,14 @@ bool Application::ApplicationImpl::load() const try
         "sql/character_owners.sql",
         "sql/character_previews.sql",
         "sql/character_professions.sql",
+        "sql/item_templates.sql",
         "sql/gs_data.sql",
     });
     SPDLOG_INFO("Database initialization done.");
+
+    SPDLOG_INFO("Loading item templates…");
+    ItemTemplateDirectory::load();
+    SPDLOG_INFO("Registered {:L} item templates", ItemTemplateDirectory::size());
 
     SPDLOG_INFO("Loading skills…");
     SkillTemplateDirectory::load("data/skillname-e.txt", "data/skillgrp.txt");
