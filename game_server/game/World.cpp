@@ -157,6 +157,7 @@ auto World::createCharacter(Player const & p, CharacterCreationParameters const 
 {
     auto & c = addCharacterPreview(p.accountId());
     c.setName(params.name);
+    c.setProfession(params.profession);
     c.appearance().setStartingProfession(params.profession);
     c.appearance().setSex(params.sex);
     c.appearance().setHairStyle(params.hairStyle);
