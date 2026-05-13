@@ -177,23 +177,6 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character owner");
 
     query = SQLite::Statement(Database::instance(), R"(
-        UPDATE
-            character_previews
-        SET
-            selected = FALSE
-        WHERE
-            character_id IN (SELECT character_id FROM character_owners WHERE account_id = :account_id)
-    )");
-    query.bind(":account_id", accountId);
-    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to unselect other characters");
-
-    query = SQLite::Statement(Database::instance(), R"(
-        INSERT INTO character_previews (character_id) VALUES (:character_id)
-    )");
-    query.bind(":character_id", charId);
-    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character preview");
-
-    query = SQLite::Statement(Database::instance(), R"(
         INSERT INTO character_professions VALUES (:character_id, :profession)
     )");
     query.bind(":character_id", charId);

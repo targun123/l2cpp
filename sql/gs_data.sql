@@ -17,8 +17,6 @@ VALUES
 
 INSERT OR IGNORE INTO character_owners VALUES (1, 1), (2, 2);
 
-INSERT OR IGNORE INTO character_previews (character_id) VALUES (1), (2);
-
 INSERT OR IGNORE INTO character_professions VALUES
 (1,  0), -- Human Fighter (main class)
 (1, 88), -- Duelist       (1st subclass)
