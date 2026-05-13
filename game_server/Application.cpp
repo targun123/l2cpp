@@ -71,7 +71,6 @@ bool Application::ApplicationImpl::load() const try
     Database::init({
         // Order is significant
         "sql/characters.sql",
-        "sql/character_owners.sql",
         "sql/character_previews.sql",
         "sql/character_professions.sql",
         "sql/item_templates.sql",

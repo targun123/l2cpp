@@ -1,5 +1,6 @@
 INSERT OR IGNORE INTO characters (
-    name
+    account_id
+  , name
   , starting_profession
   , sex
   , hair_style
@@ -12,10 +13,8 @@ INSERT OR IGNORE INTO characters (
   , current_profession
 )
 VALUES
-('Admin',  0, 0, 0, 0, 0, '{l2cpp}', -83968, 244634, -3500, 88), -- on subclass Duelist
-('Admin2', 1, 1, 0, 0, 0, '{l2cpp}', -83968, 244634, -3500, 25); -- on main class Elven Mystic
-
-INSERT OR IGNORE INTO character_owners VALUES (1, 1), (2, 2);
+(1, 'Admin',  0,  0, 0, 0, 0, '{l2cpp}', -83968, 244634, -3500, 88), -- on subclass Duelist
+(2, 'Admin2', 25, 1, 0, 0, 0, '{l2cpp}', -83968, 244634, -3500, 25); -- on main class Elven Mystic
 
 INSERT OR IGNORE INTO character_professions VALUES
 (1,  0), -- Human Fighter (main class)

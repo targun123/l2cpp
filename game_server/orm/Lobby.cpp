@@ -52,11 +52,11 @@ try
         JOIN
             character_previews previews ON previews.character_id = characters.id
         WHERE
-            id IN (SELECT character_id FROM character_owners WHERE account_id = ?)
+            account_id = :account_id
         ORDER BY
             creation_date
     )");
-    query.bind(1, accountId);
+    query.bind(":account_id", accountId);
 
     std::vector<Ref<Character>> previews;
     while (query.executeStep())
@@ -85,37 +85,7 @@ try
         stats[StatId::CurMp] = query.getColumn("mp").getUInt();
         stats[StatId::CurCp] = query.getColumn("cp").getUInt();
 
-        SQLite::Statement gearQuery(Database::instance(), R"(
-            SELECT
-                template_id
-              , enchant_level
-            FROM
-                items
-            WHERE
-                owner_id = :character_id AND equipped = TRUE
-        )");
-        gearQuery.bind(":character_id", query.getColumn("id").getUInt());
-
-        auto & inventory = c.inventory();
-        auto & gear      = c.gear();
-        while (gearQuery.executeStep())
-        {
-            auto const     id = gearQuery.getColumn("template_id").getUInt();
-            auto itemTemplate = ItemTemplateDirectory::find(id);
-            if (!itemTemplate)
-            {
-                SPDLOG_ERROR("ItemTemplate id '{}' not loaded but a character requests it", id);
-                continue;
-            }
-
-            auto const enchantLevel = gearQuery.getColumn("enchant_level");
-
-            Item item;
-            item.tmplate      = std::move(*itemTemplate);
-            item.enchantLevel = static_cast<u8>(enchantLevel.isNull() ? 0 : enchantLevel.getUInt());
-
-            gear.equipItem(inventory.add(std::move(item)));
-        }
+        loadGear(c);
     }
     return previews;
 }
@@ -126,13 +96,14 @@ catch (SQLite::Exception const & e)
     return {};
 }
 
-void Orm::createCharacter(AccountId const accountId, Character const & c) try
+void Orm::createCharacter(AccountId const accountId, Character & c) try
 {
     SQLite::Transaction tr(Database::instance());
 
     SQLite::Statement query(Database::instance(), R"(
         INSERT INTO characters (
-            name
+            account_id
+          , name
           , starting_profession
           , sex
           , hair_style
@@ -143,7 +114,8 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
           , pos_z
           , current_profession
         ) VALUES (
-            :name
+            :account_id
+          , :name
           , :starting_profession
           , :sex
           , :hair_style
@@ -155,6 +127,7 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
           , :current_profession
         )
     )");
+    query.bind(":account_id",          accountId);
     query.bind(":name",                Utils::toString(c.name()));
     query.bind(":starting_profession", std::to_underlying(c.appearance().startingProfession()));
     query.bind(":sex",                 std::to_underlying(c.appearance().sex()));
@@ -168,13 +141,6 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert a new character");
 
     auto const charId = Database::instance().getLastInsertRowid();
-
-    query = SQLite::Statement(Database::instance(), R"(
-        INSERT INTO character_owners VALUES (:account_id, :character_id)
-    )");
-    query.bind(":account_id",   accountId);
-    query.bind(":character_id", charId);
-    L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character owner");
 
     query = SQLite::Statement(Database::instance(), R"(
         INSERT INTO character_professions VALUES (:character_id, :profession)
@@ -196,6 +162,8 @@ void Orm::createCharacter(AccountId const accountId, Character const & c) try
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert character status");
 
     tr.commit();
+
+    loadGear(c);
 }
 catch (SQLite::Exception const & e)
 {
@@ -213,9 +181,9 @@ try
         SET
             selected = FALSE
         WHERE
-            character_id IN (SELECT character_id FROM character_owners WHERE account_id = ?)
+            character_id IN (SELECT id FROM characters WHERE account_id = :account_id)
     )");
-    query.bind(1, accountId);
+    query.bind(":account_id", accountId);
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to unselect all characters");
 
     query = SQLite::Statement(Database::instance(), R"(
@@ -234,4 +202,39 @@ try
 catch (SQLite::Exception const & e)
 {
     L2CPP_THROW(e.getErrorCode(), "SQL error '{}'", e.what());
+}
+
+void Orm::loadGear(Character & c)
+{
+    SQLite::Statement gearQuery(Database::instance(), R"(
+        SELECT
+            template_id
+          , enchant_level
+        FROM
+            items
+        WHERE
+            owner_id = (SELECT id FROM characters WHERE name = :name LIMIT 1) AND equipped = TRUE
+    )");
+    gearQuery.bind(":name", Utils::toString(c.name()));
+
+    auto & inventory = c.inventory();
+    auto & gear      = c.gear();
+    while (gearQuery.executeStep())
+    {
+        auto const     id = gearQuery.getColumn("template_id").getUInt();
+        auto itemTemplate = ItemTemplateDirectory::find(id);
+        if (!itemTemplate)
+        {
+            SPDLOG_ERROR("ItemTemplate id '{}' not loaded but a character requests it", id);
+            continue;
+        }
+
+        auto const enchantLevel = gearQuery.getColumn("enchant_level");
+
+        Item item;
+        item.tmplate      = std::move(*itemTemplate);
+        item.enchantLevel = static_cast<u8>(enchantLevel.isNull() ? 0 : enchantLevel.getUInt());
+
+        gear.equipItem(inventory.add(std::move(item)));
+    }
 }
