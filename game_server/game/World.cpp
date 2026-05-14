@@ -175,7 +175,7 @@ auto World::getCharacterPreviews(Player const & p) -> std::vector<Ref<Character>
     std::vector<Ref<Character>> result;
 
     if (!_characterPreviewsIndex.contains(p.accountId())) // no index means first connection since server booted
-        result = Orm::fetchCharacterPreviews(p.accountId());
+        result = Orm::loadCharacterPreviews(p.accountId());
     else
     {
         auto const & index = _characterPreviewsIndex[p.accountId()];

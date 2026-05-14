@@ -10,8 +10,7 @@ class Character;
 
 namespace Orm
 {
-    auto fetchCharacterPreviews(AccountId) -> std::vector<Ref<Character>>;
+    auto loadCharacterPreviews(AccountId) -> std::vector<Ref<Character>>;
     void createCharacter(AccountId, Character &);
     void selectCharacter(AccountId, std::wstring_view selectedCharName);
-    void loadGear(Character & c);
 }

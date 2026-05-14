@@ -21,7 +21,9 @@
 // Third-party includes
 #include <spdlog/spdlog.h>
 
-auto Orm::fetchCharacterPreviews(AccountId const accountId) -> std::vector<Ref<Character>>
+static void loadGear(u32 characterId, Character & c);
+
+auto Orm::loadCharacterPreviews(AccountId const accountId) -> std::vector<Ref<Character>>
 try
 {
     SQLite::Statement query(Database::instance(), R"(
@@ -85,7 +87,7 @@ try
         stats[StatId::CurMp] = query.getColumn("mp").getUInt();
         stats[StatId::CurCp] = query.getColumn("cp").getUInt();
 
-        loadGear(c);
+        loadGear(query.getColumn("id").getUInt(), c);
     }
     return previews;
 }
@@ -140,7 +142,7 @@ void Orm::createCharacter(AccountId const accountId, Character & c) try
     query.bind(":current_profession",  std::to_underlying(c.profession()));
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to insert a new character");
 
-    auto const charId = Database::instance().getLastInsertRowid();
+    auto const charId = static_cast<u32>(Database::instance().getLastInsertRowid());
 
     query = SQLite::Statement(Database::instance(), R"(
         INSERT INTO character_professions VALUES (:character_id, :profession)
@@ -163,7 +165,7 @@ void Orm::createCharacter(AccountId const accountId, Character & c) try
 
     tr.commit();
 
-    loadGear(c);
+    loadGear(charId, c);
 }
 catch (SQLite::Exception const & e)
 {
@@ -204,28 +206,28 @@ catch (SQLite::Exception const & e)
     L2CPP_THROW(e.getErrorCode(), "SQL error '{}'", e.what());
 }
 
-void Orm::loadGear(Character & c)
+void loadGear(u32 const characterId, Character & c)
 {
-    SQLite::Statement gearQuery(Database::instance(), R"(
+    SQLite::Statement gearQuery{Database::instance(), R"(
         SELECT
             template_id
           , enchant_level
         FROM
             items
         WHERE
-            owner_id = (SELECT id FROM characters WHERE name = :name LIMIT 1) AND equipped = TRUE
-    )");
-    gearQuery.bind(":name", Utils::toString(c.name()));
+            owner_id = :character_id AND equipped = TRUE
+    )"};
+    gearQuery.bind(":character_id", characterId);
 
     auto & inventory = c.inventory();
     auto & gear      = c.gear();
     while (gearQuery.executeStep())
     {
-        auto const     id = gearQuery.getColumn("template_id").getUInt();
-        auto itemTemplate = ItemTemplateDirectory::find(id);
+        auto const templateId   = gearQuery.getColumn("template_id").getUInt();
+        auto const itemTemplate = ItemTemplateDirectory::find(templateId);
         if (!itemTemplate)
         {
-            SPDLOG_ERROR("ItemTemplate id '{}' not loaded but a character requests it", id);
+            SPDLOG_ERROR("ItemTemplate id '{}' not loaded but a character requests it", templateId);
             continue;
         }
 
