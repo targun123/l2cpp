@@ -4,16 +4,13 @@
 #include "Shortcut.hpp"
 
 // Project includes
+#include "../constants/Ui.hpp"
+
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/details/Pimpl.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/PacketReader.hpp>
 #include <l2cpp/utils/Enum.hpp>
-
-namespace Constants
-{
-    constexpr size_t maxShortcuts = 120;
-}
 
 struct Shortcut::ShortcutImpl
 {
@@ -32,35 +29,26 @@ Shortcut::Shortcut(Shortcut &&) noexcept = default;
 Shortcut & Shortcut::operator=(Shortcut &&) noexcept = default;
 Shortcut::~Shortcut() = default;
 
+auto Shortcut::isEmpty() const -> bool
+{
+    return _impl->type  == ShortcutType::None
+        || _impl->index >= Constants::maxShortcuts
+        || _impl->id    == 0;
+}
+
 auto Shortcut::index() const -> std::optional<size_t>
 {
-    std::optional<size_t> idx;
-
-    if (_impl->index < Constants::maxShortcuts)
-        idx = _impl->index;
-
-    return idx;
+    return _impl->index < Constants::maxShortcuts ? std::optional(_impl->index) : std::nullopt;
 }
 
-auto Shortcut::type() const -> ShortcutType
-{
-    return _impl->type;
-}
+auto Shortcut::type()       const -> ShortcutType { return _impl->type; }
+auto Shortcut::targetId()   const -> u32 { return _impl->id; }
+auto Shortcut::skillLevel() const -> SkillLevel { return _impl->level; }
 
-auto Shortcut::targetId() const -> u32
-{
-    return _impl->id;
-}
-
-auto Shortcut::skillLevel() const -> SkillLevel
-{
-    return _impl->level;
-}
-
-void Shortcut::setSkillLevel(SkillLevel const level)
-{
-    _impl->level = level;
-}
+void Shortcut::setIndex     (size_t       const idx)   { _impl->index = static_cast<u32>(idx); }
+void Shortcut::setType      (ShortcutType const type)  { _impl->type  = type;                  }
+void Shortcut::setTargetId  (u32          const id)    { _impl->id    = id;                    }
+void Shortcut::setSkillLevel(SkillLevel   const level) { _impl->level = level;                 }
 
 l2cpp::Network::PacketReader & operator>>(l2cpp::Network::PacketReader & r, Shortcut & s)
 {
