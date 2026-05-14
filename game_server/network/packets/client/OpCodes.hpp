@@ -24,7 +24,7 @@ namespace Network
         ItemUse                     = 0x14,
         SkillUse                    = 0x2f,
         UiShortcutSet               = 0x33,
-        UiShortcutUnset            = 0x35,
+        UiShortcutUnset             = 0x35,
         TargetClear                 = 0x37,
         ChatSay                     = 0x38,
         SkillList                   = 0x3f,

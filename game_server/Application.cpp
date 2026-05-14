@@ -174,8 +174,12 @@ void Application::ApplicationImpl::onSignal(boost::system::error_code const & ec
             shutdown();
             break;
 
+        case boost::system::errc::operation_canceled:
+            SPDLOG_INFO("SIGINT listener canceled");
+            break;
+
         default:
-            SPDLOG_WARN("onSignal error {}: {}", ec.default_error_condition().value(), ec.message());
+            SPDLOG_ERROR("onSignal error {}: {}", ec.default_error_condition().value(), ec.message());
             break;
     }
 }
