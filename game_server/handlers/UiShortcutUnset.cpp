@@ -2,17 +2,17 @@
 /// @date      Created on 2026-03-03
 
 // Project includes
-#include "_Common.hpp"
 #include "../game/actor/Character.hpp"
-#include "../game/ui/Shortcut.hpp"
+#include "_Common.hpp"
 
-DEFINE_PACKET_HANDLER(ShortcutBarRemove)
+DEFINE_PACKET_HANDLER(UiShortcutUnset)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
     u32 index;
     reader >> index;
-    L2CPP_B_ASSERT(index < 120, "Trying to remove a shortcut outside the valid index range: {}", index);
+    L2CPP_B_ASSERT(index < Constants::maxShortcuts,
+                   "Trying to remove a shortcut outside the valid index range, at index {}", index);
 
     player.currentCharacter()->delShortcut(index);
 }
