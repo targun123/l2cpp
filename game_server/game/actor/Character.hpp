@@ -6,9 +6,13 @@
 // Project includes
 #include "../../Typedefs.hpp"
 #include "../constants/Profession.hpp"
+#include "../constants/Ui.hpp"
 #include "Actor.hpp"
 
 #include <l2cpp/Pimpl.hpp>
+
+// C++ includes
+#include <span>
 
 class CharacterStatus;
 class ItemStorage;
@@ -42,7 +46,9 @@ public:
     auto inventory()       -> ItemStorage       &;
     auto inventory() const -> ItemStorage const &;
 
-    bool isAttackable() const override;
+    auto shortcuts() const -> std::span<Shortcut const, Constants::maxShortcuts>;
+
+    bool isAttackable() const override { return false; }
 
 public:
     void setProfession(Profession);

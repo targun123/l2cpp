@@ -68,7 +68,7 @@ auto Character::appearance() const -> PlayerAppearance const & { return componen
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
 auto Character::inventory() const -> ItemStorage const & { return _impl->inventory; }
 
-bool Character::isAttackable() const { return false; }
+auto Character::shortcuts() const -> std::span<Shortcut const, Constants::maxShortcuts> { return _impl->shortcuts; }
 
 void Character::setProfession(Profession const profession) { _impl->profession = profession; }
 
