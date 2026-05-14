@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS character_previews (
-    character_id  INTEGER UNIQUE,
-    selected      INTEGER NOT NULL DEFAULT TRUE,
-    creation_date TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE
+    character_id  INTEGER NOT NULL
+  , selected      BOOLEAN NOT NULL DEFAULT TRUE
+  , creation_date TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
+  , PRIMARY KEY (character_id)
+  , FOREIGN KEY (character_id) REFERENCES characters (id) ON DELETE CASCADE
 );
 
 CREATE TRIGGER IF NOT EXISTS auto_insert_character_preview
