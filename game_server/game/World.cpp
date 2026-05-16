@@ -22,6 +22,7 @@
 #include "components/ActorStatus.hpp"
 #include "components/CharacterStatus.hpp"
 #include "components/DeletionTimer.hpp"
+#include "components/ActorRespawnTimer.hpp"
 #include "components/Loot.hpp"
 #include "components/NpcAppearance.hpp"
 #include "components/PlayerAppearance.hpp"
@@ -37,6 +38,7 @@
 #include "systems/ActorDeletionTimerSystem.hpp"
 #include "systems/ActorAbnormalEffectSystem.hpp"
 #include "systems/ActorStatsUpdateSystem.hpp"
+#include "systems/ActorRespawnSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
 
@@ -57,6 +59,26 @@ static void addGremlin()
 
     if (auto const gremlin = World::addMonster(1))
         gremlin->setPosX(gremlin->position().x + (count++ % 2 ? 35 : -35));
+}
+
+static void addGoblin()
+{
+    static u32 count = 1;
+
+    if (auto const goblin = World::addMonster(3)) 
+        goblin->setPosX(goblin->position().x + (count++ % 2 ? 120 : -120));
+    
+        
+}
+
+static void addImp()
+{
+    static u32 count = 1;
+
+    if (auto const imp = World::addMonster(4)) 
+        imp->setPosX(imp->position().x + (count++ % 2 ? 200 : -200));
+    
+
 }
 
 static void addDummy()
@@ -82,6 +104,8 @@ void World::init()
     registerSystem<ActorAutoRegenSystem>();
     registerSystem<ActorDeletionTimerSystem>();
     registerSystem<ActorAbnormalEffectSystem>();
+    registerSystem<ActorRespawnSystem>();
+
     // Must be last!
     registerSystem<ActorStatsUpdateSystem>();
 
@@ -95,6 +119,10 @@ void World::init()
 
     addGremlin();
     addGremlin();
+
+    addGoblin();
+
+    addImp();
 
     addDummy();
     addDummy();
@@ -283,6 +311,15 @@ void World::unscheduleForDeletion(Actor & a)
 {
     _scheduledForDeletion.erase(a.id());
     a.delComponent<DeletionTimer>();
+}
+
+void World::scheduleNpcRespawn(Actor& deadActor, u32 npcId, ClockDuration delay)
+{
+    auto& timer = deadActor.getOrAddComponent<ActorRespawnTimer>();
+    timer.npcId = npcId;
+    timer.respawnDelay = delay;
+    timer.elapsedSinceDeath = ClockDuration::zero();
+    timer.spawnPosition = deadActor.position();
 }
 
 auto World::inGameTime() -> std::chrono::minutes

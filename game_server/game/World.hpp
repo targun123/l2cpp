@@ -57,6 +57,8 @@ public:
     static void scheduleForDeletion(Actor &, ClockDuration timeFromNow = ClockDuration::zero());
     static void unscheduleForDeletion(Actor &);
 
+    static void scheduleNpcRespawn(Actor& deadActor, u32 npcId, ClockDuration delay);
+
     static auto inGameTime() -> std::chrono::minutes;
 
     static auto subscribeToTarget(GameObjectId targetId, Actor const & listener) -> OptRef<Actor>;

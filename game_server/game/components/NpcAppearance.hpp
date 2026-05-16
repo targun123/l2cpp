@@ -13,6 +13,7 @@ public:
 
 public:
     auto id() const -> u32;
+    auto templateId() const -> u32;
     auto titleColor() const -> u32;
     bool nameIsVisible() const;
 
@@ -22,6 +23,6 @@ public:
     void setNameIsVisible(bool visible);
 
 private:
-    u32 _id, _titleColor;
+    u32 _id, _templateId, _titleColor;
     bool _nameIsVisible;
 };

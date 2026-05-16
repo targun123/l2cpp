@@ -15,6 +15,7 @@
 #include "../components/Position.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../components/Stats.hpp"
+#include "../components/NpcAppearance.hpp"
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
@@ -204,6 +205,15 @@ void Actor::die()
 
     delComponent<ActorAutoRegen>();
     delComponent<AttackStanceTimer>();
+
+    
+    if (auto const app = component<NpcAppearance>())
+    {
+        u32 tId = app->templateId();
+        auto const delay = std::chrono::seconds(2);
+        World::scheduleNpcRespawn(*this, tId, delay);
+    }
+    
 
     fire onDied();
 }
