@@ -20,11 +20,17 @@ void ActorRespawnSystem::updateImpl(ClockDuration elapsed, Actor& actor)
 
     if (timer->elapsedSinceDeath >= timer->respawnDelay)
     {
-        if (auto const npc = World::addNpc(timer->npcId))
+        if (auto const npc = World::addNpc(timer->npcId); npc && npc->type() == ActorType::Npc)
         {
             npc->setPosition(timer->spawnPosition);
 
             World::broadcastAround(npc, NpcStatusUpdatePacket(npc));
+        }
+        else if (auto const monster = World::addMonster(timer->npcId); monster && monster->type() == ActorType::Monster)
+        {
+            monster->setPosition(timer->spawnPosition);
+
+            World::broadcastAround(monster, NpcStatusUpdatePacket(monster));
         }
 
         actor.delComponent<ActorRespawnTimer>();
