@@ -444,7 +444,8 @@ void World::forEachActorAround(Actor const & source, std::function<void(Actor &)
 
 bool World::isInBroadcastRange(Actor const & source, Actor const & target)
 {
-    return Utils::Maths::distance(source, target) <= 1000;
+    return true;
+    //return Utils::Maths::distance(source, target) <= 1000;
 }
 
 void World::send(Actor const & to, Packet & packet, std::source_location const & src)
