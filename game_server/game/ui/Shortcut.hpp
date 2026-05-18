@@ -26,7 +26,6 @@ public:
             auto index()     const -> Index;
             auto type()      const -> ShortcutType;
     virtual auto targetId()  const -> u32 = 0;
-    virtual auto extraInfo() const -> std::optional<u32> { return std::nullopt; }
 
 private:
     void serialize(l2cpp::Network::Packet &) const;

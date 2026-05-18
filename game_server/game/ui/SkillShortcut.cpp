@@ -11,8 +11,10 @@ SkillShortcut::SkillShortcut(Index const index, SkillUid const skillUid)
     , _skillUid{skillUid}
 {}
 
-auto SkillShortcut::targetId()  const -> u32                { return _skillUid.id();    }
-auto SkillShortcut::extraInfo() const -> std::optional<u32> { return _skillUid.level(); }
+auto SkillShortcut::targetId() const -> u32
+{
+    return _skillUid.id();
+}
 
 void SkillShortcut::serializeImpl(l2cpp::Network::Packet & p) const
 {

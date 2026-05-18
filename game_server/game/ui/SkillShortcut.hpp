@@ -14,7 +14,6 @@ public:
 
 public:
     auto targetId()  const -> u32 override;
-    auto extraInfo() const -> std::optional<u32> override;
 
 private:
     void serializeImpl(l2cpp::Network::Packet &) const override;

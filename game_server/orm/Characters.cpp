@@ -233,9 +233,9 @@ namespace
 
         query = SQLite::Statement{Database::instance(), R"(
             INSERT OR REPLACE INTO character_shortcuts
-                ( character_id,  profession, "index",  type,  target_id,  extra_info)
+                ( character_id,  profession, "index",  type,  target_id)
             VALUES
-                (:character_id, :profession, :index,  :type, :target_id, :extra_info)
+                (:character_id, :profession, :index,  :type, :target_id)
         )"};
 
         for (Shortcut const & s : nonEmptyShortcuts)
@@ -246,10 +246,6 @@ namespace
             query.bind(":index",        s.index());
             query.bind(":type",         std::to_underlying(s.type()));
             query.bind(":target_id",    s.targetId());
-            if (auto const extraInfo = s.extraInfo())
-                query.bind(":extra_info", *extraInfo);
-            else
-                query.bind(":extra_info");
 
             query.exec();
         }
@@ -276,7 +272,6 @@ namespace
             auto const index    = query.getColumn("index"    ).getUInt();
             auto const type     = query.getColumn("type"     ).getUInt();
             auto const targetId = query.getColumn("target_id").getUInt();
-            // auto const extraInfo = query.getColumn("extra_info");
 
             switch (static_cast<ShortcutType>(type))
             {
