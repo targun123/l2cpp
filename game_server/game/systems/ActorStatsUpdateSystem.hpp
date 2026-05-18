@@ -9,7 +9,7 @@
 namespace Network::Packet::Server { class StatsUpdatePacket; }
 
 class Character;
-struct CharacterStatus;
+class CharacterStatus;
 class Npc;
 
 struct ActorStatsUpdateSystem : public ActorSystem

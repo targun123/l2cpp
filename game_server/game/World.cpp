@@ -13,29 +13,34 @@
 #include "../network/packets/server/status/ActorRevivePacket.hpp"
 #include "../network/packets/server/target/TargetClearPacket.hpp"
 #include "../network/packets/server/world/GameObjectDeletePacket.hpp"
+#include "../orm/Characters.hpp"
+#include "../orm/Lobby.hpp"
 #include "../utils/Conversion.hpp"
 #include "../utils/Maths.hpp"
 #include "actor/Character.hpp"
 #include "actor/Monster.hpp"
 #include "actor/Npc.hpp"
 #include "actor/NpcDirectory.hpp"
-#include "components/ActorStatus.hpp"
+#include "components/ActorAutoRegen.hpp"
+#include "components/AttackStanceTimer.hpp"
+#include "components/CharacterSelectionData.hpp"
 #include "components/CharacterStatus.hpp"
 #include "components/DeletionTimer.hpp"
 #include "components/Loot.hpp"
 #include "components/NpcAppearance.hpp"
+#include "components/NpcStatus.hpp"
 #include "components/PlayerAppearance.hpp"
 #include "components/Position.hpp"
 #include "constants/Profession.hpp"
-#include "constants/Race.hpp"
 #include "constants/Sex.hpp"
 #include "constants/SocialAction.hpp"
 #include "constants/SystemMessageId.hpp"
 #include "ecs/System.hpp"
+#include "lobby/CharacterCreationParameters.hpp"
+#include "systems/ActorAbnormalEffectSystem.hpp"
 #include "systems/ActorAttackStanceTimerSystem.hpp"
 #include "systems/ActorAutoRegenSystem.hpp"
 #include "systems/ActorDeletionTimerSystem.hpp"
-#include "systems/ActorAbnormalEffectSystem.hpp"
 #include "systems/ActorStatsUpdateSystem.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
@@ -45,7 +50,6 @@
 
 // C++ includes
 #include <ranges>
-#include <unordered_set>
 
 namespace SC = Network::Packet::Server; // Server -> Client
 
@@ -66,11 +70,11 @@ static void addDummy()
     auto & d = World::addCharacter();
     d.setPosY(d.position().y + (count++ % 2 ? 35 : -35));
     d.setName(std::format(L"dummy{}", d.id()));
-    d.appearance().setRace(Race::Elf);
-    d.appearance().sex = Sex::Female;
+    d.appearance().setStartingProfession(Profession::ElvenMystic);
+    d.appearance().setSex(Sex::Female);
     d.appearance().collisionHeight = 23;
     d.appearance().collisionRadius = 7.5;
-    d.setProfession(Profession::ElvenMystic);
+    d.setProfession(d.appearance().startingProfession());
 
     auto & loot = d.addComponent<Loot>();
     loot.xp = 50;
@@ -84,14 +88,6 @@ void World::init()
     registerSystem<ActorAbnormalEffectSystem>();
     // Must be last!
     registerSystem<ActorStatsUpdateSystem>();
-
-    auto & c1 = addCharacterPreview(L"Admin");
-    c1.setName(L"test" + std::to_wstring(c1.id()));
-    c1.setTitle(L"Admin");
-
-    auto & c2 = addCharacterPreview(L"Admin2");
-    c2.setName(L"test" + std::to_wstring(c2.id()));
-    c2.setTitle(L"Admin2");
 
     addGremlin();
     addGremlin();
@@ -157,24 +153,48 @@ void World::update(ClockDuration const elapsed)
     _scheduledForDeletion.clear();
 }
 
-auto World::getCharacterPreviews(std::wstring_view const playerAccount) -> std::vector<Ref<Character>>
+auto World::createCharacter(Player const & p, CharacterCreationParameters const & params) -> CharacterCreationResult
+{
+    auto & c = addCharacterPreview(p.accountId());
+    c.setName(params.name);
+    c.setProfession(params.profession);
+    c.appearance().setStartingProfession(params.profession);
+    c.appearance().setSex(params.sex);
+    c.appearance().setHairStyle(params.hairStyle);
+    c.appearance().setHairColor(params.hairColor);
+    c.appearance().setFace(params.face);
+    c.addComponent<CharacterSelectionData>().selected = true;
+    // FIXME: change values depending on race & class
+    c.setPosition(-83968, 244634, -3500); // Talking Island GK
+    Orm::createCharacter(p.accountId(), c);
+    return CharacterCreationResult::Success;
+}
+
+auto World::getCharacterPreviews(Player const & p) -> std::vector<Ref<Character>>
 {
     std::vector<Ref<Character>> result;
 
-    auto const & index = _characterPreviewsIndex[playerAccount];
-    for (result.reserve(index.size()); auto const id : index)
-        result.emplace_back(*_characterPreviews.at(id));
+    if (!_characterPreviewsIndex.contains(p.accountId())) // no index means first connection since server booted
+        result = Orm::loadCharacterPreviews(p.accountId());
+    else
+    {
+        auto const & index = _characterPreviewsIndex[p.accountId()];
+        result.reserve(index.size());
+
+        for (auto const id : index)
+            result.emplace_back(*_characterPreviews.at(id));
+    }
 
     return result;
 }
 
-auto World::addCharacterPreview(std::wstring_view const playerAccount) -> Character &
+auto World::addCharacterPreview(AccountId const accountId) -> Character &
 {
-    L2CPP_B_ASSERT(!playerAccount.empty(), "Player account name unknown, cannot create character preview");
+    L2CPP_B_ASSERT(accountId, "Player account id unknown, cannot create character preview");
 
     Ref c = addCharacter();
     auto const id = c.get().id();
-    _characterPreviewsIndex[playerAccount].emplace_back(id);
+    _characterPreviewsIndex[accountId].emplace_back(id);
     c = *_characterPreviews.try_emplace(id, static_cast<Character *>(_actors[id].release())).first->second;
     _actors.erase(id);
     return c;
@@ -187,12 +207,23 @@ auto World::loadCharacterFromPreview(Character const & c) -> Character &
     auto const id    = c.id();
     auto const & ptr = _actors.try_emplace(id, _characterPreviews[id].release()).first->second;
     _characterPreviews.erase(id);
-    return static_cast<Character &>(*ptr);
+
+    auto & character = static_cast<Character &>(*ptr);
+    Orm::loadCharacter(character);
+    return character;
 }
 
 void World::moveCharacterBackToPreviews(Character & c)
 {
     L2CPP_B_ASSERT(_actors.contains(c.id()), "Character '{}' is not present in the world", c.id());
+
+    c.onAbnormalEffectListChanged.clear();
+    c.onDied                     .clear();
+    c.onLeveledUp                .clear();
+    c.onRevived                  .clear();
+
+    c.delComponent<ActorAutoRegen>();
+    c.delComponent<AttackStanceTimer>();
 
     if (auto const target = c.target())
     {
@@ -206,8 +237,11 @@ void World::moveCharacterBackToPreviews(Character & c)
     if (c.player)
         c.player->unsetCurrentCharacter();
 
+    Orm::saveCharacter(c);
+
     auto const id = c.id();
-    _characterPreviews.try_emplace(id, std::make_unique<Character>(std::move(c)));
+    auto & ptr = _actors.at(id);
+    _characterPreviews.try_emplace(id, static_cast<Character *>(ptr.release()));
     _actors.erase(id);
 }
 
@@ -215,10 +249,10 @@ auto World::addCharacter(OptRef<Player> p) -> Character &
 {
     auto & c = addActor<Character>(std::move(p));
     c.onAbnormalEffectListChanged += [&c] { send(c, SC::AbnormalEffectListPacket{c}); };
-    c.onLeveledUp += [&c]
+    c.onLeveledUp                 += [&c]
     {
-        broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
         send(c, SC::ChatSystemSayPacket{SystemMessageId::YourLevelHasIncreased});
+        broadcastAround(c, SC::SocialActionPerformPacket{c, SocialAction::LevelUpAnimation}, true);
     };
     return c;
 }
@@ -359,30 +393,36 @@ void World::distributeLoot(Loot const & loot, DamageDealtTable const & attackerD
 
     auto & c = participants.rbegin()->second.get(); // For now, select the one who dealt the most damage
 
-    c.status().xp += loot.xp;
-    c.status().sp += loot.sp;
-
     auto const oldLevel = c.status().level();
-    auto const newLevel = ExperienceTable::level(c.status().xp);
+    auto const oldXp    = c.status().xp();
+    auto const oldSp    = c.status().sp();
+
+    c.status().addXp(loot.xp);
+    c.status().addSp(loot.sp);
+
+    auto const newLevel  = c.status().level();
     bool const leveledUp = newLevel > oldLevel;
+    auto const newXp     = c.status().xp();
+    auto const newSp     = c.status().sp();
+
     if (leveledUp)
         c.status().setLevel(newLevel);
 
     std::optional<SC::ChatSystemSayPacket> msg;
-    /**/ if (loot.xp && loot.sp)
+    /**/ if (newXp > oldXp && newSp > oldSp)
     {
         msg.emplace(SystemMessageId::EarnedXpAndSp);
-        *msg << SysMsgArg::Number{loot.xp} << SysMsgArg::Number{loot.sp};
+        *msg << SysMsgArg::Number{newXp - oldXp} << SysMsgArg::Number{newSp - oldSp};
     }
-    else if (loot.xp)
+    else if (newXp > oldXp)
     {
         msg.emplace(SystemMessageId::EarnedXp);
-        *msg << SysMsgArg::Number{loot.xp};
+        *msg << SysMsgArg::Number{newXp - oldXp};
     }
-    else
+    else if (newSp > oldSp)
     {
         msg.emplace(SystemMessageId::EarnedSp);
-        *msg << SysMsgArg::Number{loot.sp};
+        *msg << SysMsgArg::Number{newSp - oldSp};
     }
 
     if (msg)
@@ -453,7 +493,7 @@ void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool
     }
 
     if (includeEmitter)
-        send(emitter, Packet(packet));
+        send(emitter, Packet(packet), src);
 }
 
 auto World::addActor(std::unique_ptr<Actor> actor) -> Actor &
@@ -489,9 +529,9 @@ void World::delActor(Actor & a)
     }
 }
 
-std::vector<std::unique_ptr<System>>                             World::_systems;
-std::unordered_map<std::wstring_view, std::vector<GameObjectId>> World::_characterPreviewsIndex;
-std::unordered_map<GameObjectId, std::unique_ptr<Character>>     World::_characterPreviews;
-std::unordered_map<GameObjectId, std::unique_ptr<Actor>>         World::_actors;
-std::unordered_map<GameObjectId, Ref<Actor>>                     World::_scheduledForDeletion;
-std::unordered_map<GameObjectId, std::list<GameObjectId>>        World::_targetSubscribers;
+std::vector<std::unique_ptr<System>>                         World::_systems;
+std::unordered_map<AccountId,    std::vector<GameObjectId>>  World::_characterPreviewsIndex;
+std::unordered_map<GameObjectId, std::unique_ptr<Character>> World::_characterPreviews;
+std::unordered_map<GameObjectId, std::unique_ptr<Actor>>     World::_actors;
+std::unordered_map<GameObjectId, Ref<Actor>>                 World::_scheduledForDeletion;
+std::unordered_map<GameObjectId, std::list<GameObjectId>>    World::_targetSubscribers;

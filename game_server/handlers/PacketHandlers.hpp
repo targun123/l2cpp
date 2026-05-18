@@ -4,11 +4,10 @@
 #pragma once
 
 // Project includes
-#include <l2cpp/Typedefs.hpp>
+#include "../Typedefs.hpp"
 
 // C++ includes
 #include <string_view>
-#include <unordered_map>
 
 class Player;
 

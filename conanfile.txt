@@ -2,6 +2,7 @@
 boost/1.90.0
 openssl/1.1.1w
 spdlog/1.17.0
+sqlitecpp/3.3.3
 
 [options]
 boost/*:header_only=True

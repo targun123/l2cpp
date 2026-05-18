@@ -14,6 +14,7 @@
 #include "../network/packets/server/status/CharacterStatusUpdateBroadcastPacket.hpp"
 #include "../network/packets/server/status/CharacterStatusUpdatePacket.hpp"
 #include "../network/packets/server/status/NpcStatusUpdatePacket.hpp"
+#include "../network/packets/server/ui/UiShortcutListPacket.hpp"
 #include "_Common.hpp"
 
 DEFINE_PACKET_HANDLER(EnterWorld) try
@@ -25,8 +26,9 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
     if (c.isAlive())
         c.addComponent<ActorAutoRegen>();
 
-    conn.send(InventoryListPacket(false, c.inventory()));
-    conn.send(ChatSystemSayPacket(SystemMessageId::WelcomeToTheWorldOfL2));
+    conn.send(InventoryListPacket{false, c.inventory()});
+    conn.send(UiShortcutListPacket{c.shortcutBar()});
+    conn.send(ChatSystemSayPacket{SystemMessageId::WelcomeToTheWorldOfL2});
 
     // Send surrounding actors
     World::forEachActorAround(c, [&] (Actor & a)

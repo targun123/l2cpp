@@ -4,17 +4,17 @@
 #pragma once
 
 // Project includes
-#include <l2cpp/Typedefs.hpp>
+#include "../Typedefs.hpp"
 
 namespace Network
 {
     enum class ClientOpCode : byte
     {
         Protocol                    = 0x00,
-        Authenticate                = 0x08,
         Move                        = 0x01,
         EnterWorld                  = 0x03,
         ActionRequest               = 0x04,
+        Authenticate                = 0x08,
         ConnectionClosing           = 0x09,
         CharacterCreate             = 0x0b,
         CharacterSelect             = 0x0d,
@@ -23,8 +23,8 @@ namespace Network
         ItemUnequip                 = 0x11,
         ItemUse                     = 0x14,
         SkillUse                    = 0x2f,
-        ShortcutBarAdd              = 0x33,
-        ShortcutBarRemove           = 0x35,
+        UiShortcutSet               = 0x33,
+        UiShortcutUnset             = 0x35,
         TargetClear                 = 0x37,
         ChatSay                     = 0x38,
         SkillList                   = 0x3f,

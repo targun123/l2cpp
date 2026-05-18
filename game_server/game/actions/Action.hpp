@@ -4,9 +4,8 @@
 #pragma once
 
 // Project includes
+#include "../../Typedefs.hpp"
 #include "../constants/ActionType.hpp"
-
-#include <l2cpp/Typedefs.hpp>
 
 class Actor;
 

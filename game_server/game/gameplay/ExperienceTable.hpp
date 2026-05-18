@@ -4,7 +4,7 @@
 #pragma once
 
 // Project includes
-#include <l2cpp/Typedefs.hpp>
+#include "../../Typedefs.hpp"
 
 class ExperienceTable
 {
@@ -12,6 +12,8 @@ class ExperienceTable
 
 public:
     static auto level(u32 experience) -> u32;
+    static auto floor(u32 level) -> u32;
+    static auto ceil(u32 level) -> u32;
     static auto minLevel() -> u32;
     static auto maxLevel() -> u32;
 };

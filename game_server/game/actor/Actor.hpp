@@ -72,6 +72,7 @@ public:
 
     auto attackerDamageAmounts() const -> DamageDealtTable const &;
 
+public:
     virtual bool isAttackable() const = 0;
 
 public:
@@ -79,9 +80,10 @@ public:
     void setTitle(std::wstring title);
     void setPosition(Position const & position);
     void setPosition(s32 x, s32 y, s32 z);
-    void setPosX(s32 x);
-    void setPosY(s32 y);
-    void setPosZ(s32 z);
+    void setPosX(s32);
+    void setPosY(s32);
+    void setPosZ(s32);
+    void setOrientation(s32);
     void setTeam(Team team);
     void setTarget(OptRef<Actor>);
 

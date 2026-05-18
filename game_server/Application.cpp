@@ -7,20 +7,22 @@
 #include "Player.hpp"
 #include "game/World.hpp"
 #include "game/actor/NpcDirectory.hpp"
+#include "game/inventory/ItemTemplateDirectory.hpp"
 #include "game/skill/SkillTemplateDirectory.hpp"
 #include "handlers/PacketHandlers.hpp"
 #include "network/Connection.hpp"
 #include "network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "network/packets/server/client/ClientForceDisconnectPacket.hpp"
+#include "orm/Uids.hpp"
 #include "utils/Chrono.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Misc.hpp>
-#include <l2cpp/Typedefs.hpp>
 #include <l2cpp/details/Pimpl.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/SocketListener.hpp>
+#include <l2cpp/services/Database.hpp>
 
 // Third-party includes
 #include <boost/asio.hpp>
@@ -65,7 +67,24 @@ template class Pimpl<Application::ApplicationImpl>;
 
 bool Application::ApplicationImpl::load() const try
 {
-    SPDLOG_INFO("[Loading static data]");
+    SPDLOG_INFO("Initializing database…");
+    Database::init({
+        // Order is significant
+        "sql/characters.sql",
+        "sql/character_previews.sql",
+        "sql/character_professions.sql",
+        "sql/character_shortcuts.sql",
+        "sql/item_templates.sql",
+        "sql/items.sql",
+        "sql/starting_items.sql",
+        "sql/gs_data.sql",
+    });
+    Orm::loadUids();
+    SPDLOG_INFO("Database initialization done.");
+
+    SPDLOG_INFO("Loading item templates…");
+    ItemTemplateDirectory::load();
+    SPDLOG_INFO("Registered {:L} item templates", ItemTemplateDirectory::size());
 
     SPDLOG_INFO("Loading skills…");
     SkillTemplateDirectory::load("data/skillname-e.txt", "data/skillgrp.txt");
@@ -76,11 +95,9 @@ bool Application::ApplicationImpl::load() const try
     SPDLOG_INFO("Registered {:L} NPC templates ({:L} NPCs; {:L} monsters)",
                 NpcDirectory::totalCount(), NpcDirectory::npcCount(), NpcDirectory::monsterCount());
 
-    SPDLOG_INFO("Loading ECS systems");
+    SPDLOG_INFO("Loading World systems…");
     World::init();
-    SPDLOG_INFO("Loaded");
-
-    SPDLOG_INFO("Static data loading done.");
+    SPDLOG_INFO("World systems loaded.");
     return true;
 }
 catch (l2cpp::Exception const & e)
@@ -89,7 +106,7 @@ catch (l2cpp::Exception const & e)
     return false;
 }
 
-int Application::ApplicationImpl::run()
+int Application::ApplicationImpl::run() try
 {
     signalSet.async_wait([this] (auto const & ec, int s) { onSignal(ec, s); });
 
@@ -121,6 +138,14 @@ int Application::ApplicationImpl::run()
     SPDLOG_INFO("Goodbye.");
     return EXIT_SUCCESS;
 }
+catch (...)
+{
+    SPDLOG_CRITICAL("Unhandled exception caught! Performing emergency shutdown…");
+    signalSet.cancel();
+    shutdown();
+    ioContext.run();
+    throw;
+}
 
 void Application::ApplicationImpl::shutdown()
 {
@@ -150,8 +175,12 @@ void Application::ApplicationImpl::onSignal(boost::system::error_code const & ec
             shutdown();
             break;
 
+        case boost::system::errc::operation_canceled:
+            SPDLOG_INFO("SIGINT listener canceled");
+            break;
+
         default:
-            SPDLOG_WARN("onSignal error {}: {}", ec.default_error_condition().value(), ec.message());
+            SPDLOG_ERROR("onSignal error {}: {}", ec.default_error_condition().value(), ec.message());
             break;
     }
 }
@@ -179,7 +208,11 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
         {
             auto const & [handler, handlerName] = it->second;
 
-            SPDLOG_INFO("'{}' → 0x{:02x}   ({:4} bytes) ({})", player.connection().id(), opCode, size, handlerName);
+            if (opCode > 0xff)
+                SPDLOG_INFO("'{}' → 0x{:04x} ({:4} bytes) ({})", player.connection().id(), opCode, size, handlerName);
+            else
+                SPDLOG_INFO("'{}' → 0x{:02x}   ({:4} bytes) ({})", player.connection().id(), opCode, size, handlerName);
+
             hexdump(body);
 
             try { (*handler)(player); }

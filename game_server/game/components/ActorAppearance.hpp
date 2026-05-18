@@ -4,15 +4,13 @@
 #pragma once
 
 // Project includes
+#include "../../Typedefs.hpp"
 #include "../ecs/Component.hpp"
-
-#include <l2cpp/Typedefs.hpp>
 
 struct ActorAppearance : public Component
 {
     double collisionRadius = 0;
     double collisionHeight = 0;
-    s32    headAngle       = 0;
 
     ~ActorAppearance() override = 0;
 };

@@ -6,8 +6,8 @@
 // Project includes
 #include "Actor.hpp"
 
-class ActorStatus;
 class NpcAppearance;
+class NpcStatus;
 
 class Npc : public Actor
 {
@@ -20,8 +20,7 @@ protected:
 public:
     auto appearance()       -> NpcAppearance       &;
     auto appearance() const -> NpcAppearance const &;
-
-    virtual auto status() const -> ActorStatus const &;
+    auto status()     const -> NpcStatus     const &;
 
     bool isAttackable() const override { return false; }
 };

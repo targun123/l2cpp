@@ -3,17 +3,18 @@
 
 // Project includes
 #include "Constants.hpp"
+#include "Orm.hpp"
 #include "crypto/Blowfish.hpp"
 #include "crypto/Checksum.hpp"
 #include "crypto/Rsa.hpp"
 #include "network/Connection.hpp"
 #include "network/OpCodes.hpp"
 
-#include <l2cpp/CompileTimeConfig.hpp>
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Packet.hpp>
 #include <l2cpp/network/SocketListener.hpp>
+#include <l2cpp/services/Database.hpp>
 
 // Third-party includes
 #include <boost/asio/signal_set.hpp>
@@ -36,26 +37,80 @@ static void handleGameGuardPacket(Connection & conn)
     conn.send(Packet(ServerOpCode::GameGuard) << ignoreGg);
 }
 
-static void handleAuthPacket(Connection & conn)
+static void handleAuthPacket(Connection & conn) try
 {
-    auto const body = std::span(conn.readBuffer).subspan(sizeof(PacketHeader) + sizeof(PacketOpCode));
+    auto const body = std::span(conn.readBuffer).subspan(sizeof(PacketHeader) + 1);
 
-    try
-    {
-        Rsa::instance().decrypt(body);
-    }
-    catch (l2cpp::Exception const & e)
-    {
-        SPDLOG_ERROR("Rsa::decrypt() failed:\n{}", l2cpp::formatExceptionStack(e));
-        return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 0x01); // system error
-    }
+    // AuthenticationFailed argument meaning
+    //  0: ""
+    //  1: "System error, please log in again later." (448)
+    //  2: "Password does not match this account. Confirm your account information and log in again later." (449+450)
+    // ...
+    //  4: "Access failed. Please try again later. ." (461+462+463)
+    //  5: "Your account information is incorrect.
+    //      For more details, please contact our customer service center at http://support.lineage2.com" (453+454)
+    //  6: "Access failed. Please try again later. ." (461+462+463)
+    //  7: "The account is already in use. Access denied. " (455)
+    //  8: "Access failed. Please try again later. ." (461+462+463)
+    // ...
+    // 12: "Lineage II game services may be used by individuals 15 years of age or older except for PvP servers,
+    //      which may only be used by adults 18 years of age and older. (Korea Only)" (456)
+    // 13: "Access failed. Please try again later. ." (461+462+463)
+    // ...
+    // 15: "Due to a large number of users currently accessing our server, your login attempt has failed.
+    //      Please wait a little while and attempt to log in again." (1650)
+    // 16: "Server under maintenance. Please try again later. " (457)
+    // 17: "Please login after changing your temporary password." (396)
+    // 18: "Your usage term has expired.  Please visit the official Lineage II website at http://www.lineage2.com to
+    //      reactivate your account." (458+459+460)
+    // 19: "You have no more time left on your account." (398)
+    // 20: "System error." (399)
+    // 21: "Access failed. " (461)
+    // 22: "This server is reserved for players in Korea.
+    //      To use Lineage II game services, please connect to the server in your region. " (621)
+    // 23: ""
+    // ...
+    // 30: "This week’s usage time has finished." (756)
+    // 31: "The security card number is invalid." (1243)
+    // 32: "Users who have not verified their age cannot log in between 10:00 p.m. and 6:00 a.m." (1242)
+    // 33: "This server cannot be accessed by the coupon you are using." (1340)
+    // 34: ""
+    // 35: "You are using a computer that does not allow you to log in with two accounts at the same time." (1407)
+
+    Rsa::instance().decrypt(body);
 
     conn.userName = reinterpret_cast<char const *>(body.data() + 0x62);
     conn.password = reinterpret_cast<char const *>(body.data() + 0x70);
 
+    if (conn.password.empty())
+        return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 21); // access failed
+
+    std::optional<std::vector<byte>> password;
+    L2CPP_F_ASSERT([&] { password = Orm::fetchAccountPassword(conn.userName); },
+                   "Failed to fetch password for account '{}", conn.userName);
+
+    if (password)
+    {
+        std::vector<byte> tmp;
+        tmp.append_range(conn.password);
+        if (password != tmp)
+            return conn.send(Packet(ServerOpCode::AuthenticationFailed) << 2); // password does not match
+    }
+    else /*if (Config::autoCreateAccountEnabled)*/
+    {
+        SPDLOG_TRACE("Creating new account '{}'", conn.userName);
+        L2CPP_F_ASSERT([&] { Orm::createAccount(conn.userName, conn.password); },
+                       "Failed to create new account '{}'", conn.userName);
+    }
+
     std::array<byte, sizeof(u64)> loginKey;
     RAND_bytes(loginKey.data(), static_cast<int>(loginKey.size()));
     conn.send(Packet(ServerOpCode::AuthenticationSuccess) << loginKey);
+}
+catch (std::exception const & e)
+{
+    SPDLOG_ERROR("Failed to authenticate user:\n{}", l2cpp::formatExceptionStack(e));
+    conn.send(Packet(ServerOpCode::AuthenticationFailed) << 20); // system error
 }
 
 static void handleServerListPacket(Connection & conn)
@@ -144,10 +199,12 @@ int main() try
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-    if constexpr (Config::isDebugMode)
-        spdlog::set_pattern("[%Y-%m-%d %R:%S.%e] [%^%L%$] %v [%s:%#]");
-
+    spdlog::set_pattern("[%^%R:%S.%e%$] [%L] %v [%s:%#]");
     spdlog::set_level(spdlog::level::trace);
+
+    SPDLOG_INFO("Initializing database…");
+    Database::init({"sql/accounts.sql", "sql/ls_data.sql"});
+    SPDLOG_INFO("Database initialization done.");
 
     std::list<Connection> connections;
 

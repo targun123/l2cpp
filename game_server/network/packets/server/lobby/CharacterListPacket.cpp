@@ -6,6 +6,7 @@
 // Project includes
 #include "../../../../Player.hpp"
 #include "../../../../game/actor/Character.hpp"
+#include "../../../../game/components/CharacterSelectionData.hpp"
 #include "../../../../game/components/CharacterStatus.hpp"
 #include "../../../../game/components/Gear.hpp"
 #include "../../../../game/components/PlayerAppearance.hpp"
@@ -33,17 +34,17 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << player.playOk1()
             << 0 // clanId
             << 0 // ?
-            << c.appearance().sex
+            << c.appearance().sex()
             << c.appearance().race()
-            << c.profession()
+            << c.appearance().startingProfession()
             << 1 // active (?)
             << c.position()
             << c.stats()[StatId::CurHp]
             << c.stats()[StatId::CurMp]
-            << c.status().sp
-            << c.status().xp
+            << c.status().sp()
+            << c.status().xp()
             << c.status().level()
-            << c.status().karma
+            << c.status().karma()
             << std::array<u32, 9>{} // unknown
             << c.gear().itemId(Underwear)
             << c.gear().itemId(LeftEar)
@@ -77,14 +78,14 @@ CharacterListPacket::CharacterListPacket(Player const & player, std::vector<Ref<
             << c.gear().itemTemplateId(Back)
             << c.gear().itemTemplateId(RightHand)
             << c.gear().itemTemplateId(Hair)
-            << c.appearance().hairStyleId
-            << c.appearance().hairColorId
-            << c.appearance().faceId
+            << c.appearance().hairStyle()
+            << c.appearance().hairColor()
+            << c.appearance().face()
             << c.stats()[StatId::MaxHp]
             << c.stats()[StatId::MaxMp]
-            << c.deleteTime
+            << 0 // remainingSecondsBeforeDeletion
             << c.profession()
-            << c.selected
+            << (c.component<CharacterSelectionData>()->selected ? 1 : 0)
             << (weapon ? weapon->enchantLevel : 0_u8)
         ;
     }

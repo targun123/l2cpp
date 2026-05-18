@@ -30,6 +30,8 @@ public:
             f(std::forward<Args>(args)...);
     }
 
+    void clear() { _functions.clear(); }
+
 private:
     std::list<std::function<void(Args...)>> _functions;
 };

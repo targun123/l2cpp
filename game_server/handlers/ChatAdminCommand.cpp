@@ -8,6 +8,7 @@
 #include "../game/actor/Character.hpp"
 #include "../game/actor/Monster.hpp"
 #include "../game/actor/NpcDirectory.hpp"
+#include "../game/components/CharacterStatus.hpp"
 #include "../game/components/PlayerAppearance.hpp"
 #include "../game/components/SkillDirectory.hpp"
 #include "../network/packets/server/chat/ChatSystemSayPacket.hpp"
@@ -123,11 +124,22 @@ DEFINE_PACKET_HANDLER(ChatAdminCommand)
         auto & d = World::addCharacter();
         d.setName(L"dummy");
         d.setPosition(c.position());
-        d.appearance().setRace(Race::Elf);
-        d.appearance().sex = Sex::Female;
+        d.appearance().setStartingProfession(Profession::ElvenMystic);
+        d.appearance().setSex(Sex::Female);
         d.appearance().collisionHeight = 23;
         d.appearance().collisionRadius = 7.5;
-        d.setProfession(Profession::ElvenMystic);
+        d.setProfession(d.appearance().startingProfession());
         World::broadcastAround(d, CharacterStatusUpdateBroadcastPacket(d));
+    }
+    else if (args[0] == L"xp" || args[0] == L"sp")
+    {
+        std::wistringstream iss(text);
+        std::wstring cmd, subCmd;
+        u32 nbr = 0;
+        iss >> cmd >> nbr;
+        if (cmd == L"xp")
+            c.status().setXp(nbr);
+        else
+            c.status().setSp(nbr);
     }
 }

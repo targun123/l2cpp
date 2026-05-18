@@ -4,8 +4,8 @@
 #include "ActorAutoRegenSystem.hpp"
 
 // Project includes
-#include "../World.hpp"
 #include "../../network/packets/server/status/StatsUpdatePacket.hpp"
+#include "../World.hpp"
 #include "../components/ActorAutoRegen.hpp"
 #include "../components/Stats.hpp"
 
@@ -19,6 +19,8 @@ static bool addRegenTicks(StatValue & stat, StatValue const regenPerSecond, size
 
 void ActorAutoRegenSystem::updateImpl(ClockDuration const elapsed, Actor & actor)
 {
+    using enum StatId;
+
     auto const autoRegen = actor.component<ActorAutoRegen>();
     if (autoRegen && (autoRegen->elapsedSinceLastUpdate += elapsed) >= 3s)
     {
@@ -27,18 +29,16 @@ void ActorAutoRegenSystem::updateImpl(ClockDuration const elapsed, Actor & actor
 
         autoRegen->elapsedSinceLastUpdate %= 3s;
 
+        auto & stats = *actor.component<Stats>();
         std::unordered_map<Stat, StatValue> updates;
 
-        using enum StatId;
-
-        auto & stats = *actor.component<Stats>();
-        if (stats[CurHp] < stats[MaxHp] && addRegenTicks(stats[CurHp], stats[HpRegen], ticks, stats[MaxHp]))
+        if (addRegenTicks(stats[CurHp], stats[HpRegen], ticks, stats[MaxHp]))
             updates.try_emplace(Stat::CurHp, stats[CurHp]);
 
-        if (stats[CurMp] < stats[MaxMp] && addRegenTicks(stats[CurMp], stats[HpRegen], ticks, stats[MaxMp]))
+        if (addRegenTicks(stats[CurMp], stats[MpRegen], ticks, stats[MaxMp]))
             updates.try_emplace(Stat::CurMp, stats[CurMp]);
 
-        if (stats[CurCp] < stats[MaxCp] && addRegenTicks(stats[CurCp], stats[HpRegen], ticks, stats[MaxCp]))
+        if (addRegenTicks(stats[CurCp], stats[CpRegen], ticks, stats[MaxCp]))
             updates.try_emplace(Stat::CurCp, stats[CurCp]);
 
         if (!updates.empty())

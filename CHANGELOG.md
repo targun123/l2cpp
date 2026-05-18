@@ -4,10 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Unit testing;
-- Event system;
-- Skill usage prerequisites + effects conditions; 
-- Store/Load data in-between runs.
+In no particular order:
+- More system messages so the game feels more alive (especially during combat);
+- Fix in-game time;
+- Restore buffs on reconnection;
+- Move static data from files to database;
+- Social actions;
+- Skill usage prerequisites + effects conditions.
+
+## [0.24.0] - 2026-05-18
+### Added
+- ORM powered by a SQLite3 database to save/load the following:
+  - accounts
+  - characters (appearance, profession, preview data, shortcuts per profession, xp/sp/etc. per profession)
+  - inventory
+- Starting items on character creation (not race/profession dependent yet)
+- Application will go into emergency shutdown when encountering an exception to save the world (pun intended)
+- Admin can set self xp/sp
+
+### Changed
+- New logging pattern on both servers
+- Character race is now deduced from profession
+- Game and Login specific typedefs are segregated now
+
+### Fixed
+- RSA operations would fail repeatedly sometimes then go away
+- Level up animation and related system message was not firing up in all scenarios
+- Character is better cleaned up on disconnection
+- Adding xp/sp was bugged toward the limits
+- System messages correctly adapt to earning zero XP and/or SP
+- MP and CP regen were incorrectly using HP regen value
 
 ## [0.23.1] - 2026-05-05
 ### Changed

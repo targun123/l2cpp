@@ -7,19 +7,15 @@
 #include "../../network/packets/server/ui/UiConfirmationModalShowPacket.hpp"
 #include "../World.hpp"
 #include "../components/CharacterStatus.hpp"
-#include "../components/Gear.hpp"
 #include "../components/PlayerAppearance.hpp"
 #include "../components/SkillDirectory.hpp"
 #include "../inventory/ItemStorage.hpp"
 #include "../skill/SkillTemplateDirectory.hpp"
-#include "../ui/Shortcut.hpp"
+#include "../ui/ShortcutBar.hpp"
 
 #include <l2cpp/Exception.hpp>
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
-
-// C++ includes
-#include <array>
 
 enum class ConfirmationModalSystemMessageId : u32
 {
@@ -30,8 +26,8 @@ struct Character::CharacterImpl
 {
     Profession profession = Profession::HumanFighter;
 
-    ItemStorage               inventory;
-    std::array<Shortcut, 120> shortcuts{};
+    ItemStorage inventory;
+    ShortcutBar shortcutBar;
 
     std::optional<ConfirmationModalSystemMessageId> confirmationModalMessageId;
 };
@@ -52,71 +48,6 @@ Character::Character(OptRef<Player> p)
 
     if (accessLevel > 0)
         skills().learn(7029, 4); // Super Haste
-
-    auto & gear = *component<Gear>();
-
-    Item formalWear;
-    formalWear.tmplate.id       = 6408;
-    formalWear.tmplate.name     = "formalWear";
-    formalWear.tmplate.category = ItemCategory::Armor;
-    formalWear.tmplate.gearSlot = GearSlot::Dress;
-    Ref item = _impl->inventory.add(std::move(formalWear));
-    gear.equipItem(item.get());
-
-    Item infinitySpear;
-    infinitySpear.tmplate.id       = 6621;
-    infinitySpear.tmplate.name     = "infinitySpear";
-    infinitySpear.tmplate.category = ItemCategory::Weapon;
-    infinitySpear.tmplate.grade    = ItemGrade::S;
-    infinitySpear.tmplate.gearSlot = GearSlot::Hands;
-    item = _impl->inventory.add(std::move(infinitySpear));
-    gear.equipItem(item.get());
-
-    Item infinityBlade;
-    infinityBlade.tmplate.id       = 6611;
-    infinityBlade.tmplate.name     = "infinityBlade";
-    infinityBlade.tmplate.category = ItemCategory::Weapon;
-    infinityBlade.tmplate.grade    = ItemGrade::S;
-    infinityBlade.tmplate.gearSlot = GearSlot::RightHand;
-    item = _impl->inventory.add(std::move(infinityBlade));
-    gear.equipItem(item.get());
-
-    Item imperialCrusaderShield;
-    imperialCrusaderShield.tmplate.id       = 6377;
-    imperialCrusaderShield.tmplate.name     = "imperialCrusaderShield";
-    imperialCrusaderShield.tmplate.category = ItemCategory::Armor;
-    imperialCrusaderShield.tmplate.grade    = ItemGrade::S;
-    imperialCrusaderShield.tmplate.gearSlot = GearSlot::LeftHand;
-    item = _impl->inventory.add(std::move(imperialCrusaderShield));
-    gear.equipItem(item.get());
-
-    Item infinityFang;
-    infinityFang.tmplate.id       = 6618;
-    infinityFang.tmplate.name     = "infinityFang";
-    infinityFang.tmplate.category = ItemCategory::Weapon;
-    infinityFang.tmplate.grade    = ItemGrade::S;
-    infinityFang.tmplate.gearSlot = GearSlot::Hands;
-    item = _impl->inventory.add(std::move(infinityFang));
-    gear.equipItem(item.get());
-
-    Item infinityBow;
-    infinityBow.tmplate.id       = 6619;
-    infinityBow.tmplate.name     = "infinityBow";
-    infinityBow.tmplate.category = ItemCategory::Weapon;
-    infinityBow.tmplate.grade    = ItemGrade::S;
-    infinityBow.tmplate.gearSlot = GearSlot::Hands;
-    item = _impl->inventory.add(std::move(infinityBow));
-    gear.equipItem(item.get());
-
-    Item sGradeArrows;
-    sGradeArrows.tmplate.id = 1345;
-    sGradeArrows.tmplate.name     = "sGradeArrows";
-    sGradeArrows.tmplate.category = ItemCategory::Misc;
-    sGradeArrows.tmplate.grade    = ItemGrade::S;
-    sGradeArrows.tmplate.gearSlot = GearSlot::LeftHand;
-    sGradeArrows.quantity         = 100;
-    item = _impl->inventory.add(std::move(sGradeArrows));
-    gear.equipItem(item.get());
 }
 
 Character::Character(Character &&) noexcept = default;
@@ -134,33 +65,10 @@ auto Character::appearance() const -> PlayerAppearance const & { return componen
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
 auto Character::inventory() const -> ItemStorage const & { return _impl->inventory; }
 
-bool Character::isAttackable() const { return false; }
-
-template<typename T, typename F>
-void assign(T & t, F f) { t = static_cast<T>(f); }
+auto Character::shortcutBar()       -> ShortcutBar       & { return _impl->shortcutBar; }
+auto Character::shortcutBar() const -> ShortcutBar const & { return _impl->shortcutBar; }
 
 void Character::setProfession(Profession const profession) { _impl->profession = profession; }
-
-auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
-{
-    L2CPP_B_ASSERT(shortcut.index(), "Cannot set a shortcut whose index ({}) is invalid", *shortcut.index());
-    auto const index = *shortcut.index();
-
-    if (shortcut.type() == ShortcutType::Skill)
-    {
-        if (auto const skill = skills().skill(static_cast<SkillId>(shortcut.targetId())); skill)
-            shortcut.setSkillLevel(skill->tmplate().level());
-    }
-
-    _impl->shortcuts[index] = std::move(shortcut);
-    return _impl->shortcuts[index];
-}
-
-void Character::delShortcut(size_t const index)
-{
-    L2CPP_B_ASSERT(index < _impl->shortcuts.size(), "Cannot remove a shortcut whose index ({}) is invalid", index);
-    _impl->shortcuts[index] = Shortcut();
-}
 
 void Character::offerResurrection(Actor const & emitter)
 {

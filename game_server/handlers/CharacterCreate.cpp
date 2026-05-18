@@ -2,56 +2,87 @@
 /// @date      Created on 2026-02-24
 
 // Project includes
-#include "_Common.hpp"
 #include "../game/World.hpp"
-#include "../game/actor/Character.hpp"
-#include "../game/components/Stats.hpp"
-#include "../game/components/PlayerAppearance.hpp"
+#include "../game/lobby/CharacterCreationParameters.hpp"
+#include "../network/packets/server/lobby/CharacterCreatePacket.hpp"
+#include "_Common.hpp"
+
+#include <l2cpp/utils/Enum.hpp>
+
+// C++ includes
+#include <regex>
 
 DECLARE_PACKET_HANDLER(CharacterList)
 
-DEFINE_PACKET_HANDLER(CharacterCreate)
+DEFINE_PACKET_HANDLER(CharacterCreate) try
 {
+    CharacterCreationParameters params;
+
     PacketReader reader(player.connection().readBuffer().subspan(3));
-
-    std::wstring name;
-    Race race;
-    Sex sex;
-    Profession profession;
-    u32 INT, STR, CON, MEN, DEX, WIT;
-
-    auto & c     = World::addCharacterPreview(player.accountName());
-    auto & stats = c.stats();
-
     reader
-        >> name
-        >> race
-        >> sex
-        >> profession
-        >> INT
-        >> STR
-        >> CON
-        >> MEN
-        >> DEX
-        >> WIT
-        >> c.appearance().hairStyleId
-        >> c.appearance().hairColorId
-        >> c.appearance().faceId
+        >> params.name
+        >> params.race
+        >> params.sex
+        >> params.profession
+        >> params.INT
+        >> params.STR
+        >> params.CON
+        >> params.MEN
+        >> params.DEX
+        >> params.WIT
+        >> params.hairStyle
+        >> params.hairColor
+        >> params.face
     ;
 
-    stats[StatId::Int] = INT;
-    stats[StatId::Str] = STR;
-    stats[StatId::Con] = CON;
-    stats[StatId::Men] = MEN;
-    stats[StatId::Dex] = DEX;
-    stats[StatId::Wit] = WIT;
+    using enum Race;
+    using l2cpp::Utils::Enum::isAnyOf;
+    L2CPP_B_ASSERT(isAnyOf(params.race, Human, Elf, DarkElf, Orc, Dwarf),
+                   "Invalid race value '{}'", std::to_underlying(params.race));
 
-    c.setName(std::move(name));
-    c.appearance().setRace(race);
-    c.appearance().sex = sex;
-    c.setProfession(profession);
-    c.selected = 1;
+    using enum Sex;
+    L2CPP_B_ASSERT(isAnyOf(params.sex, Male, Female), "Invalid sex value '{}'", std::to_underlying(params.sex));
 
-    player.connection().send(Packet(0x19) << 1);
-    handleCharacterList(player);
+    bool isValidProfessionForRace = false;
+    switch (params.race)
+    {
+#define CHECK_PROFESSION(race, ...) case race: isValidProfessionForRace = isAnyOf(params.profession, __VA_ARGS__); break
+
+        using enum Profession;
+        CHECK_PROFESSION(Human,   HumanFighter, HumanMystic);
+        CHECK_PROFESSION(Elf,     ElvenFighter, ElvenMystic);
+        CHECK_PROFESSION(DarkElf, DarkFighter,  DarkMystic);
+        CHECK_PROFESSION(Orc,     OrcFighter,   OrcMystic);
+        CHECK_PROFESSION(Dwarf,   DwarvenFighter);
+
+#undef  CHECK_PROFESSION
+
+        default:
+            break;
+    }
+
+    L2CPP_B_ASSERT(isValidProfessionForRace, "Invalid profession value '{}' for race '{}'",
+                   std::to_underlying(params.profession), std::to_underlying(params.race));
+
+    // TODO: check hair style/color + face values for each race & sex combinations
+
+    std::wregex const namePattern{LR"([A-Za-z0-9]{1,16})"};
+
+    CharacterCreationResult result;
+    if (std::regex_match(params.name, namePattern))
+        result = World::createCharacter(player, params);
+    else
+    {
+        result = CharacterCreationResult::InvalidName;
+        SPDLOG_TRACE(L"Player attempted to name their new character '{}' which breaks naming rules", params.name);
+    }
+
+    player.connection().send(CharacterCreatePacket{result});
+    if (result == CharacterCreationResult::Success)
+        handleCharacterList(player);
+}
+catch (...)
+{
+    player.connection().send(CharacterCreatePacket{CharacterCreationResult::Failure});
+    L2CPP_THROW_NESTED("Failed to create character");
 }

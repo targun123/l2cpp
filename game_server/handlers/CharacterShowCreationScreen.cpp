@@ -6,5 +6,5 @@
 
 DEFINE_PACKET_HANDLER(CharacterShowCreationScreen)
 {
-    player.connection().send(Packet(0x17) << 0);
+    player.connection().send(Packet(0x17, "CharacterShowCreationScreen") << 0);
 }

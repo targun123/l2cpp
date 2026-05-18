@@ -4,10 +4,9 @@
 #pragma once
 
 // Project includes
+#include "../../Typedefs.hpp"
 #include "../constants/StatId.hpp"
 #include "../ecs/Component.hpp"
-
-#include <l2cpp/Typedefs.hpp>
 
 // C++ includes
 #include <array>

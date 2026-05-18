@@ -9,6 +9,7 @@
 
 // C++ includes
 #include <span>
+#include <string_view>
 
 class Rsa
 {
