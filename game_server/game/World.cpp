@@ -329,11 +329,10 @@ auto World::inGameTime() -> std::chrono::minutes
         constexpr std::chrono::minutes irlDayInMinutes{60min * 24};
         constexpr std::chrono::minutes inGameDayInMinutes{irlDayInMinutes / inGameTimeAcceleration};
 
-        auto const now          = std::chrono::system_clock::now(); // Server time is always UTC time
-        auto const irlTimeOfDay = now - std::chrono::floor<std::chrono::days>(now);
-        auto const minutesOfDay = std::chrono::floor<std::chrono::minutes>(irlTimeOfDay);
-        auto const percentOfDay = static_cast<double>(minutesOfDay.count()) / irlDayInMinutes.count();
-        return std::chrono::floor<std::chrono::minutes>(inGameDayInMinutes * percentOfDay);
+        auto const now                   = std::chrono::system_clock::now(); // Server time is always UTC time
+        auto const irlTimeOfDay          = now - std::chrono::floor<std::chrono::days>(now);
+        auto const irlTimeOfDayInMinutes = std::chrono::floor<std::chrono::minutes>(irlTimeOfDay);
+        return irlTimeOfDayInMinutes % inGameDayInMinutes * inGameTimeAcceleration;
     }
 }
 
