@@ -25,24 +25,35 @@ ItemStorage::ItemStorage(ItemStorage &&) noexcept = default;
 ItemStorage & ItemStorage::operator=(ItemStorage &&) noexcept = default;
 ItemStorage::~ItemStorage() = default;
 
-auto ItemStorage::item(GameObjectId const uid) -> OptRef<Item>
+auto ItemStorage::find_if(std::function<bool(Item const &)> const & predicate) const -> OptRef<Item const>
 {
-    OptRef<Item> result;
+    OptRef<Item const> result;
 
-    if (_impl->items.contains(uid))
-        result = _impl->items.at(uid);
+    if (predicate)
+    {
+        for (auto const & item : _impl->items | std::views::values)
+        {
+            if (predicate(item))
+            {
+                result = item;
+                break;
+            }
+        }
+    }
 
     return result;
 }
 
+auto ItemStorage::item(GameObjectId const uid) -> OptRef<Item>
+{
+    auto const it = _impl->items.find(uid);
+    return it != _impl->items.end() ? OptRef{it->second} : std::nullopt;
+}
+
 auto ItemStorage::item(GameObjectId const uid) const -> OptRef<Item const>
 {
-    OptRef<Item const> result;
-
-    if (_impl->items.contains(uid))
-        result = _impl->items.at(uid);
-
-    return result;
+    auto const it = _impl->items.find(uid);
+    return it != _impl->items.cend() ? OptRef<Item const>{it->second} : std::nullopt;
 }
 
 auto ItemStorage::item(ItemTemplate const & tmplate) -> std::vector<Ref<Item>>
@@ -71,10 +82,7 @@ auto ItemStorage::items() const -> std::vector<Ref<Item const>>
     return result;
 }
 
-auto ItemStorage::limit() const -> u16
-{
-    return 1000; // TODO
-}
+auto ItemStorage::limit() const -> u16 { return 1000; /* TODO */ }
 
 auto ItemStorage::add(Item && item) -> Item &
 {
@@ -93,3 +101,5 @@ auto ItemStorage::remove(Item const & item) -> Item
     _impl->items.erase(uid);
     return result;
 }
+
+void ItemStorage::clear() { _impl->items.clear(); }

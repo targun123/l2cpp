@@ -6,19 +6,15 @@
 // Project includes
 #include "../../Typedefs.hpp"
 #include "../constants/Profession.hpp"
-#include "../constants/Ui.hpp"
 #include "Actor.hpp"
 
 #include <l2cpp/Pimpl.hpp>
-
-// C++ includes
-#include <span>
 
 class CharacterStatus;
 class ItemStorage;
 class Player;
 class PlayerAppearance;
-class Shortcut;
+class ShortcutBar;
 
 class Character : public Actor
 {
@@ -46,15 +42,13 @@ public:
     auto inventory()       -> ItemStorage       &;
     auto inventory() const -> ItemStorage const &;
 
-    auto shortcuts() const -> std::span<Shortcut const, Constants::maxShortcuts>;
+    auto shortcutBar()       -> ShortcutBar       &;
+    auto shortcutBar() const -> ShortcutBar const &;
 
     bool isAttackable() const override { return false; }
 
 public:
     void setProfession(Profession);
-
-    auto setShortcut(Shortcut shortcut) -> Shortcut &;
-    void delShortcut(size_t index);
 
     void offerResurrection(Actor const & emitter);
     void answerConfirmationModal(u32 systemMessageId, bool accepted);

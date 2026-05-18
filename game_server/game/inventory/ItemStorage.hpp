@@ -9,6 +9,7 @@
 #include <l2cpp/Pimpl.hpp>
 
 // C++ includes
+#include <functional>
 #include <vector>
 
 /// Could be a player/pet inventory, a wharehouse, etc.
@@ -21,6 +22,8 @@ public:
     virtual ~ItemStorage();
 
 public:
+    auto find_if(std::function<bool(Item const &)> const & predicate) const -> OptRef<Item const>;
+
     auto item(GameObjectId uid)           -> OptRef<Item>;
     auto item(GameObjectId uid)     const -> OptRef<Item const>;
     auto item(ItemTemplate const &)       -> std::vector<Ref<Item>>;
@@ -31,8 +34,10 @@ public:
 public:
     auto add(Item && item) -> Item &;
 
-    /// @return Gives a chance to take back ownership the item instance, else it gets deleted.
+    /// @return Gives a chance to take back ownership of the item instance, else it gets destroyed.
     auto remove(Item const &) -> Item;
+
+    void clear();
 
 private:
     struct ItemStorageImpl;

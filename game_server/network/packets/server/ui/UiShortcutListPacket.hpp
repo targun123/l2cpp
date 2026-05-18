@@ -4,15 +4,13 @@
 #pragma once
 
 // Project includes
-#include "../../../../game/constants/Ui.hpp"
-
 #include <l2cpp/network/Packet.hpp>
 
-class Shortcut;
+class ShortcutBar;
 
 namespace Network::Packet::Server { struct UiShortcutListPacket; }
 
 struct Network::Packet::Server::UiShortcutListPacket final : public l2cpp::Network::Packet
 {
-    explicit UiShortcutListPacket(std::span<Shortcut const, Constants::maxShortcuts>);
+    explicit UiShortcutListPacket(ShortcutBar const &);
 };

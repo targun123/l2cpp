@@ -3,6 +3,7 @@
 
 // Project includes
 #include "../game/actor/Character.hpp"
+#include "../game/ui/ShortcutBar.hpp"
 #include "_Common.hpp"
 
 DEFINE_PACKET_HANDLER(UiShortcutUnset)
@@ -11,8 +12,5 @@ DEFINE_PACKET_HANDLER(UiShortcutUnset)
 
     u32 index;
     reader >> index;
-    L2CPP_B_ASSERT(index < Constants::maxShortcuts,
-                   "Trying to remove a shortcut outside the valid index range, at index {}", index);
-
-    player.currentCharacter()->delShortcut(index);
+    player.currentCharacter()->shortcutBar().unset(index);
 }

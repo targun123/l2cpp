@@ -4,15 +4,25 @@
 #include "UiShortcutListPacket.hpp"
 
 // Project includes
-#include "../../../../game/ui/Shortcut.hpp"
+#include "../../../../game/ui/ShortcutBar.hpp"
+
+// C++ includes
+#include <algorithm>
 
 using Network::Packet::Server::UiShortcutListPacket;
 
-UiShortcutListPacket::UiShortcutListPacket(std::span<Shortcut const, Constants::maxShortcuts> shortcuts)
+UiShortcutListPacket::UiShortcutListPacket(ShortcutBar const & shortcutBar)
     : Packet(0x45, "UiShortcutList")
 {
-    *this << static_cast<u32>(shortcuts.size()) ;
+    auto const shortcuts = shortcutBar.shortcuts();
 
-    for (auto const & s : shortcuts)
-        *this << s;
+    *this
+        << static_cast<u32>(std::ranges::count_if(shortcuts, [] (auto const & s) { return !!s; }))
+    ;
+
+    for (auto const & shortcut : shortcuts)
+    {
+        if (shortcut)
+            *this << *shortcut;
+    }
 }

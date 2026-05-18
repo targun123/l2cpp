@@ -11,14 +11,11 @@
 #include "../components/SkillDirectory.hpp"
 #include "../inventory/ItemStorage.hpp"
 #include "../skill/SkillTemplateDirectory.hpp"
-#include "../ui/Shortcut.hpp"
+#include "../ui/ShortcutBar.hpp"
 
 #include <l2cpp/Exception.hpp>
 // ReSharper disable once CppUnusedIncludeDirective
 #include <l2cpp/details/Pimpl.hpp>
-
-// C++ includes
-#include <array>
 
 enum class ConfirmationModalSystemMessageId : u32
 {
@@ -29,8 +26,8 @@ struct Character::CharacterImpl
 {
     Profession profession = Profession::HumanFighter;
 
-    ItemStorage               inventory;
-    std::array<Shortcut, 120> shortcuts{};
+    ItemStorage inventory;
+    ShortcutBar shortcutBar;
 
     std::optional<ConfirmationModalSystemMessageId> confirmationModalMessageId;
 };
@@ -68,30 +65,10 @@ auto Character::appearance() const -> PlayerAppearance const & { return componen
 auto Character::inventory()       -> ItemStorage       & { return _impl->inventory; }
 auto Character::inventory() const -> ItemStorage const & { return _impl->inventory; }
 
-auto Character::shortcuts() const -> std::span<Shortcut const, Constants::maxShortcuts> { return _impl->shortcuts; }
+auto Character::shortcutBar()       -> ShortcutBar       & { return _impl->shortcutBar; }
+auto Character::shortcutBar() const -> ShortcutBar const & { return _impl->shortcutBar; }
 
 void Character::setProfession(Profession const profession) { _impl->profession = profession; }
-
-auto Character::setShortcut(Shortcut shortcut) -> Shortcut &
-{
-    L2CPP_B_ASSERT(shortcut.index(), "Cannot set a shortcut whose index ({}) is invalid", *shortcut.index());
-    auto const index = *shortcut.index();
-
-    if (shortcut.type() == ShortcutType::Skill)
-    {
-        if (auto const skill = skills().skill(static_cast<SkillId>(shortcut.targetId())); skill)
-            shortcut.setSkillLevel(skill->tmplate().level());
-    }
-
-    _impl->shortcuts[index] = std::move(shortcut);
-    return _impl->shortcuts[index];
-}
-
-void Character::delShortcut(size_t const index)
-{
-    L2CPP_B_ASSERT(index < _impl->shortcuts.size(), "Cannot remove a shortcut whose index ({}) is invalid", index);
-    _impl->shortcuts[index] = Shortcut();
-}
 
 void Character::offerResurrection(Actor const & emitter)
 {

@@ -5,7 +5,6 @@
 
 // Project includes
 #include "Player.hpp"
-#include "Typedefs.hpp"
 #include "game/World.hpp"
 #include "game/actor/NpcDirectory.hpp"
 #include "game/inventory/ItemTemplateDirectory.hpp"
@@ -14,6 +13,7 @@
 #include "network/Connection.hpp"
 #include "network/packets/server/chat/ChatSystemSayPacket.hpp"
 #include "network/packets/server/client/ClientForceDisconnectPacket.hpp"
+#include "orm/Uids.hpp"
 #include "utils/Chrono.hpp"
 
 #include <l2cpp/CompileTimeConfig.hpp>
@@ -79,6 +79,7 @@ bool Application::ApplicationImpl::load() const try
         "sql/starting_items.sql",
         "sql/gs_data.sql",
     });
+    Orm::loadUids();
     SPDLOG_INFO("Database initialization done.");
 
     SPDLOG_INFO("Loading item templates…");
