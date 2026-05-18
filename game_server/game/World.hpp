@@ -59,6 +59,7 @@ public:
     static void scheduleForDeletion(Actor &, ClockDuration timeFromNow = ClockDuration::zero());
     static void unscheduleForDeletion(Actor &);
 
+    /// @returns The amount of seconds elasped since in-game midnight.
     static auto inGameTime() -> std::chrono::minutes;
 
     static auto subscribeToTarget(GameObjectId targetId, Actor const & listener) -> OptRef<Actor>;
