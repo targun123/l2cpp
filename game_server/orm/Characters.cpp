@@ -7,11 +7,14 @@
 #include "../game/actor/Character.hpp"
 #include "../game/components/CharacterStatus.hpp"
 #include "../game/components/Position.hpp"
+#include "../game/components/SkillDirectory.hpp"
 #include "../game/components/Stats.hpp"
 #include "../game/inventory/Item.hpp"
 #include "../game/inventory/ItemStorage.hpp"
 #include "../game/inventory/ItemTemplateDirectory.hpp"
-#include "../game/ui/Shortcut.hpp"
+#include "../game/ui/ItemShortcut.hpp"
+#include "../game/ui/ShortcutBar.hpp"
+#include "../game/ui/SkillShortcut.hpp"
 #include "../utils/Conversion.hpp"
 
 #include <l2cpp/services/Database.hpp>
@@ -60,7 +63,7 @@ void Orm::saveCharacter(Character const & c)
     L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to save character");
 
     saveStatus   (id, c);
-    // saveInventory(id, c);
+    saveInventory(id, c);
     saveShortcuts(id, c);
 }
 
@@ -117,11 +120,48 @@ namespace
         L2CPP_F_ASSERT([&] { query.exec(); }, "Failed to save character's profession");
     }
 
+    void saveInventory(u32 const characterId, Character const & c)
+    {
+        SQLite::Transaction tr{Database::instance()};
+
+        SQLite::Statement query{Database::instance(), R"(
+            INSERT OR REPLACE INTO items
+                ( id,  template_id,  owner_id,  storage_id,  quantity,  equipped,  enchant_level)
+            VALUES
+                (:id, :template_id, :owner_id,  0,          :quantity, :equipped, :enchant_level)
+        )"};
+        query.bind(":owner_id", characterId);
+
+        for (Item const & item : c.inventory().items())
+        {
+            query.reset();
+            query.bind(":id",          item.uid);
+            query.bind(":template_id", item.tmplate.id);
+            query.bind(":equipped",    item.equipped);
+
+            if (item.tmplate.category == ItemCategory::Armor || item.tmplate.category == ItemCategory::Weapon)
+            {
+                query.bind(":quantity");
+                query.bind(":enchant_level", item.enchantLevel);
+            }
+            else
+            {
+                query.bind(":quantity", item.quantity);
+                query.bind(":enchant_level");
+            }
+
+            query.exec();
+        }
+
+        tr.commit();
+    }
+
     void loadInventory(u32 const characterId, Character & c)
     {
         SQLite::Statement query{Database::instance(), R"(
             SELECT
-                template_id
+                id
+              , template_id
               , quantity
               , enchant_level
             FROM
@@ -156,19 +196,19 @@ namespace
 
     void saveShortcuts(u32 const characterId, Character const & c)
     {
-        auto const & shortcuts = c.shortcuts();
+        auto const & bar = c.shortcutBar();
 
         static std::vector<Ref<Shortcut const>> nonEmptyShortcuts;
-        nonEmptyShortcuts.reserve(shortcuts.size());
+        nonEmptyShortcuts.reserve(bar.size());
         nonEmptyShortcuts.clear();
 
         std::vector<size_t> indexes;
-        for (auto const & s : shortcuts)
+        for (auto const & s : bar.shortcuts())
         {
-            if (!s.isEmpty())
+            if (s)
             {
                 nonEmptyShortcuts.emplace_back(s);
-                indexes.emplace_back(*s.index());
+                indexes.emplace_back(s->index());
             }
         }
 
@@ -194,7 +234,7 @@ namespace
             INSERT OR REPLACE INTO character_shortcuts
                 ( character_id,  profession, "index",  type,  target_id,  extra_info)
             VALUES
-                (:character_id, :profession, :index, :type, :target_id, :extra_info)
+                (:character_id, :profession, :index,  :type, :target_id, :extra_info)
         )"};
 
         for (Shortcut const & s : nonEmptyShortcuts)
@@ -202,11 +242,11 @@ namespace
             query.reset();
             query.bind(":character_id", characterId);
             query.bind(":profession",   std::to_underlying(c.profession()));
-            query.bind(":index",        static_cast<u32>(*s.index()));
+            query.bind(":index",        s.index());
             query.bind(":type",         std::to_underlying(s.type()));
             query.bind(":target_id",    s.targetId());
-            if (s.type() == ShortcutType::Skill)
-                query.bind(":extra_info", s.skillLevel());
+            if (auto const extraInfo = s.extraInfo())
+                query.bind(":extra_info", *extraInfo);
             else
                 query.bind(":extra_info");
 
@@ -232,15 +272,37 @@ namespace
 
         while (query.executeStep())
         {
-            Shortcut s;
-            s.setIndex(query.getColumn("index").getUInt());
-            s.setType(static_cast<ShortcutType>(query.getColumn("type").getUInt()));
-            s.setTargetId(query.getColumn("target_id").getUInt());
+            auto const index     = query.getColumn("index").getUInt();
+            auto const type      = query.getColumn("type").getUInt();
+            auto const targetId  = query.getColumn("target_id").getUInt();
+            // auto const extraInfo = query.getColumn("extra_info");
 
-            if (s.type() == ShortcutType::Skill)
-                s.setSkillLevel(static_cast<SkillLevel>(query.getColumn("extra_info").getUInt()));
+            switch (static_cast<ShortcutType>(type))
+            {
+                case ShortcutType::Item:
+                {
+                    if (auto const item = c.inventory().find_if([=](auto const & item){ return item.uid == targetId; }))
+                        c.shortcutBar().set<ItemShortcut>(index, item);
+                    else
+                    {
+                        SPDLOG_WARN("Failed to find item '{}' pointed at by shortcut in inventory, dropping shortcut",
+                                   targetId);
+                    }
+                    break;
+                }
+                case ShortcutType::Skill:
+                {
+                    if (auto const skill = c.skills().skill(static_cast<SkillId>(targetId)))
+                        c.shortcutBar().set<SkillShortcut>(index, skill->tmplate().uid());
+                    else
+                        SPDLOG_WARN("Failed to find skill '{}' pointed at by shortcut, dropping shortcut", targetId);
 
-            c.setShortcut(std::move(s));
+                    break;
+                }
+                default:
+                    SPDLOG_WARN("Unsupported shortcut type '{}', cannot restore shortcut", type);
+                    break;
+            }
         }
     }
 }

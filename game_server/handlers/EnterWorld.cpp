@@ -27,7 +27,7 @@ DEFINE_PACKET_HANDLER(EnterWorld) try
         c.addComponent<ActorAutoRegen>();
 
     conn.send(InventoryListPacket{false, c.inventory()});
-    conn.send(UiShortcutListPacket{c.shortcuts()});
+    conn.send(UiShortcutListPacket{c.shortcutBar()});
     conn.send(ChatSystemSayPacket{SystemMessageId::WelcomeToTheWorldOfL2});
 
     // Send surrounding actors
