@@ -6,15 +6,6 @@
 // Project includes
 #include <l2cpp/Exception.hpp>
 
-ShortcutBar::ShortcutBar()
-    : _readOnlyShortcuts(_shortcuts.size())
-{}
-
-auto ShortcutBar::size() const -> size_t
-{
-    return _shortcuts.size();
-}
-
 auto ShortcutBar::at(Shortcut::Index const index) const -> OptRef<Shortcut>
 {
     checkIndex(index);
@@ -22,7 +13,7 @@ auto ShortcutBar::at(Shortcut::Index const index) const -> OptRef<Shortcut>
     return _shortcuts[index] ? OptRef(*_shortcuts[index]) : std::nullopt;
 }
 
-auto ShortcutBar::shortcuts() const -> std::span<OptRef<Shortcut const> const>
+auto ShortcutBar::shortcuts() const -> std::span<OptRef<Shortcut const> const, maxShortcuts>
 {
     return _readOnlyShortcuts;
 }
@@ -37,7 +28,7 @@ void ShortcutBar::unset(Shortcut::Index const index)
 
 void ShortcutBar::unsetAll()
 {
-    for (size_t i = 0; i < _shortcuts.size(); ++i)
+    for (size_t i = 0; i < maxShortcuts; ++i)
     {
         _shortcuts        [i].reset();
         _readOnlyShortcuts[i].reset();
@@ -46,7 +37,7 @@ void ShortcutBar::unsetAll()
 
 void ShortcutBar::checkIndex(Shortcut::Index const index) const
 {
-    L2CPP_B_ASSERT(index < _shortcuts.size(), "Invalid index '{}': out of range", index);
+    L2CPP_B_ASSERT(index < maxShortcuts, "Invalid index '{}': out of range", index);
 }
 
 void ShortcutBar::setImpl(Shortcut::Index const index, std::unique_ptr<Shortcut> shortcut)

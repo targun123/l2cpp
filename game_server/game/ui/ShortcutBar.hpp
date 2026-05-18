@@ -12,13 +12,15 @@
 
 class ShortcutBar
 {
-public:
-    ShortcutBar();
+    static constexpr size_t maxShortcuts = 120;
 
 public:
-    auto size()              const -> size_t;
+    ShortcutBar() = default;
+
+public:
+    auto size()              const -> size_t { return maxShortcuts; }
     auto at(Shortcut::Index) const -> OptRef<Shortcut>;
-    auto shortcuts()         const -> std::span<OptRef<Shortcut const> const>;
+    auto shortcuts()         const -> std::span<OptRef<Shortcut const> const, maxShortcuts>;
 
 public:
     template<class T> requires std::is_base_of_v<Shortcut, T>
@@ -36,6 +38,6 @@ private:
     void setImpl(Shortcut::Index, std::unique_ptr<Shortcut>);
 
 private:
-    std::array<std::unique_ptr<Shortcut>, 120> _shortcuts;
-    std::vector<OptRef<Shortcut const>>        _readOnlyShortcuts;
+    std::array<std::unique_ptr<Shortcut>, maxShortcuts> _shortcuts;
+    std::array<OptRef<Shortcut const>,    maxShortcuts> _readOnlyShortcuts;
 };
