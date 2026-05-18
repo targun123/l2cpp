@@ -6,11 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 In no particular order:
 - More system messages so the game feels more alive (especially during combat);
-- Fix in-game time;
 - Restore buffs on reconnection;
 - Move static data from files to database;
 - Social actions;
 - Skill usage prerequisites + effects conditions.
+
+## [0.24.1] - 2026-05-18
+### Fixed
+- In-game time was not the same for everyone
 
 ## [0.24.0] - 2026-05-18
 ### Added
