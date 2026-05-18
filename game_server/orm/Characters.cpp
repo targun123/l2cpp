@@ -145,7 +145,7 @@ namespace
             auto const enchantLevel = query.getColumn("enchant_level");
             auto const quantity     = query.getColumn("quantity");
 
-            Item item;
+            Item item{query.getColumn("id").getInt64()};
             item.tmplate      = std::move(*itemTemplate);
             item.enchantLevel = enchantLevel.isNull() ? 0 : static_cast<u8>(enchantLevel.getUInt());
             item.quantity     = quantity    .isNull() ? 1 : quantity.getUInt();

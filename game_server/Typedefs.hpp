@@ -17,6 +17,7 @@ using ClockTimePoint = std::chrono::steady_clock::time_point;
 
 using GameObjectId = u32;
 
+using ItemId     = s64;
 using SkillId    = u16;
 using SkillLevel = u16;
 using StatValue  = double;

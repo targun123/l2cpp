@@ -13,9 +13,15 @@ struct Item : public GameObject
 {
     DECLARE_PACKET_SERIALIZATION_OPERATOR(Item);
 
+    Item();
+    explicit Item(ItemId);
+
     ItemTemplate tmplate;
 
-    u32  quantity     = 1;
-    u8   enchantLevel = 0;
-    bool equipped     = false;
+    ItemId uid;
+    u32    quantity     = 1;
+    u8     enchantLevel = 0;
+    bool   equipped     = false;
+
+    static ItemId nextId;
 };

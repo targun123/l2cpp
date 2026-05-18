@@ -7,27 +7,38 @@
 #include <l2cpp/Exception.hpp>
 #include <l2cpp/network/Packet.hpp>
 
-static u16 typeFromCategory(ItemCategory const cat)
+namespace
 {
-    using enum ItemCategory;
-    switch (cat)
+    u16 typeFromCategory(ItemCategory const cat)
     {
-        case Weapon:
-        case Accessory:
-            return 0;
+        using enum ItemCategory;
+        switch (cat)
+        {
+            case Weapon:
+            case Accessory:
+                return 0;
 
-        case Armor:
-            return 1;
+            case Armor:
+                return 1;
 
-        case Quest:
-        case Adena:
-        case Misc:
-            return 4;
+            case Quest:
+            case Adena:
+            case Misc:
+                return 4;
 
-        default:
-            L2CPP_THROW("Unknown item category '{}' for type conversion", std::to_underlying(cat));
+            default:
+                L2CPP_THROW("Unknown item category '{}' for type conversion", std::to_underlying(cat));
+        }
     }
 }
+
+Item::Item()
+    : Item(++nextId)
+{}
+
+Item::Item(ItemId const id)
+    : uid(id)
+{}
 
 l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, Item const & item)
 {
@@ -44,3 +55,5 @@ l2cpp::Network::Packet & operator<<(l2cpp::Network::Packet & p, Item const & ite
         << 0_u16 // pet name exists or not shown in control item
     ;
 }
+
+ItemId Item::nextId = 0;

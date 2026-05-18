@@ -208,22 +208,23 @@ catch (SQLite::Exception const & e)
 
 void loadGear(u32 const characterId, Character & c)
 {
-    SQLite::Statement gearQuery{Database::instance(), R"(
+    SQLite::Statement query{Database::instance(), R"(
         SELECT
-            template_id
+            id
+          , template_id
           , enchant_level
         FROM
             items
         WHERE
             owner_id = :character_id AND equipped = TRUE
     )"};
-    gearQuery.bind(":character_id", characterId);
+    query.bind(":character_id", characterId);
 
     auto & inventory = c.inventory();
     auto & gear      = c.gear();
-    while (gearQuery.executeStep())
+    while (query.executeStep())
     {
-        auto const templateId   = gearQuery.getColumn("template_id").getUInt();
+        auto const templateId   = query.getColumn("template_id").getUInt();
         auto const itemTemplate = ItemTemplateDirectory::find(templateId);
         if (!itemTemplate)
         {
@@ -231,9 +232,9 @@ void loadGear(u32 const characterId, Character & c)
             continue;
         }
 
-        auto const enchantLevel = gearQuery.getColumn("enchant_level");
+        auto const enchantLevel = query.getColumn("enchant_level");
 
-        Item item;
+        Item item{query.getColumn("id").getInt64()};
         item.tmplate      = std::move(*itemTemplate);
         item.enchantLevel = static_cast<u8>(enchantLevel.isNull() ? 0 : enchantLevel.getUInt());
 
