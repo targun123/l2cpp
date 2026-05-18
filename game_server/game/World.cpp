@@ -493,7 +493,7 @@ void World::broadcastToSubscribers(Actor const & emitter, Packet && packet, bool
     }
 
     if (includeEmitter)
-        send(emitter, Packet(packet));
+        send(emitter, Packet(packet), src);
 }
 
 auto World::addActor(std::unique_ptr<Actor> actor) -> Actor &

@@ -208,7 +208,11 @@ void Application::ApplicationImpl::onSocketAccepted(boost::asio::ip::tcp::socket
         {
             auto const & [handler, handlerName] = it->second;
 
-            SPDLOG_INFO("'{}' → 0x{:02x}   ({:4} bytes) ({})", player.connection().id(), opCode, size, handlerName);
+            if (opCode > 0xff)
+                SPDLOG_INFO("'{}' → 0x{:04x} ({:4} bytes) ({})", player.connection().id(), opCode, size, handlerName);
+            else
+                SPDLOG_INFO("'{}' → 0x{:02x}   ({:4} bytes) ({})", player.connection().id(), opCode, size, handlerName);
+
             hexdump(body);
 
             try { (*handler)(player); }
