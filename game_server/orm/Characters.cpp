@@ -12,6 +12,7 @@
 #include "../game/inventory/Item.hpp"
 #include "../game/inventory/ItemStorage.hpp"
 #include "../game/inventory/ItemTemplateDirectory.hpp"
+#include "../game/ui/ActionShortcut.hpp"
 #include "../game/ui/ItemShortcut.hpp"
 #include "../game/ui/ShortcutBar.hpp"
 #include "../game/ui/SkillShortcut.hpp"
@@ -272,9 +273,9 @@ namespace
 
         while (query.executeStep())
         {
-            auto const index     = query.getColumn("index").getUInt();
-            auto const type      = query.getColumn("type").getUInt();
-            auto const targetId  = query.getColumn("target_id").getUInt();
+            auto const index    = query.getColumn("index"    ).getUInt();
+            auto const type     = query.getColumn("type"     ).getUInt();
+            auto const targetId = query.getColumn("target_id").getUInt();
             // auto const extraInfo = query.getColumn("extra_info");
 
             switch (static_cast<ShortcutType>(type))
@@ -290,6 +291,7 @@ namespace
                     }
                     break;
                 }
+
                 case ShortcutType::Skill:
                 {
                     if (auto const skill = c.skills().skill(static_cast<SkillId>(targetId)))
@@ -299,6 +301,11 @@ namespace
 
                     break;
                 }
+
+                case ShortcutType::Action:
+                    c.shortcutBar().set<ActionShortcut>(index, targetId);
+                    break;
+
                 default:
                     SPDLOG_WARN("Unsupported shortcut type '{}', cannot restore shortcut", type);
                     break;

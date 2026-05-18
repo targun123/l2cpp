@@ -5,6 +5,7 @@
 #include "../game/actor/Character.hpp"
 #include "../game/components/SkillDirectory.hpp"
 #include "../game/inventory/ItemStorage.hpp"
+#include "../game/ui/ActionShortcut.hpp"
 #include "../game/ui/ItemShortcut.hpp"
 #include "../game/ui/ShortcutBar.hpp"
 #include "../game/ui/SkillShortcut.hpp"
@@ -49,7 +50,12 @@ DEFINE_PACKET_HANDLER(UiShortcutSet)
         }
 
         case ShortcutType::Action:
-            return;
+        {
+            u32 actionId;
+            reader >> actionId;
+            c.shortcutBar().set<ActionShortcut>(index, actionId);
+            break;
+        }
 
         case ShortcutType::Macro:
             return;
