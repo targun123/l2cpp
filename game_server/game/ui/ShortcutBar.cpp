@@ -35,6 +35,15 @@ void ShortcutBar::unset(Shortcut::Index const index)
     _readOnlyShortcuts[index].reset();
 }
 
+void ShortcutBar::unsetAll()
+{
+    for (size_t i = 0; i < _shortcuts.size(); ++i)
+    {
+        _shortcuts        [i].reset();
+        _readOnlyShortcuts[i].reset();
+    }
+}
+
 void ShortcutBar::checkIndex(Shortcut::Index const index) const
 {
     L2CPP_B_ASSERT(index < _shortcuts.size(), "Invalid index '{}': out of range", index);
@@ -47,4 +56,3 @@ void ShortcutBar::setImpl(Shortcut::Index const index, std::unique_ptr<Shortcut>
     else
         _readOnlyShortcuts[index].reset();
 }
-

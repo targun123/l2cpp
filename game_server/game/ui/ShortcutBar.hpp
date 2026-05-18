@@ -29,6 +29,7 @@ public:
     }
 
     void unset(Shortcut::Index);
+    void unsetAll();
 
 private:
     void checkIndex(Shortcut::Index) const;
