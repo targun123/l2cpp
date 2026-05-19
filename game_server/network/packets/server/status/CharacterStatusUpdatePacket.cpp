@@ -24,14 +24,14 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
 
     *this
         << c.position()
-        << c.appearance().headAngle
+        << c.position().orientation
         << c.id()
         << c.name()
         << c.appearance().race()
-        << c.appearance().sex
-        << c.profession()
+        << c.appearance().sex()
+        << c.appearance().startingProfession()
         << c.status().level()
-        << c.status().xp
+        << c.status().xp()
         << static_cast<u32>(stats[StatId::Str])
         << static_cast<u32>(stats[StatId::Dex])
         << static_cast<u32>(stats[StatId::Con])
@@ -42,7 +42,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << static_cast<u32>(stats[StatId::CurHp])
         << static_cast<u32>(stats[StatId::MaxMp])
         << static_cast<u32>(stats[StatId::CurMp])
-        << c.status().sp
+        << c.status().sp()
         << static_cast<u32>(stats[StatId::CurWeight])
         << static_cast<u32>(stats[StatId::MaxWeight])
         << (c.gear().hasActiveWeapon() ? 20 : 40)
@@ -89,7 +89,7 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << static_cast<u32>(stats[StatId::BasePAtkSpeed])
         << static_cast<u32>(stats[StatId::MDef])
         << 0 // (c.isPvpFlagged ? 1 : 0)
-        << c.status().karma
+        << c.status().karma()
         << static_cast<u32>(stats[StatId::BaseRunSpeed])
         << static_cast<u32>(stats[StatId::BaseWalkSpeed])
         << static_cast<u32>(stats[StatId::BaseSwimRunSpeed])
@@ -102,9 +102,9 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << stats[StatId::PAtkSpeed] / stats[StatId::BasePAtkSpeed]
         << c.appearance().collisionRadius
         << c.appearance().collisionHeight
-        << c.appearance().hairStyleId
-        << c.appearance().hairColorId
-        << c.appearance().faceId
+        << c.appearance().hairStyle()
+        << c.appearance().hairColor()
+        << c.appearance().face()
         << (c.accessLevel > 0 ? 1 : 0)
         << c.title()
         << 0                  // clanId
@@ -115,12 +115,13 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << static_cast<u8>(0) // mount type
         << static_cast<u8>(0) // private store type
         << false              // can dwarven craft
-        << c.status().pkCount
-        << c.status().pvpCount
+        << c.status().pkCount()
+        << c.status().pvpCount()
     ;
 
-    *this << static_cast<u16>(c.cubics.size());
-    for (auto const id : c.cubics)
+    std::array<u16, 0> const cubics;
+    *this << static_cast<u16>(cubics.size());
+    for (auto const id : cubics)
         *this << id;
 
     *this
@@ -135,9 +136,9 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << 0     // ?
         << 0     // ?
         << 0     // ?
-        << c.evalAmount
-        << c.evalScore
-        << 0 // ?
+        << 0_u16 // evalAmount
+        << 0_u16 // evalScore
+        << 0     // ?
         << c.inventory().limit()
         << c.profession()
         << 0 // special effects? circles around player...
@@ -146,12 +147,12 @@ CharacterStatusUpdatePacket::CharacterStatusUpdatePacket(Character const & c)
         << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan crest large id
-        << c.status().isNoble // noble symbol in status window
-        << c.status().isHero  // hero aura
+        << c.status().isNoblesse() // noblesse symbol in status window
+        << c.status().isHero()     // hero aura
         << false // is fishing
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z
-        << c.appearance().nameColor
+        << c.appearance().nameColor()
     ;
 }

@@ -6,5 +6,5 @@
 
 DEFINE_PACKET_HANDLER(MiniMapShow)
 {
-    player.connection().send(Packet(0x9d) << 1665);
+    player.connection().send(Packet(0x9d, "MiniMapShow") << 1665);
 }

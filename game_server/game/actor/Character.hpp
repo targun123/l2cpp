@@ -4,20 +4,17 @@
 #pragma once
 
 // Project includes
-#include "Actor.hpp"
+#include "../../Typedefs.hpp"
 #include "../constants/Profession.hpp"
+#include "Actor.hpp"
 
 #include <l2cpp/Pimpl.hpp>
-#include <l2cpp/Typedefs.hpp>
 
-// C++ includes
-#include <vector>
-
+class CharacterStatus;
 class ItemStorage;
 class Player;
 class PlayerAppearance;
-class Shortcut;
-struct CharacterStatus;
+class ShortcutBar;
 
 class Character : public Actor
 {
@@ -32,11 +29,6 @@ public:
 
 public:
     u32 accessLevel = 1;
-    u32 deleteTime = 0;
-    u32 selected = 1;
-    u16 evalAmount = 32, evalScore = 0;
-
-    std::vector<u16> cubics;
 
 public:
     auto profession() const -> Profession;
@@ -50,13 +42,13 @@ public:
     auto inventory()       -> ItemStorage       &;
     auto inventory() const -> ItemStorage const &;
 
-    bool isAttackable() const override;
+    auto shortcutBar()       -> ShortcutBar       &;
+    auto shortcutBar() const -> ShortcutBar const &;
+
+    bool isAttackable() const override { return false; }
 
 public:
-    void setProfession(Profession profession);
-
-    auto setShortcut(Shortcut shortcut) -> Shortcut &;
-    void delShortcut(size_t index);
+    void setProfession(Profession);
 
     void offerResurrection(Actor const & emitter);
     void answerConfirmationModal(u32 systemMessageId, bool accepted);

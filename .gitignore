@@ -7,3 +7,5 @@ CMakeUserPresets.json
 
 # Build artifacts
 build
+
+data/*

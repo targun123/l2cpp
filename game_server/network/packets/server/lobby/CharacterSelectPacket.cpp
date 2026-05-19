@@ -27,18 +27,18 @@ CharacterSelectPacket::CharacterSelectPacket(Character const & c, u32 const encr
         << encryptionKey
         << 0 // clanId
         << 0 // ?
-        << c.appearance().sex
+        << c.appearance().sex()
         << c.appearance().race()
-        << c.profession()
+        << c.appearance().startingProfession()
         << 1 // active (?)
         << c.position()
         << stats[StatId::CurHp]
         << stats[StatId::CurMp]
-        << status.sp
-        << status.xp
+        << status.sp()
+        << status.xp()
         << status.level()
-        << status.karma
-        << status.pkCount
+        << status.karma()
+        << status.pkCount()
         << static_cast<u32>(stats[StatId::Int])
         << static_cast<u32>(stats[StatId::Str])
         << static_cast<u32>(stats[StatId::Con])

@@ -2,19 +2,19 @@
 /// @date      Created on 2026-02-27
 
 // Project includes
-#include "_Common.hpp"
 #include "../game/actor/Character.hpp"
-#include "../game/components/PlayerAppearance.hpp"
+#include "_Common.hpp"
 
 DEFINE_PACKET_HANDLER(MoveUpdate)
 {
     PacketReader reader(player.connection().readBuffer().subspan(3));
 
-    auto & c = *player.currentCharacter();
+    s32 x, y, z, orientation;
+    reader >> x >> y >> z >> orientation;
 
-    s32 x, y, z;
-    reader >> x >> y >> z >> c.appearance().headAngle;
+    auto & c = *player.currentCharacter();
     c.setPosition(x, y, z);
+    c.setOrientation(orientation);
 
     // if (player.actions().empty())
     // {
@@ -39,7 +39,7 @@ DEFINE_PACKET_HANDLER(MoveUpdate)
     // if ((move.currentDistance/* += distanceCovered*/) >= move.totalDistance) // Reached destination
     // {
     //     Packet p(0x61);
-    //     p << c.id() << x << y << c.position().z << c.appearance().headAngle;
+    //     p << c.id() << x << y << c.position().z << c.position().orientation;
     //     player.connection().send(p);
     // }
 }

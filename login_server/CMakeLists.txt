@@ -11,6 +11,8 @@ target_sources(${PROJECT_NAME}
     PRIVATE
         main.cpp
         Constants.hpp
+        Orm.cpp
+        Orm.hpp
         network/Connection.cpp
         network/Connection.hpp
         network/OpCodes.hpp

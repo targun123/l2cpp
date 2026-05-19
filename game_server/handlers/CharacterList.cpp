@@ -4,9 +4,9 @@
 // Project includes
 #include "_Common.hpp"
 #include "../game/World.hpp"
-#include "../network/packets/server/char_select/CharacterListPacket.hpp"
+#include "../network/packets/server/lobby/CharacterListPacket.hpp"
 
 DEFINE_PACKET_HANDLER(CharacterList)
 {
-    player.connection().send(CharacterListPacket(player, World::getCharacterPreviews(player.accountName())));
+    player.connection().send(CharacterListPacket(player, World::getCharacterPreviews(player)));
 }

@@ -9,7 +9,9 @@
 #include "../utils/Traits.hpp"
 
 // C++ includes
+#include <chrono>
 #include <span>
+#include <string_view>
 
 namespace l2cpp::Network { class Packet; template<u16> struct HeaderOnlyPacket; }
 

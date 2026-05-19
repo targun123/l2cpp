@@ -4,7 +4,6 @@
 #pragma once
 
 // Project includes
-#include <l2cpp/Typedefs.hpp>
 
 enum class ActionType
 {

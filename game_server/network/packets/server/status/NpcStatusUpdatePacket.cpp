@@ -24,7 +24,7 @@ NpcStatusUpdatePacket::NpcStatusUpdatePacket(Npc const & actor)
         << appearance.id()
         << (actor.isAttackable() ? 1 : 0)
         << actor.position()
-        << appearance.headAngle
+        << actor.position().orientation
         << 0 // ?
         << static_cast<u32>(stats[StatId::MAtkSpeed])
         << static_cast<u32>(stats[StatId::PAtkSpeed])

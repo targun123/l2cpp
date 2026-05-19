@@ -4,6 +4,7 @@
 #pragma once
 
 // Project includes
+#include "../../../../Typedefs.hpp"
 #include "../../../../game/constants/StatId.hpp"
 
 #include <l2cpp/network/Packet.hpp>

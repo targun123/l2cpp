@@ -4,7 +4,8 @@
 #pragma once
 
 // Project includes
-#include <l2cpp/Typedefs.hpp>
+#include "../../Typedefs.hpp"
+
 #include <l2cpp/network/Serialization.hpp>
 
 namespace Network::Packet::Server { struct AbnormalEffectListPacket; }

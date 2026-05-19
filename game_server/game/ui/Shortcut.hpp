@@ -4,37 +4,34 @@
 #pragma once
 
 // Project includes
+#include "../../Typedefs.hpp"
 #include "../constants/ShortcutType.hpp"
 
-#include <l2cpp/Pimpl.hpp>
-#include <l2cpp/Typedefs.hpp>
 #include <l2cpp/network/Serialization.hpp>
-
-// C++ includes
-#include <optional>
 
 class Shortcut
 {
-    friend class Character;
-
-    DECLARE_PACKET_SERIALIZATION_OPERATORS(Shortcut);
+    DECLARE_PACKET_SERIALIZATION_OPERATOR(Shortcut);
 
 public:
-    Shortcut();
-    Shortcut(Shortcut &&) noexcept;
-    Shortcut & operator=(Shortcut &&) noexcept;
-    ~Shortcut();
+    using Index = u32;
 
 public:
-    auto index()      const -> std::optional<size_t>;
-    auto type()       const -> ShortcutType;
-    auto targetId()   const -> u32;
-    auto skillLevel() const -> SkillLevel;
+    virtual ~Shortcut();
+
+protected:
+    Shortcut(Index index, ShortcutType type);
+
+public:
+            auto index()     const -> Index;
+            auto type()      const -> ShortcutType;
+    virtual auto targetId()  const -> u32 = 0;
 
 private:
-    void setSkillLevel(SkillLevel level);
+    void serialize(l2cpp::Network::Packet &) const;
+    virtual void serializeImpl(l2cpp::Network::Packet &) const = 0;
 
 private:
-    struct ShortcutImpl;
-    Pimpl<ShortcutImpl> _impl;
+    Index        _index;
+    ShortcutType _type;
 };

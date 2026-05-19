@@ -29,8 +29,8 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << c.id()
         << c.name()
         << appearance.race()
-        << appearance.sex
-        << c.profession()
+        << appearance.sex()
+        << c.appearance().startingProfession()
         << 0 // ?
         << gear.itemTemplateId(Head)
         << gear.itemTemplateId(RightHand)
@@ -43,11 +43,11 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << gear.itemTemplateId(RightHand)
         << gear.itemTemplateId(Hair)
         << 0 // (c.isPvpFlagged ? 1 : 0)
-        << c.status().karma
+        << c.status().karma()
         << static_cast<u32>(stats[StatId::MAtkSpeed])
         << static_cast<u32>(stats[StatId::PAtkSpeed])
         << 0 // (c.isPvpFlagged ? 1 : 0) // repeated
-        << c.status().karma              // repeated
+        << c.status().karma()            // repeated
         << static_cast<u32>(stats[StatId::BaseRunSpeed])
         << static_cast<u32>(stats[StatId::BaseWalkSpeed])
         << static_cast<u32>(stats[StatId::BaseSwimRunSpeed])
@@ -60,9 +60,9 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << stats[StatId::PAtkSpeed] / stats[StatId::BasePAtkSpeed]
         << appearance.collisionRadius
         << appearance.collisionHeight
-        << appearance.hairStyleId
-        << appearance.hairColorId
-        << appearance.faceId
+        << appearance.hairStyle()
+        << appearance.hairColor()
+        << appearance.face()
         << c.title()
         << 0     // clanId
         << 0     // clan crest id
@@ -78,27 +78,28 @@ CharacterStatusUpdateBroadcastPacket::CharacterStatusUpdateBroadcastPacket(Chara
         << 0_u8  // private store type
     ;
 
-    *this << static_cast<u16>(c.cubics.size());
-    for (auto const id : c.cubics)
+    std::array<u16, 0> const cubics;
+    *this << static_cast<u16>(cubics.size());
+    for (auto const id : cubics)
         *this << id;
 
     *this
         << false // looking for party members
         << 0     // abnormal visual effects
-        << static_cast<u8>(c.evalAmount)
-        << c.evalScore
+        << 0_u8  // evalAmount
+        << 0_u16 // evalScore
         << c.profession()
         << static_cast<u32>(stats[StatId::MaxCp])
         << static_cast<u32>(stats[StatId::CurCp])
         << (weapon ? weapon->enchantLevel : 0_u8)
         << c.team()
         << 0 // clan large crest id
-        << c.status().isNoble
-        << c.status().isHero
+        << c.status().isNoblesse()
+        << c.status().isHero()
         << false // fishing
         << 0 // fish x
         << 0 // fish y
         << 0 // fish z
-        << appearance.nameColor
+        << appearance.nameColor()
     ;
 }

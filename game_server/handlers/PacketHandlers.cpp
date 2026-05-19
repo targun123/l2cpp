@@ -29,12 +29,12 @@ namespace Handler
     HANDLER(MoveUpdate)
     HANDLER(Protocol)
     HANDLER(QuestList)
-    HANDLER(ShortcutBarAdd)
-    HANDLER(ShortcutBarRemove)
     HANDLER(SkillList)
     HANDLER(SkillUse)
     HANDLER(TargetClear)
     HANDLER(UiConfirmationModalAnswer)
+    HANDLER(UiShortcutSet)
+    HANDLER(UiShortcutUnset)
 #undef HANDLER
 }
 
@@ -61,11 +61,11 @@ std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHand
     HANDLER(MoveUpdate),
     HANDLER(Protocol),
     HANDLER(QuestList),
-    HANDLER(ShortcutBarAdd),
-    HANDLER(ShortcutBarRemove),
     HANDLER(SkillList),
     HANDLER(SkillUse),
     HANDLER(TargetClear),
     HANDLER(UiConfirmationModalAnswer),
+    HANDLER(UiShortcutSet),
+    HANDLER(UiShortcutUnset),
 #undef HANDLER
 };

@@ -4,8 +4,9 @@
 #pragma once
 
 // Project includes
+#include "../Typedefs.hpp"
+
 #include <l2cpp/Pimpl.hpp>
-#include <l2cpp/Typedefs.hpp>
 
 // Third-party includes
 #include <boost/asio/ip/tcp.hpp>
@@ -27,7 +28,7 @@ public:
     ~Connection();
 
 public:
-    auto id()            const -> u64;
+    auto id()            const -> ConnectionId;
     bool isAlive()       const;
     auto readBuffer()    const -> std::span<byte const>;
     auto encryptionKey() const -> std::span<byte const>;
