@@ -10,6 +10,7 @@
 #include "../game/components/Position.hpp"
 #include "../game/components/Stats.hpp"
 #include "../network/packets/server/action/ActionFailedPacket.hpp"
+#include "../network/packets/server/action/NpcHtmlMessagePacket.hpp"
 #include "../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
 #include "../network/packets/server/target/TargetSelectPacket.hpp"
@@ -51,6 +52,12 @@ DEFINE_PACKET_HANDLER(ActionRequest) try
         {
             c.state = ActorState::Attacking;
             c.doNext<AttackAction>(c.target(), c.stats()[StatId::PAtkSpeed]);
+        }
+        else if (!target->isAttackable())
+        {
+            NpcHtmlMessagePacket p;
+            c.player->connection().send(std::move(p));
+            success = false;
         }
         else
             success = false;
