@@ -2,11 +2,13 @@
 
 using Network::Packet::Server::NpcHtmlMessagePacket;
 
-NpcHtmlMessagePacket::NpcHtmlMessagePacket() : Packet(0x0f, "NpcHtmlMessage")
+NpcHtmlMessagePacket::NpcHtmlMessagePacket(u32 const npcObjectId, std::wstring const& htmlContent) : Packet(0x0f, "NpcHtmlMessage")
 {
+	
+
 	*this
-		<< 10001
-		<< L"<html><body>My Text is missing:<br> TEXT </body></html>"
+		<< npcObjectId
+		<< htmlContent
 		<< 0
 	;
 }

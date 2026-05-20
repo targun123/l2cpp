@@ -23,6 +23,7 @@ namespace Handler
     HANDLER(InventoryOpen)
     HANDLER(ItemUnequip)
     HANDLER(ItemUse)
+    HANDLER(RequestBypassToServer)
     HANDLER(ManorList)
     HANDLER(MiniMapShow)
     HANDLER(Move)
@@ -55,6 +56,7 @@ std::unordered_map<byte, std::pair<PacketHandler, std::string_view>> gPacketHand
     HANDLER(InventoryOpen),
     HANDLER(ItemUnequip),
     HANDLER(ItemUse),
+    HANDLER(RequestBypassToServer),
     HANDLER(ManorList),
     HANDLER(MiniMapShow),
     HANDLER(Move),

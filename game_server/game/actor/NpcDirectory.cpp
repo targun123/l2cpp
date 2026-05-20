@@ -5,7 +5,7 @@
 
 // Project includes
 #include "../../utils/Conversion.hpp"
-
+#include "../game_server/orm/Npcs.hpp"
 #include <l2cpp/Exception.hpp>
 
 // Third-pary includes
@@ -115,6 +115,10 @@ void NpcDirectory::load(std::filesystem::path const & npcNamesFile, std::filesys
     loadNpcNames (_npcs, _monsters, npcNamesFile);
 }
 
+void NpcDirectory::loadHtmls() {
+    Orm::loadNpcHtmls(_htmls);
+}
+
 auto NpcDirectory::npcCount()     -> size_t { return _npcs.size();                    }
 auto NpcDirectory::monsterCount() -> size_t { return _monsters.size();                }
 auto NpcDirectory::totalCount()   -> size_t { return _monsters.size() + _npcs.size(); }
@@ -158,5 +162,18 @@ auto NpcDirectory::monster(size_t const id) -> OptRef<NpcInfo const>
     return it != _monsters.end() ? OptRef(it->second) : std::nullopt;
 }
 
+auto NpcDirectory::html(size_t id, size_t page) -> std::wstring
+{
+    uint64_t const key = makeKey(id, page);
+
+    auto const it = _htmls.find(key);
+    if (it != _htmls.end()) {
+        return it->second;
+    }
+
+    return L"<html><body>Html not found for NPC: " + std::to_wstring(id) + L" page: " + std::to_wstring(page) + L"</body></html>";
+}
+
 Storage NpcDirectory::_monsters;
 Storage NpcDirectory::_npcs;
+std::unordered_map<u64, std::wstring> NpcDirectory::_htmls;

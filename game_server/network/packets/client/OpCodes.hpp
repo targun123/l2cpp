@@ -22,6 +22,7 @@ namespace Network
         InventoryOpen               = 0x0f,
         ItemUnequip                 = 0x11,
         ItemUse                     = 0x14,
+        RequestBypassToServer       = 0x21,
         SkillUse                    = 0x2f,
         UiShortcutSet               = 0x33,
         UiShortcutUnset             = 0x35,

@@ -5,7 +5,7 @@
 
 // Project includes
 #include "Actor.hpp"
-
+#include "../game_server/Player.hpp"
 class NpcAppearance;
 class NpcStatus;
 
@@ -22,5 +22,9 @@ public:
     auto appearance() const -> NpcAppearance const &;
     auto status()     const -> NpcStatus     const &;
 
+    void showChatWindow(Player& player, u32 page);
+    void onBypassFeedback(Player& player, std::string command);
+    std::wstring html(u32 npcId, u32 page);
     bool isAttackable() const override { return false; }
+
 };

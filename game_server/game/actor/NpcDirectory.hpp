@@ -26,6 +26,7 @@ class NpcDirectory
 
 public:
     static void load(std::filesystem::path const & npcNamesFile, std::filesystem::path const & npcGroupsFile);
+    static void loadHtmls();
 
 public:
     static auto npcCount()     -> size_t;
@@ -37,8 +38,16 @@ public:
     static auto find   (size_t id) -> OptRef<NpcInfo const>;
     static auto npc    (size_t id) -> OptRef<NpcInfo const>;
     static auto monster(size_t id) -> OptRef<NpcInfo const>;
+    static auto html(size_t id, size_t page) -> std::wstring;
+
+private:
+    static constexpr auto makeKey(u64 id, u64 page) -> uint64_t
+    {
+        return (id << 32) | page;
+    }
 
 private:
     static std::unordered_map<size_t, NpcInfo> _monsters;
     static std::unordered_map<size_t, NpcInfo> _npcs;
+    static std::unordered_map<u64, std::wstring> _htmls;
 };

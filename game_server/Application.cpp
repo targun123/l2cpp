@@ -30,6 +30,7 @@
 
 // C++ includes
 #include <print>
+#include "game/actions/bypass/BypassHandler.hpp"
 
 static void hexdump(std::span<byte const> const buffer)
 {
@@ -70,6 +71,7 @@ bool Application::ApplicationImpl::load() const try
     SPDLOG_INFO("Initializing database…");
     Database::init({
         // Order is significant
+        "sql/npc_htmls.sql",
         "sql/characters.sql",
         "sql/character_previews.sql",
         "sql/character_professions.sql",
@@ -94,6 +96,14 @@ bool Application::ApplicationImpl::load() const try
     NpcDirectory::load("data/npcname-e.txt", "data/npcgrp.txt");
     SPDLOG_INFO("Registered {:L} NPC templates ({:L} NPCs; {:L} monsters)",
                 NpcDirectory::totalCount(), NpcDirectory::npcCount(), NpcDirectory::monsterCount());
+
+    SPDLOG_INFO("Loading NPCs htmls...");
+    NpcDirectory::loadHtmls();
+    SPDLOG_INFO("NPCs htmls loaded");
+
+    SPDLOG_INFO("Loading BypassHandler...");
+    BypassHandler::load();
+    SPDLOG_INFO("BypassHandler: Loaded {} handlers.", BypassHandler::instance().size());
 
     SPDLOG_INFO("Loading World systems…");
     World::init();

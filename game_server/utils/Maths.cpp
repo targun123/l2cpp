@@ -12,3 +12,14 @@ auto Utils::Maths::distance(Position const & pos1, Position const & pos2) -> dou
                       static_cast<double>(pos1.y - pos2.y),
                       static_cast<double>(pos1.z - pos2.z));
 }
+
+auto Utils::Maths::isInRange(Position const& pos1, Position const& pos2, double const maxDistance) -> bool
+{
+    double const dx = static_cast<double>(pos1.x - pos2.x);
+    double const dy = static_cast<double>(pos1.y - pos2.y);
+    double const dz = static_cast<double>(pos1.z - pos2.z);
+
+    double const squaredDistance = (dx * dx) + (dy * dy) + (dz * dz);
+
+    return squaredDistance <= (maxDistance * maxDistance);
+}

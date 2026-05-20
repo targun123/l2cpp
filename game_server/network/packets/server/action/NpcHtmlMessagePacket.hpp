@@ -7,5 +7,6 @@ namespace Network::Packet::Server { struct NpcHtmlMessagePacket; }
 
 struct Network::Packet::Server::NpcHtmlMessagePacket final : public l2cpp::Network::Packet
 {
-	NpcHtmlMessagePacket();
+	NpcHtmlMessagePacket(u32 const npcObjectId, std::wstring const& htmlContent);
+
 };

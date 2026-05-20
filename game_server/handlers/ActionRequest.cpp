@@ -14,7 +14,7 @@
 #include "../network/packets/server/status/StatsUpdatePacket.hpp"
 #include "../network/packets/server/target/TargetMonsterSelectPacket.hpp"
 #include "../network/packets/server/target/TargetSelectPacket.hpp"
-
+#include "../game_server/utils/Maths.hpp"
 DEFINE_PACKET_HANDLER(ActionRequest) try
 {
     L2CPP_B_ASSERT(player.currentCharacter(), "Cannot select target, no current character");
@@ -55,8 +55,14 @@ DEFINE_PACKET_HANDLER(ActionRequest) try
         }
         else if (!target->isAttackable())
         {
-            NpcHtmlMessagePacket p;
-            c.player->connection().send(std::move(p));
+            if (target->type() == ActorType::Npc && Utils::Maths::isInRange(c, target, 250.0))
+            {
+                
+                auto* npc = const_cast<Npc*>(static_cast<Npc const*>(&*target));
+
+                npc->showChatWindow(*c.player, 0);
+            }
+
             success = false;
         }
         else
